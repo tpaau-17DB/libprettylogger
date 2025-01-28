@@ -16,61 +16,81 @@ pub struct LogStruct<'a> {
     pub log_type: LogType,
 }
 
-fn print_debug(message: &String, ignore_filtering: Option<bool>) {
-    match ignore_filtering {
-        Some(false) | None => {
-            if !filter_log(LogType::Debug)
-            {
-                return;
-            }
-            let log = LogStruct {
-                message,
-                log_type: LogType::Debug,
-            };
-            print_log(&log);
-        },
-        Some(true) => {
-            let log = LogStruct {
-                message,
-                log_type: LogType::Debug,
-            };
-            print_log(&log);
-        },
+pub fn debug(message: &String) {
+    if !filter_log(LogType::Debug)
+    {
+        return;
     }
+    let log = LogStruct {
+        message,
+        log_type: LogType::Debug,
+    };
+    print_log(&log);
 }
 
-fn print_info(message: &String, ignore_filtering: Option<bool>) {
-    match ignore_filtering {
-        Some(false) | None => {
-        },
-        Some(true) => {
-        },
-    }
+pub fn debug_no_filtering(message: &String) {
+    let log = LogStruct {
+        message,
+        log_type: LogType::Debug,
+    };
+    print_log(&log);
 }
 
-fn print_warning(message: &String, ignore_filtering: Option<bool>) {
-    match ignore_filtering {
-        Some(false) | None => {
-        },
-        Some(true) => {
-        },
+
+pub fn info(message: &String) {
+    if !filter_log(LogType::Info)
+    {
+        return;
     }
+    let log = LogStruct {
+        message,
+        log_type: LogType::Info,
+    };
+    print_log(&log);
 }
 
-fn print_error(message: &String, ignore_filtering: Option<bool>) {
-    match ignore_filtering {
-        Some(false) | None => {
-        },
-        Some(true) => {
-        },
-    }
+pub fn info_no_filtering(message: &String) {
+    let log = LogStruct {
+        message,
+        log_type: LogType::Info,
+    };
+    print_log(&log);
 }
 
-fn print_fatal_error(message: &String, ignore_filtering: Option<bool>) {
-    match ignore_filtering {
-        Some(false) | None => {
-        },
-        Some(true) => {
-        },
+pub fn warn(message: &String) {
+    if !filter_log(LogType::Warning)
+    {
+        return;
     }
+    let log = LogStruct {
+        message,
+        log_type: LogType::Warning,
+    };
+    print_log(&log);
+}
+
+pub fn warn_no_filtering(message: &String) {
+    let log = LogStruct {
+        message,
+        log_type: LogType::Warning,
+    };
+    print_log(&log);
+}
+
+pub fn err(message: &String) {
+    // error messages cant get suppressed
+    let log = LogStruct {
+        message,
+        log_type: LogType::Error,
+    };
+    print_log(&log);
+}
+
+pub fn fatal(message: &String) {
+    // error messages cant get suppressed
+    let log = LogStruct {
+        message,
+        log_type: LogType::FatalError,
+    };
+    print_log(&log);
 }

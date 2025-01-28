@@ -1,17 +1,18 @@
 use std::collections::HashMap;
 use lazy_static::lazy_static;
 
-static BLACK: &str = "\x1b[30m";
-static BLUE: &str = "\x1b[34m";
-static CYAN: &str = "\x1b[36m";
-static GREEN: &str = "\x1b[32m";
-static GRAY: &str = "\x1b[90m";
-static MAGENTA: &str = "\x1b[35m";
-static RED: &str = "\x1b[31m";
-static WHITE: &str = "\x1b[37m";
-static YELLOW: &str = "\x1b[33m";
-static RESET: &str = "\x1b[0m";
+pub static BLACK: &str = "\x1b[30m";
+pub static BLUE: &str = "\x1b[34m";
+pub static CYAN: &str = "\x1b[36m";
+pub static GREEN: &str = "\x1b[32m";
+pub static GRAY: &str = "\x1b[90m";
+pub static MAGENTA: &str = "\x1b[35m";
+pub static RED: &str = "\x1b[31m";
+pub static WHITE: &str = "\x1b[37m";
+pub static YELLOW: &str = "\x1b[33m";
+pub static RESET: &str = "\x1b[0m";
 
+#[derive(Clone)]
 pub enum Color
 {
     Black = 1,
@@ -52,6 +53,6 @@ fn get_color_code(color: Color) -> String {
     }
 }
 
-pub fn colorify(text: &str, color: Color) -> String {
+pub fn colorify(text: &String, color: Color) -> String {
     return get_color_code(color) + text + RESET;
 }

@@ -1,17 +1,6 @@
-pub mod colors;
+use crate::logging::*;
+use crate::utils::formatting::*;
 
-use colors::*;
+pub fn print_log(log: &LogStruct) {
 
-pub fn log_debug(message: &String) {
-    eprintln!("{}", RED.to_string() + message + RESET);
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::*;
-    #[test]
-    fn it_works() {
-        log = "this is a log";
-        log_debug(&"This is a debug log!");
-    }
 }

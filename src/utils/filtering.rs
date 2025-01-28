@@ -11,9 +11,9 @@ pub enum LogLevel {
 }
 
 lazy_static! {
-    static ref LOG_LEVEL: Mutex<LogLevel> = Mutex::new(LogLevel::Standard);
+    static ref LOG_LEVEL: Mutex<LogLevel> = Mutex::new(LogLevel::All);
 }
 
 pub fn filter_log(log_type: LogType) -> bool {
-    return log_type as i32 > LOG_LEVEL.lock().unwrap().clone() as i32
+    return log_type as i32 >= LOG_LEVEL.lock().unwrap().clone() as i32
 }
