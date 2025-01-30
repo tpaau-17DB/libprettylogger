@@ -1,4 +1,4 @@
-use crate::utils::{
+use crate::{
     filtering::*,
     printing::*,
 };
@@ -17,7 +17,7 @@ pub struct LogStruct<'a> {
 }
 
 pub fn debug(message: &String) {
-    if !filter_log(LogType::Debug)
+    if filter_log(LogType::Debug)
     {
         return;
     }
@@ -38,7 +38,7 @@ pub fn debug_no_filtering(message: &String) {
 
 
 pub fn info(message: &String) {
-    if !filter_log(LogType::Info)
+    if filter_log(LogType::Info)
     {
         return;
     }
@@ -58,7 +58,7 @@ pub fn info_no_filtering(message: &String) {
 }
 
 pub fn warn(message: &String) {
-    if !filter_log(LogType::Warning)
+    if filter_log(LogType::Warning)
     {
         return;
     }

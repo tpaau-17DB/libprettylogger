@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
 use std::sync::Mutex;
 use crate::logging::*;
-use crate::utils::colors::*;
+use crate::colors::*;
 
 
 // Log headers
