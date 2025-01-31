@@ -16,6 +16,7 @@ pub struct LogStruct<'a> {
     pub log_type: LogType,
 }
 
+/// Prints a **debug log**
 pub fn debug(message: &String) {
     if filter_log(LogType::Debug)
     {
@@ -28,6 +29,7 @@ pub fn debug(message: &String) {
     print_log(&log);
 }
 
+/// Prints a **debug log**, completely bypasses any filtering
 pub fn debug_no_filtering(message: &String) {
     let log = LogStruct {
         message,
@@ -37,6 +39,7 @@ pub fn debug_no_filtering(message: &String) {
 }
 
 
+/// Prints an **informative log**
 pub fn info(message: &String) {
     if filter_log(LogType::Info)
     {
@@ -49,6 +52,7 @@ pub fn info(message: &String) {
     print_log(&log);
 }
 
+/// Prints an **informative log**, completely bypasses filtering
 pub fn info_no_filtering(message: &String) {
     let log = LogStruct {
         message,
@@ -57,6 +61,8 @@ pub fn info_no_filtering(message: &String) {
     print_log(&log);
 }
 
+
+/// Prints a **warning**
 pub fn warn(message: &String) {
     if filter_log(LogType::Warning)
     {
@@ -69,6 +75,7 @@ pub fn warn(message: &String) {
     print_log(&log);
 }
 
+/// Prints a **warning**, completely bypasses filtering
 pub fn warn_no_filtering(message: &String) {
     let log = LogStruct {
         message,
@@ -77,6 +84,8 @@ pub fn warn_no_filtering(message: &String) {
     print_log(&log);
 }
 
+
+/// Prints an **error**
 pub fn err(message: &String) {
     // error messages cant get suppressed
     let log = LogStruct {
@@ -86,6 +95,8 @@ pub fn err(message: &String) {
     print_log(&log);
 }
 
+
+/// Prints a **fatal error**
 pub fn fatal(message: &String) {
     // error messages cant get suppressed
     let log = LogStruct {

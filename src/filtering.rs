@@ -16,10 +16,10 @@ pub enum LogLevel {
 impl fmt::Display for LogLevel {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let level_str = match *self {
-            LogLevel::All => "All",
-            LogLevel::Standard => "Standard",
-            LogLevel::Quiet => "Quiet",
-            LogLevel::ErrorsOnly => "ErrorsOnly",
+            LogLevel::All => "LogLevel::All",
+            LogLevel::Standard => "LogLevel::Standard",
+            LogLevel::Quiet => "LogLevel::Quiet",
+            LogLevel::ErrorsOnly => "LogLevel::ErrorsOnly",
         };
         write!(f, "{}", level_str)
     }
@@ -29,6 +29,12 @@ lazy_static! {
     pub static ref LOG_LEVEL: Mutex<LogLevel> = Mutex::new(LogLevel::All);
 }
 
+lazy_static! {
+    pub static ref FILTERING_ENABLED: Mutex<bool> = Mutex::new(true);
+}
+
 pub fn filter_log(log_type: LogType) -> bool {
-    return (log_type as i32) < LOG_LEVEL.lock().unwrap().clone() as i32
+    return !*FILTERING_ENABLED.lock().unwrap()
+        || ((log_type as i32) < LOG_LEVEL.lock().unwrap().clone() as i32)
+
 }

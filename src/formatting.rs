@@ -3,40 +3,39 @@ use std::sync::Mutex;
 use crate::logging::*;
 use crate::colors::*;
 
-
 // Log headers
 lazy_static! {
-    static ref DEBUG_HEADER: Mutex<String> = Mutex::new("[DBG]".to_string());
+    pub static ref DEBUG_HEADER: Mutex<String> = Mutex::new("[DBG]".to_string());
 }
 lazy_static! {
-    static ref INFO_HEADER: Mutex<String> = Mutex::new("[INF]".to_string());
+    pub static ref INFO_HEADER: Mutex<String> = Mutex::new("[INF]".to_string());
 }
 lazy_static! {
-    static ref WARN_HEADER: Mutex<String> = Mutex::new("[WAR]".to_string());
+    pub static ref WARN_HEADER: Mutex<String> = Mutex::new("[WAR]".to_string());
 }
 lazy_static! {
-    static ref ERR_HEADER: Mutex<String> = Mutex::new("[ERR]".to_string());
+    pub static ref ERR_HEADER: Mutex<String> = Mutex::new("[ERR]".to_string());
 }
 lazy_static! {
-    static ref FATAL_HEADER: Mutex<String> = Mutex::new("[FATAL]".to_string());
+    pub static ref FATAL_HEADER: Mutex<String> = Mutex::new("[FATAL]".to_string());
 }
 
 
 // Log colors
 lazy_static! {
-    static ref DEBUG_COLOR: Mutex<Color> = Mutex::new(Color::Blue);
+    pub static ref DEBUG_COLOR: Mutex<Color> = Mutex::new(Color::Blue);
 }
 lazy_static! {
-    static ref INFO_COLOR: Mutex<Color> = Mutex::new(Color::Green);
+    pub static ref INFO_COLOR: Mutex<Color> = Mutex::new(Color::Green);
 }
 lazy_static! {
-    static ref WARN_COLOR: Mutex<Color> = Mutex::new(Color::Yellow);
+    pub static ref WARN_COLOR: Mutex<Color> = Mutex::new(Color::Yellow);
 }
 lazy_static! {
-    static ref ERR_COLOR: Mutex<Color> = Mutex::new(Color::Red);
+    pub static ref ERR_COLOR: Mutex<Color> = Mutex::new(Color::Red);
 }
 lazy_static! {
-    static ref FATAL_COLOR: Mutex<Color> = Mutex::new(Color::Magenta);
+    pub static ref FATAL_COLOR: Mutex<Color> = Mutex::new(Color::Magenta);
 }
 
 
