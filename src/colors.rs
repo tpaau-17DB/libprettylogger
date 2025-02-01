@@ -58,7 +58,7 @@ fn get_color_code(color: Color) -> String {
     }
 }
 
-pub fn colorify(text: &String, color: Color) -> String {
+pub fn colorify(text: &str, color: Color) -> String {
     let use_color = USE_COLOR.lock().unwrap();
     if *use_color {
         return get_color_code(color) + text + RESET;

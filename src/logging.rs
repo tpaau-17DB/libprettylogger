@@ -12,12 +12,12 @@ pub enum LogType {
 }
 
 pub struct LogStruct<'a> {
-    pub message: &'a String,
+    pub message: &'a str,
     pub log_type: LogType,
 }
 
 /// Prints a **debug log**
-pub fn debug(message: &String) {
+pub fn debug(message: &str) {
     if filter_log(LogType::Debug)
     {
         return;
@@ -30,7 +30,7 @@ pub fn debug(message: &String) {
 }
 
 /// Prints a **debug log**, completely bypasses any filtering
-pub fn debug_no_filtering(message: &String) {
+pub fn debug_no_filtering(message: &str) {
     let log = LogStruct {
         message,
         log_type: LogType::Debug,
@@ -40,7 +40,7 @@ pub fn debug_no_filtering(message: &String) {
 
 
 /// Prints an **informative log**
-pub fn info(message: &String) {
+pub fn info(message: &str) {
     if filter_log(LogType::Info)
     {
         return;
@@ -53,7 +53,7 @@ pub fn info(message: &String) {
 }
 
 /// Prints an **informative log**, completely bypasses filtering
-pub fn info_no_filtering(message: &String) {
+pub fn info_no_filtering(message: &str) {
     let log = LogStruct {
         message,
         log_type: LogType::Info,
@@ -63,7 +63,7 @@ pub fn info_no_filtering(message: &String) {
 
 
 /// Prints a **warning**
-pub fn warn(message: &String) {
+pub fn warning(message: &str) {
     if filter_log(LogType::Warning)
     {
         return;
@@ -76,7 +76,7 @@ pub fn warn(message: &String) {
 }
 
 /// Prints a **warning**, completely bypasses filtering
-pub fn warn_no_filtering(message: &String) {
+pub fn warning_no_filtering(message: &str) {
     let log = LogStruct {
         message,
         log_type: LogType::Warning,
@@ -86,7 +86,7 @@ pub fn warn_no_filtering(message: &String) {
 
 
 /// Prints an **error**
-pub fn err(message: &String) {
+pub fn error(message: &str) {
     // error messages cant get suppressed
     let log = LogStruct {
         message,
@@ -97,7 +97,7 @@ pub fn err(message: &String) {
 
 
 /// Prints a **fatal error**
-pub fn fatal(message: &String) {
+pub fn fatal(message: &str) {
     // error messages cant get suppressed
     let log = LogStruct {
         message,

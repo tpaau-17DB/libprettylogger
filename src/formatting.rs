@@ -1,5 +1,6 @@
 use lazy_static::lazy_static;
 use std::sync::Mutex;
+use chrono::prelude::*;
 use crate::logging::*;
 use crate::colors::*;
 
@@ -38,8 +39,27 @@ lazy_static! {
     pub static ref FATAL_COLOR: Mutex<Color> = Mutex::new(Color::Magenta);
 }
 
+lazy_static! {
+    pub static ref DATETIME_HEADER_LEFT_BRACKET: Mutex<String> = 
+        Mutex::new("[".to_string());
+}
+lazy_static! {
+    pub static ref DATETIME_HEADER_RIGHT_BRACKET: Mutex<String> = 
+        Mutex::new("[".to_string());
+}
 
-fn get_header(log_type: &LogType) -> String {
+lazy_static! {
+    pub static ref SHOW_DATETIME: Mutex<bool> = Mutex::new(false);
+}
+
+fn get_datetime_header() -> String {
+    let time = Local::now();
+    let right = DATETIME_HEADER_RIGHT_BRACKET.lock().unwrap(); 
+    let left = DATETIME_HEADER_LEFT_BRACKET.lock().unwrap(); 
+    return format!("{left}{time}{right}");
+}
+
+pub fn get_header(log_type: &LogType) -> String {
     match log_type {
         LogType::Debug => { DEBUG_HEADER.lock().unwrap().to_string() }
         LogType::Info => { INFO_HEADER.lock().unwrap().to_string() }
@@ -60,7 +80,15 @@ fn get_color(log_type: &LogType) -> Color {
 }
 
 pub fn format_log(log: &LogStruct) -> String {
-    return format!("{} {}\n",
-        colorify(&get_header(&log.log_type), get_color(&log.log_type)),
-        log.message);
+    if !*SHOW_DATETIME.lock().unwrap() {
+        return format!("{} {}\n",
+            colorify(&get_header(&log.log_type), get_color(&log.log_type)),
+            log.message);
+    }
+    else {
+        return format!("{} {} {}\n",
+            colorify(&get_header(&log.log_type), get_color(&log.log_type)),
+            get_datetime_header(),
+            log.message);
+    }
 }
