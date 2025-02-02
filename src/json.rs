@@ -5,6 +5,7 @@ use std::fs::File;
 use std::io::Write;
 
 impl Logger {
+    /// Creates a `Logger` instance from a template file.
     pub fn from_template(path: &str) -> Logger {
         let file = fs::read_to_string(path)
             .expect("Unable to read file!");
@@ -14,6 +15,7 @@ impl Logger {
         return logger;
     }
 
+    /// Saves a `Logger` template file.
     pub fn save_template(&self, path: &str) {
         let json = serde_json::to_string_pretty(self)
             .expect("Failed to serialize");

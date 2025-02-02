@@ -13,7 +13,7 @@ static WHITE: &str = "\x1b[37m";
 static YELLOW: &str = "\x1b[33m";
 static RESET: &str = "\x1b[0m";
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub enum Color
 {
     None = 0,
