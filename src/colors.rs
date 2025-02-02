@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::sync::Mutex;
 use lazy_static::lazy_static;
 
 static BLACK: &str = "\x1b[30m";
@@ -16,6 +15,7 @@ static RESET: &str = "\x1b[0m";
 #[derive(Clone)]
 pub enum Color
 {
+    None = 0,
     Black = 1,
     Blue = 2,
     Cyan = 3,
@@ -44,26 +44,12 @@ lazy_static! {
     };
 }
 
-lazy_static! {
-    pub static ref USE_COLOR: Mutex<bool> = Mutex::new(true);
-}
-
-fn get_color_code(color: Color) -> String {
+pub fn get_color_code(color: Color) -> String {
     let key = color as i32;
     if COLOR_MAP.contains_key(&key) {
         return COLOR_MAP[&key].to_string();
     }
     else {
         return RESET.to_string();
-    }
-}
-
-pub fn colorify(text: &str, color: Color) -> String {
-    let use_color = USE_COLOR.lock().unwrap();
-    if *use_color {
-        return get_color_code(color) + text + RESET;
-    }
-    else {
-        return text.to_string();
     }
 }
