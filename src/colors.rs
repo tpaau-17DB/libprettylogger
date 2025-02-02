@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use serde::{Serialize, Deserialize};
 use lazy_static::lazy_static;
 
 static BLACK: &str = "\x1b[30m";
@@ -12,7 +13,7 @@ static WHITE: &str = "\x1b[37m";
 static YELLOW: &str = "\x1b[33m";
 static RESET: &str = "\x1b[0m";
 
-#[derive(Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum Color
 {
     None = 0,

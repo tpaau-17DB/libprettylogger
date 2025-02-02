@@ -3,6 +3,7 @@ use crate::{
     colors::*,
 };
 use chrono::prelude::*;
+use serde::{Serialize, Deserialize};
 
 pub enum LogType {
     Debug = 0,
@@ -18,6 +19,7 @@ pub struct LogStruct<'a> {
 }
 
 /// AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Logger {
     pub verbosity: Verbosity,
     pub filtering_enabled: bool,
@@ -225,6 +227,16 @@ impl Logger {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::{
+        env,
+        io,
+        path::PathBuf,
+    };
+
+    fn get_current_dir() -> io::Result<PathBuf> {
+        let current_dir = env::current_dir()?;
+        Ok(current_dir)
+    }
 
     #[test]
     fn test_log_filtering() {
@@ -341,6 +353,26 @@ mod tests {
         }
         if logger.set_datetime_header_format("[]") == 0 {
             panic!("Format invalid, but no error thrown!");
+        }
+    }
+
+    #[test]
+    fn test_templates() {
+        let file_name = "/templates/test.json";
+        match get_current_dir() {
+            Ok(current_dir) => {
+                let path = current_dir
+                    .to_str()
+                    .map(|s| s.to_string() + file_name)
+                    .unwrap_or_else(|| String::from(file_name));
+
+                let mut _l = Logger::default();
+                _l.save_template(&path);
+                _l = Logger::from_template(&path);
+            }
+            Err(e) => {
+                eprintln!("Error getting current directory: {}", e);
+            }
         }
     }
 }

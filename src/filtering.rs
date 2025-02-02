@@ -1,6 +1,7 @@
 use std::fmt;
+use serde::{Serialize, Deserialize};
 
-#[derive(Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum Verbosity {
     All = 0,
     Standard = 1,

@@ -1,0 +1,18 @@
+{
+  "verbosity": "Standard",
+  "filtering_enabled": true,
+  "log_color_enabled": true,
+  "debug_color": "Blue",
+  "info_color": "Green",
+  "warning_color": "Yellow",
+  "error_color": "Red",
+  "fatal_color": "Magenta",
+  "debug_header": "[DBG]",
+  "info_header": "[INF]",
+  "warning_header": "[WAR]",
+  "error_header": "[ERR]",
+  "fatal_header": "[FATAL]",
+  "show_datetime": false,
+  "datetime_header_left": "[",
+  "datetime_header_right": "]"
+}
