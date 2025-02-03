@@ -1,13 +1,14 @@
 use crate::logging::*;
-use std::fs;
 use serde_json;
-use std::fs::File;
-use std::io::Write;
+use std::{
+    fs::*,
+    io::Write,
+};
 
 impl Logger {
-    /// Creates a `Logger` instance from a template file.
+    /// # Creates a `Logger` instance from a template file.
     pub fn from_template(path: &str) -> Logger {
-        let file = fs::read_to_string(path)
+        let file = read_to_string(path)
             .expect("Unable to read file!");
         let logger: Logger = serde_json::from_str(&file)
             .expect("Invalid JSON file!");
@@ -15,7 +16,7 @@ impl Logger {
         return logger;
     }
 
-    /// Saves a `Logger` template file.
+    /// # Saves a `Logger` template file.
     pub fn save_template(&self, path: &str) {
         let json = serde_json::to_string_pretty(self)
             .expect("Failed to serialize");

@@ -16,23 +16,23 @@ pub enum LogType {
 pub struct LogStruct<'a> {
     pub message: &'a str,
     pub log_type: LogType,
+    pub datetime_header: &'a str,
 }
 
-/// A logger struct used to print logs.
+/// # A logger struct used for printing logs.
 ///
-/// You can create a `Logger` struct with default configuration:
-/// `Logger::default()`
+/// You can create a `Logger` instance with the default configuration using:
+/// `Logger::default()`.
 ///
-/// You can also initialize `Logger` instance from a JSON template file, like so:
-/// `Logger::from_template("/path/to/template.json")`
+/// Alternatively, initialize a `Logger` instance from a JSON template file:
+/// `Logger::from_template("/path/to/template.json")`.
 ///
-/// After creating a fresh `Logger`, you can use one of the logging methods
-/// to print messages:
-/// * `logger.debug("debug");`
-/// * `logger.info("info);`
-/// * `logger.warning("warning");`
-/// * `logger.error("error");`
-/// * `logger.fatal("fatal error");`
+/// Once you have a `Logger` instance, you can start printing logs:
+/// * `logger.debug("debug message");`
+/// * `logger.info("informational message");`
+/// * `logger.warning("warning message");`
+/// * `logger.error("error message");`
+/// * `logger.fatal("fatal error message");`
 #[derive(Serialize, Deserialize, PartialEq)]
 pub struct Logger {
     pub(crate) verbosity: Verbosity,
@@ -53,6 +53,7 @@ pub struct Logger {
     pub(crate) fatal_header: String,
 
     pub(crate) show_datetime: bool,
+    pub(crate) datetime_format: String,
     pub(crate) datetime_header_left: String,
     pub(crate) datetime_header_right: String,
 }
@@ -64,16 +65,29 @@ impl Logger {
         print!("{}", self.format_log(log));
     }
 
+    fn format_log(&self, log: &LogStruct) -> String {
+        return format!("{} {} {}\n",
+            self.colorify(&self.get_header(&log.log_type),
+                self.get_color(&log.log_type)),
+            log.datetime_header,
+            log.message);
+    }
+
     fn filter_log(&self, log_type: LogType) -> bool {
         return !self.filtering_enabled
             || ((log_type as i32) < self.verbosity.clone() as i32)
     }
 
     fn get_datetime_header(&self) -> String {
-        let time = Local::now();
-        let right = self.datetime_header_left.clone();
-        let left = self.datetime_header_right.clone();
-        return format!("{left}{time}{right}");
+        if self.show_datetime {
+            let time = Local::now().format(&self.datetime_format);
+            let right = self.datetime_header_left.clone();
+            let left = self.datetime_header_right.clone();
+            return format!("{left}{time}{right}");
+        }
+        else {
+            return String::from("");
+        }
     }
 
     fn get_header(&self, log_type: &LogType) -> String {
@@ -96,25 +110,9 @@ impl Logger {
         }
     }
 
-    fn format_log(&self, log: &LogStruct) -> String {
-        if !self.show_datetime {
-            return format!("{} {}\n",
-                self.colorify(&self.get_header(&log.log_type),
-                    self.get_color(&log.log_type)),
-                log.message);
-        }
-        else {
-            return format!("{} {} {}\n",
-                self.colorify(&self.get_header(&log.log_type),
-                    self.get_color(&log.log_type)),
-                self.get_datetime_header(),
-                log.message);
-        }
-    }
-
     fn colorify(&self, text: &str, color: Color) -> String {
         if self.log_color_enabled {
-            return get_color_code(color) + text + &get_color_code(Color::None);
+            return get_color_code(color) + text + &RESET;
         }
         else {
             return text.to_string();
@@ -124,7 +122,7 @@ impl Logger {
 
     // CONSTRUCTORS
 
-    /// Returns a `Logger` with default configuration applied.
+    /// # Returns a `Logger` with default configuration applied.
     pub fn default() -> Self {
         Logger {
             verbosity: Verbosity::Standard,
@@ -145,6 +143,7 @@ impl Logger {
             fatal_header: "[FATAL]".to_string(),
 
             show_datetime: false,
+            datetime_format: String::from("%Y-%m-%d %H:%M:%S"),
             datetime_header_left: "[".to_string(),
             datetime_header_right: "]".to_string(),
         }
@@ -153,7 +152,7 @@ impl Logger {
 
     // PUBLIC METHODS
 
-    /// Prints a **debug log**.
+    /// # Prints a **debug log**.
     pub fn debug(self, message: &str) {
         if self.filter_log(LogType::Debug)
         {
@@ -162,20 +161,22 @@ impl Logger {
         let log = LogStruct {
             message,
             log_type: LogType::Debug,
+            datetime_header: &self.get_datetime_header(),
         };
         self.print_log(&log);
     }
 
-    /// Prints a **debug log**, bypasses filtering.
+    /// # Prints a **debug log**, bypasses filtering.
     pub fn debug_no_filtering(self, message: &str) {
         let log = LogStruct {
             message,
             log_type: LogType::Debug,
+            datetime_header: &self.get_datetime_header(),
         };
         self.print_log(&log);
     }
 
-    /// Prints an **informative log**.
+    /// # Prints **info log**.
     pub fn info(self, message: &str) {
         if self.filter_log(LogType::Info)
         {
@@ -184,20 +185,22 @@ impl Logger {
         let log = LogStruct {
             message,
             log_type: LogType::Info,
+            datetime_header: &self.get_datetime_header(),
         };
         self.print_log(&log);
     }
 
-    /// Prints an **informative log**, bypasses filtering.
+    /// # Prints **info log**, bypasses filtering.
     pub fn info_no_filtering(self, message: &str) {
         let log = LogStruct {
             message,
             log_type: LogType::Info,
+            datetime_header: &self.get_datetime_header(),
         };
         self.print_log(&log);
     }
 
-    /// Prints a **warning**.
+    /// # Prints a **warning**.
     pub fn warning(self, message: &str) {
         if self.filter_log(LogType::Warning)
         {
@@ -206,35 +209,37 @@ impl Logger {
         let log = LogStruct {
             message,
             log_type: LogType::Warning,
+            datetime_header: &self.get_datetime_header(),
         };
         self.print_log(&log);
     }
 
-    /// Prints a **warning**, bypasses filtering.
+    /// # Prints a **warning**, bypasses filtering.
     pub fn warning_no_filtering(self, message: &str) {
         let log = LogStruct {
             message,
             log_type: LogType::Warning,
+            datetime_header: &self.get_datetime_header(),
         };
         self.print_log(&log);
     }
 
-    /// Prints an **error** (errors cannot be suppressed).
+    /// # Prints an **error** (errors cannot be suppressed).
     pub fn error(self, message: &str) {
-        // error messages cant get suppressed
         let log = LogStruct {
             message,
             log_type: LogType::Error,
+            datetime_header: &self.get_datetime_header(),
         };
         self.print_log(&log);
     }
 
-    /// Prints a **fatal error** (errors cannot be suppressed).
+    /// # Prints a **fatal error** (errors cannot be suppressed).
     pub fn fatal(self, message: &str) {
-        // error messages cant get suppressed
         let log = LogStruct {
             message,
             log_type: LogType::FatalError,
+            datetime_header: &self.get_datetime_header(),
         };
         self.print_log(&log);
     }
@@ -244,9 +249,7 @@ impl Logger {
 mod tests {
     use super::*;
     use std::{
-        env,
-        io,
-        path::PathBuf,
+        env, io, path::PathBuf
     };
 
     fn get_current_dir() -> io::Result<PathBuf> {

@@ -13,6 +13,7 @@
   "error_header": "[ERR]",
   "fatal_header": "[FATAL]",
   "show_datetime": false,
+  "datetime_format": "%Y-%m-%d %H:%M:%S",
   "datetime_header_left": "[",
   "datetime_header_right": "]"
 }

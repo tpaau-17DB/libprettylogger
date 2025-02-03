@@ -8,7 +8,7 @@ use crate::{
 impl Logger {
     // FILTERING
 
-    /// Lets you set **verbosity** to desired level
+    /// # Lets you set `verbosity` to desired level
     /// * `All`        -> Don't filter any logs
     /// * `Standard`   -> Just filter debug logs
     /// * `Quiet`      -> Only let warnings and errors to be displayed
@@ -17,7 +17,7 @@ impl Logger {
         self.verbosity = verbosity;
     }
 
-    /// Lets you toggle log filtering
+    /// # Toggles log filtering.
     /// * **true**  -> logs will get filtered based on verbosity
     /// * **false** -> log filtering will be disabled globally
     pub fn toggle_log_filtering(&mut self, enabled: bool) {
@@ -27,74 +27,74 @@ impl Logger {
 
     // FORMATTING && COLORS
 
-    /// Toggles colored log headers
+    /// # Toggles colored log headers.
     /// * `true`  -> Log headers will have colors 
     /// * `false` -> No colors :(
     pub fn toggle_log_color(&mut self, enabled: bool) {
         self.log_color_enabled = enabled;
     }
 
-    /// Sets **debug log header** color
+    /// # Sets **debug log header** color.
     pub fn set_debug_color(&mut self, color: Color) {
         self.debug_color = color;
     }
 
-    /// Sets **info log header** color
+    /// # Sets **info log header** color.
     pub fn set_info_color(&mut self, color: Color) {
         self.info_color = color;
     }
 
-    /// Sets **warning header** color
+    /// # Sets **warning header** color.
     pub fn set_warning_color(&mut self, color: Color) {
         self. warning_color = color;
     }
 
-    /// Sets **error header** color
+    /// # Sets **error header** color.
     pub fn set_error_color(&mut self, color: Color) {
         self.error_color = color;
     }
 
-    /// Sets **fatal error header** color
+    /// # Sets **fatal error header** color.
     pub fn set_fatal_color(&mut self, color: Color) {
         self.fatal_color = color;
     }
 
-    /// Sets **debug log header** format
+    /// # Sets **debug log header** format.
     pub fn set_debug_header(&mut self, format: &str) {
         self.debug_header = format.to_string();
     }
 
-    /// Sets **info log header** format
+    /// # Sets **info log header** format.
     pub fn set_info_header(&mut self, format: &str) {
         self.info_header = format.to_string();
     }
 
-    /// Sets **warning header** format
+    /// # Sets **warning header** format.
     pub fn set_warning_header(&mut self, format: &str) {
         self.warning_header = format.to_string();
     }
 
-    /// Sets **error header** format
+    /// # Sets **error header** format.
     pub fn set_error_header(&mut self, format: &str) {
         self.error_header = format.to_string();
     }
 
-    /// Sets **fatal error header** format
+    /// # Sets **fatal error header** format.
     pub fn set_fatal_header(&mut self, format: &str) {
         self.fatal_header = format.to_string();
     }
 
-    /// # Sets datetime header format
+    /// # Sets datetime header format.
     ///
     /// Note that this function sets the **header format** alone, 
     /// not the **datetime format**!
     ///
-    /// Format must contain the `{}` string to tell l where
-    /// to put datetime string.
+    /// Format must contain the `{}` string, so logger knows where
+    /// to put the datetime string.
     ///
     /// For example, if you set the format to `<d>{}</d>`, 
     /// a datetime header will be displayed like this:
-    /// **<d>YYYY:MM:DD:HH:mm</d>**
+    /// **<d>2024-5-12 14:56</d>**
     ///
     /// # Return values:
     /// * `0` -> Success
@@ -133,7 +133,15 @@ impl Logger {
         return 0;
     }
 
-    /// Toggles datetime header for every log
+    /// # Sets datetime format.
+    ///
+    /// Note that this function sets the **datetime format** alone, not the
+    /// **datetime header format**!
+    pub fn set_datetime_format(&mut self, format: &str) {
+        self.datetime_format = String::from(format);
+    }
+
+    /// # Toggles datetime header for every log.
     /// * `true`  -> Every log will have a datetime header
     /// * `false` -> No datetime headers
     pub fn toggle_show_datetime(&mut self, enabled: bool) {

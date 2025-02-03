@@ -11,7 +11,7 @@ static MAGENTA: &str = "\x1b[35m";
 static RED: &str = "\x1b[31m";
 static WHITE: &str = "\x1b[37m";
 static YELLOW: &str = "\x1b[33m";
-static RESET: &str = "\x1b[0m";
+pub(crate) static RESET: &str = "\x1b[0m";
 
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub enum Color
@@ -31,7 +31,7 @@ pub enum Color
 lazy_static! {
     static ref COLOR_MAP: HashMap<i32, &'static str> =  {
         let mut m = HashMap::new();
-        m.insert(0, RESET);
+        m.insert(Color::None as i32, "");
         m.insert(Color::Black as i32, BLACK);
         m.insert(Color::Blue as i32, BLUE);
         m.insert(Color::Cyan as i32, CYAN);
@@ -41,6 +41,7 @@ lazy_static! {
         m.insert(Color::Red as i32, RED);
         m.insert(Color::White as i32, WHITE);
         m.insert(Color::Yellow as i32, YELLOW);
+        m.insert(Color::None as i32, "");
         return m;
     };
 }
