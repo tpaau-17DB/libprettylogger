@@ -57,6 +57,10 @@ impl Logger {
         self.log_color_enabled = enabled;
     }
 
+    pub fn toggle_auto_spacing(&mut self, enabled: bool) {
+        self.auto_spacing = enabled;
+    }
+
     /// Sets **debug log header** color.
     pub fn set_debug_color(&mut self, color: Color) {
         self.debug_color = color;
@@ -161,7 +165,25 @@ impl Logger {
                 return Ok(());
             }
             Err(_) => { Err(()) }
+        }
+    }
 
+    /// Sets log format.
+    ///
+    /// Format must contain the `{}` string, so logger knows where
+    /// to put the log.
+    ///
+    /// For example, if you set the format to `<l>{}</l>`,
+    /// a log will be displayed like this:
+    /// **<l>[LOG HEADER] [YYYY:MM:DD] Log message</l>**
+    pub fn set_log_format(&mut self, format: &str) -> Result<(), ()> {
+        match format_brackets(format) {
+            Ok(value) => {
+                self.log_left = value.0;
+                self.log_right = value.1;
+                return Ok(());
+            }
+            Err(_) => { Err(()) }
         }
     }
 }
@@ -175,8 +197,11 @@ mod tests {
         if format_brackets("{]]") != Err(()) {
             panic!("format_brackets should throw an error!");
         }
+        if format_brackets("aaaaaaaa") != Err(()) {
+            panic!("format_brackets should throw an error!");
+        }
         if format_brackets("{}") == Err(()) {
-            panic!("format_brackets should not throw an error!");
+            panic!("format_brackets shouldn't throw an error!");
         }
     }
 }
