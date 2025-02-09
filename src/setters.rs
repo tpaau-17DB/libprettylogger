@@ -1,8 +1,7 @@
 use crate::{
-    filtering::*,
-    colors::*,
-    logging::*,
+    colors::*, fileio::*, filtering::*, logging::*
 };
+use std::io::{Error, ErrorKind};
 
 fn format_brackets(format: &str) -> Result<(String, String), ()> {
     let mut open_index = None;
@@ -186,9 +185,72 @@ impl Logger {
             Err(_) => { Err(()) }
         }
     }
+
+    /// Toggles file logging.
+    ///
+    /// Before enabling file logging, ensure that the log file path is set.
+    /// This method will check if the specified log file is writable before 
+    /// enabling file logging, to prevent errors related to file access.
+    ///
+    /// ```ignore
+    /// # use prettylogger::logging::Logger;
+    /// # let mut l = Logger::default();
+    /// // We need to set log file path first:
+    /// l.set_log_file_path("/path/to/file.log"); // a valid file path
+    /// l.toggle_file_logging(true); // Then we can enable file logging
+    /// ```
+    pub fn toggle_file_logging(&mut self, enabled: bool) -> Result<(), Error> {
+        if !enabled {
+            self.file_logging_enabled = false;
+            Ok(())
+        }
+        else {
+            if is_file_writable(&self.log_file_path) {
+                self.file_logging_enabled = true;
+                Ok(())
+            }
+            else {
+                self.error(&format!("Failed to open file '{}' for writing!",
+                    self.log_file_path));
+                Err(Error::new(ErrorKind::PermissionDenied,
+                    "File is not writable!"))
+            }
+        }
+    }
+
+    /// Sets log file path.
+    pub fn set_log_file_path(&mut self, path: &str) -> Result<(), Error> {
+        if is_file_writable(path) {
+            self.log_file_path = path.to_string();
+            overwrite_file(path, "")
+            .map_err(|e| {
+                    self.error(&format!("Failed to open file '{}' for writing!",
+                        self.log_file_path));
+                    Error::new(ErrorKind::Other,
+                        format!("Failed to overwrite file: {}", e))
+                })?;
+            Ok(())
+        } 
+        else {
+            self.error(&format!("Failed to open file '{}' for writing!",
+                self.log_file_path));
+            Err(Error::new(ErrorKind::PermissionDenied,
+                "File is not writable!"))
+        }
+    }
+
+    /// Sets the maximum size of a log buffer.
+    ///
+    /// When log buffer exceeds this value, it will be flushed automatically.
+    ///
+    /// When set to `0`, log buffer won't be flushed automatically.
+    pub fn set_max_log_buffer_size(&mut self, size: usize) {
+        self.log_buffer_max_size = size;
+    }
 }
 
 mod tests {
+    // linter bug?
     #[allow(unused_imports)]
     use super::*; 
 

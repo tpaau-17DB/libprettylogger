@@ -1,10 +1,10 @@
 use crate::{
-    filtering::*,
-    colors::*,
+    colors::*, fileio::append_to_file, filtering::*
 };
-use chrono::prelude::*;
+use chrono::{Local, DateTime};
 use serde::{Serialize, Deserialize};
 
+#[derive(Clone)]
 pub enum LogType {
     Debug = 0,
     Info = 1,
@@ -13,10 +13,11 @@ pub enum LogType {
     FatalError = 4,
 }
 
-pub struct LogStruct<'a> {
-    pub message: &'a str,
+#[derive(Clone)]
+pub struct LogStruct {
+    pub message: String,
     pub log_type: LogType,
-    pub datetime_header: &'a str,
+    pub datetime: DateTime<Local>,
 }
 
 /// A logger struct used for printing logs.
@@ -35,14 +36,14 @@ pub struct LogStruct<'a> {
 /// # Once you have a `Logger` instance, you can start printing logs:
 /// ```
 /// # use prettylogger::logging::Logger;
-/// # let l = Logger::default();
+/// # let mut l = Logger::default();
 /// l.debug("debug message");
-/// l.info("informational message");
+/// l.info("info message");
 /// l.warning("warning message");
 /// l.error("error message");
 /// l.fatal("fatal error message");
 /// ```
-#[derive(Serialize, Deserialize, PartialEq)]
+#[derive(Serialize, Deserialize)]
 pub struct Logger {
     pub(crate) verbosity: Verbosity,
     pub(crate) filtering_enabled: bool,
@@ -72,13 +73,95 @@ pub struct Logger {
     pub(crate) datetime_format: String,
     pub(crate) datetime_header_left: String,
     pub(crate) datetime_header_right: String,
+
+    pub(crate) file_logging_enabled: bool,
+    pub(crate) log_file_path: String,
+
+    pub(crate) log_buffer_max_size: usize,
+    #[serde(skip)]
+    pub(crate) log_buffer: Vec<LogStruct>,
+}
+
+impl Drop for Logger {
+    fn drop(&mut self) {
+        let _ = self.flush();
+    }
+}
+
+impl PartialEq<Logger> for Logger {
+    fn eq(&self, other: &Logger) -> bool {
+        self.verbosity == other.verbosity &&
+        self.filtering_enabled == other.filtering_enabled &&
+        self.auto_spacing == other.auto_spacing &&
+
+        self.log_color_enabled == other.log_color_enabled &&
+
+        self.debug_color == other.debug_color &&
+        self.info_color == other.info_color &&
+        self.warning_color == other.warning_color &&
+        self.error_color == other.error_color &&
+        self.fatal_color == other.fatal_color &&
+
+        self.debug_header == other.debug_header &&
+        self.info_header == other.info_header &&
+        self.warning_header == other.warning_header &&
+        self.error_header == other.error_header &&
+        self.fatal_header == other.fatal_header &&
+
+        self.message_left == other.message_left &&
+        self.message_right == other.message_right &&
+
+        self.log_left == other.log_left &&
+        self.log_right == other.log_right &&
+
+        self.show_datetime == other.show_datetime &&
+        self.datetime_format == other.datetime_format &&
+        self.datetime_header_left == other.datetime_header_left &&
+        self.datetime_header_right == other.datetime_header_right &&
+
+        self.file_logging_enabled == other.file_logging_enabled &&
+        self.log_file_path == other.log_file_path
+    }
 }
 
 impl Logger {
     // INTERNAL METHODS
 
-    pub(crate) fn print_log(&self, log: &LogStruct) {
-        println!("{}", self.format_log(log));
+    pub(crate) fn print_log(&mut self, log: &LogStruct) {
+        let log_str = self.format_log(log);
+
+        if self.file_logging_enabled {
+            self.log_buffer.push(log.clone());
+
+            if self.log_buffer.len() >= self.log_buffer_max_size {
+                let result = self.flush_file_log_buffer();
+
+                match result {
+                    Err(()) => { self.file_logging_enabled = false },
+                    _ => {},
+                }
+            }
+        }
+
+        print!("{}", log_str);
+    }
+
+    pub(crate) fn flush_file_log_buffer(&mut self) -> Result<(), ()> {
+        let mut buf = String::from("");
+
+        for log in &self.log_buffer {
+            buf += &self.format_log(&log);
+        }
+
+        self.log_buffer = Vec::new();
+
+        let result = append_to_file(&self.log_file_path, &buf);
+
+        match result {
+            Ok(_) => Ok(()),
+            Err(_) => Err(()),
+        }
+
     }
 
     pub(crate) fn format_log(&self, log: &LogStruct) -> String {
@@ -87,29 +170,29 @@ impl Logger {
 
         if self.auto_spacing {
             if self.show_datetime {
-                return format!("{} {} {} {} {}",
+                return format!("{} {} {} {} {}\n",
                     self.log_left.clone(),
                     self.get_header(&log.log_type),
-                    log.datetime_header,
-                    &message,
+                    self.get_datetime_header(&log.datetime),
+                    message.to_string(),
                     self.log_right,
                 );
             }
             else {
-                return format!("{} {} {}{} {}",
+                return format!("{} {} {}{} {}\n",
                     self.log_left.clone(),
                     self.get_header(&log.log_type),
-                    log.datetime_header,
-                    &message,
+                    self.get_datetime_header(&log.datetime),
+                    message.to_string(),
                     self.log_right,
                 );
             }
         }
-        return format!("{}{}{}{}{}",
+        return format!("{}{}{}{}{}\n",
             self.log_left.clone(),
             self.get_header(&log.log_type),
-            log.datetime_header,
-            &message,
+            self.get_datetime_header(&log.datetime),
+            message.to_string(),
             self.log_right,
         );
     }
@@ -119,17 +202,22 @@ impl Logger {
             || ((log_type as i32) < self.verbosity.clone() as i32)
     }
 
-    pub(crate) fn get_datetime_header(&self) -> String {
+    pub(crate) fn get_datetime_header(&self,
+    datetime: &DateTime<Local>) -> String {
         if self.show_datetime {
-            let time = &Local::now().format(&self.datetime_format);
-            let right = &self.datetime_header_left;
-            let left = &self.datetime_header_right;
+            let datetime_formatted = datetime.format(&self.datetime_format);
+            let left = &self.datetime_header_left;
+            let right = &self.datetime_header_right;
             // and here is the missing space
-            return format!("{left}{time}{right}");
+            return format!("{left}{datetime_formatted}{right}");
         }
         else {
             return String::from("");
         }
+    }
+
+    pub(crate) fn get_datetime(&self) -> DateTime<Local> {
+        return Local::now();
     }
 
     pub(crate) fn get_header(&self, log_type: &LogType) -> String {
@@ -205,100 +293,113 @@ impl Logger {
             datetime_format: String::from("%Y-%m-%d %H:%M:%S"),
             datetime_header_left: "[".to_string(),
             datetime_header_right: "]".to_string(),
+
+            file_logging_enabled: false,
+            log_file_path: "".to_string(),
+
+            log_buffer_max_size: 128,
+            log_buffer: Vec::new(),
         }
     }
 
 
     // PUBLIC METHODS
 
+    pub fn flush(&mut self) -> Result<(), ()> {
+        if self.file_logging_enabled {
+            self.flush_file_log_buffer()?;
+        }
+        return Ok(());
+    }
+
     /// Prints a **debug log**.
-    pub fn debug(&self, message: &str) {
+    pub fn debug(&mut self, message: &str) {
         if self.filter_log(LogType::Debug)
         {
             return;
         }
         let log = LogStruct {
-            message,
+            message: message.to_string(),
             log_type: LogType::Debug,
-            datetime_header: &self.get_datetime_header(),
+            datetime: self.get_datetime(),
         };
         self.print_log(&log);
     }
 
     /// Prints a **debug log**, bypasses filtering.
-    pub fn debug_no_filtering(&self, message: &str) {
+    pub fn debug_no_filtering(&mut self, message: &str) {
         let log = LogStruct {
-            message,
+            message: message.to_string(),
             log_type: LogType::Debug,
-            datetime_header: &self.get_datetime_header(),
+            datetime: self.get_datetime(),
         };
         self.print_log(&log);
     }
 
     /// Prints **info log**.
-    pub fn info(&self, message: &str) {
+    pub fn info(&mut self, message: &str) {
         if self.filter_log(LogType::Info)
         {
             return;
         }
         let log = LogStruct {
-            message,
+            message: message.to_string(),
             log_type: LogType::Info,
-            datetime_header: &self.get_datetime_header(),
+            datetime: self.get_datetime(),
         };
         self.print_log(&log);
     }
 
     /// Prints **info log**, bypasses filtering.
-    pub fn info_no_filtering(&self, message: &str) {
+    pub fn info_no_filtering(&mut self, message: &str) {
         let log = LogStruct {
-            message,
+            message: message.to_string(),
             log_type: LogType::Info,
-            datetime_header: &self.get_datetime_header(),
+            datetime: self.get_datetime(),
         };
         self.print_log(&log);
     }
 
     /// Prints a **warning**.
-    pub fn warning(&self, message: &str) {
+    pub fn warning(&mut self, message: &str) {
         if self.filter_log(LogType::Warning)
         {
             return;
         }
         let log = LogStruct {
-            message,
+            message: message.to_string(),
             log_type: LogType::Warning,
-            datetime_header: &self.get_datetime_header(),
+            datetime: self.get_datetime(),
         };
         self.print_log(&log);
     }
 
     /// Prints a **warning**, bypasses filtering.
-    pub fn warning_no_filtering(&self, message: &str) {
+    pub fn warning_no_filtering(&mut self, message: &str) {
         let log = LogStruct {
-            message,
+            message: message.to_string(),
             log_type: LogType::Warning,
-            datetime_header: &self.get_datetime_header(),
+            datetime: self.get_datetime(),
         };
         self.print_log(&log);
     }
 
     /// Prints an **error** (errors cannot be suppressed).
-    pub fn error(&self, message: &str) {
+    pub fn error(&mut self, message: &str) {
         let log = LogStruct {
-            message,
+            message: message.to_string(),
             log_type: LogType::Error,
-            datetime_header: &self.get_datetime_header(),
+            datetime: self.get_datetime(),
         };
         self.print_log(&log);
     }
 
     /// Prints a **fatal error** (errors cannot be suppressed).
-    pub fn fatal(&self, message: &str) {
+    pub fn fatal(&mut self, message: &str) {
         let log = LogStruct {
-            message,
+            message: message.to_string(),
             log_type: LogType::FatalError,
-            datetime_header: &self.get_datetime_header(),
+            datetime: self.get_datetime(),
         };
         self.print_log(&log);
     }
@@ -480,11 +581,11 @@ mod tests {
         let _ = l.set_message_format("<m>{}</m>");
 
         let mut logstruct = LogStruct {
-            datetime_header: "<d>aaa</d>",
+            datetime: l.get_datetime(),
             log_type: LogType::Debug,
-            message: "aaa",
+            message: "aaa".to_string(),
         };
-        let mut comp = format!("<l> {} <d>aaa</d> <m>aaa</m> </l>",
+        let mut comp = format!("<l> {} <d>aaa</d> <m>aaa</m> </l>\n",
             l.colorify("<h>d</h>", l.get_color(&LogType::Debug))
         );
 
@@ -495,7 +596,7 @@ mod tests {
         }
 
         logstruct.log_type = LogType::Info;
-        comp = format!("<l> {} <d>aaa</d> <m>aaa</m> </l>",
+        comp = format!("<l> {} <d>aaa</d> <m>aaa</m> </l>\n",
             l.colorify("<h>i</h>", l.get_color(&LogType::Info))
         );
         if l.format_log(&logstruct) != comp {
@@ -505,7 +606,7 @@ mod tests {
         }
 
         logstruct.log_type = LogType::Warning;
-        comp = format!("<l> {} <d>aaa</d> <m>aaa</m> </l>",
+        comp = format!("<l> {} <d>aaa</d> <m>aaa</m> </l>\n",
             l.colorify("<h>W</h>", l.get_color(&LogType::Warning))
         );
         if l.format_log(&logstruct) != comp {
@@ -515,7 +616,7 @@ mod tests {
         }
 
         logstruct.log_type = LogType::Error;
-        comp = format!("<l> {} <d>aaa</d> <m>aaa</m> </l>",
+        comp = format!("<l> {} <d>aaa</d> <m>aaa</m> </l>\n",
             l.colorify("<h>E</h>", l.get_color(&LogType::Error))
         );
         if l.format_log(&logstruct) != comp {
@@ -525,13 +626,52 @@ mod tests {
         }
 
         logstruct.log_type = LogType::FatalError;
-        comp = format!("<l> {} <d>aaa</d> <m>aaa</m> </l>",
+        comp = format!("<l> {} <d>aaa</d> <m>aaa</m> </l>\n",
             l.colorify("<h>!</h>", l.get_color(&LogType::FatalError))
         );
         if l.format_log(&logstruct) != comp {
             panic!("Bad log formatting, expected \n'{}', got \n'{}'",
                 comp,
                 l.format_log(&logstruct));
+        }
+    }
+
+    #[test]
+    fn test_file_logging() {
+        let file_name = "/output.log";
+        let max_size = 16;
+        let mut l = Logger::default();
+        l.set_max_log_buffer_size(max_size);
+
+        let current_dir = get_current_dir();
+
+        match current_dir {
+            Ok(current_dir) => {
+                let path = current_dir
+                    .to_str()
+                    .map(|s| s.to_string() + file_name)
+                    .unwrap_or_else(|| String::from(file_name));
+
+                let result = l.set_log_file_path(&path);
+
+                match result {
+                    Ok(()) => {
+                        let _ = l.toggle_file_logging(true);
+                        let mut i = 0;
+                        loop {
+                            l.fatal(&format!("i: {}", i));
+
+                            if i >= max_size {
+                                break;
+                            } 
+                            i += 1;
+                        }
+                    },
+                    Err(_) => { panic!("Failed to set the log file path to
+                        '{}'!", path) },
+                }
+            },
+            Err(_) => { panic!("Failed to get current directory!") },
         }
     }
 }

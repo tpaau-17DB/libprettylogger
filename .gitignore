@@ -32,3 +32,4 @@ Cargo.lock
 
 # Test files
 /templates/test.json
+output.log
