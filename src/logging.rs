@@ -134,34 +134,11 @@ impl Logger {
             self.log_buffer.push(log.clone());
 
             if self.log_buffer.len() >= self.log_buffer_max_size {
-                let result = self.flush_file_log_buffer();
-
-                match result {
-                    Err(()) => { self.file_logging_enabled = false },
-                    _ => {},
-                }
+                let _ = self.flush_file_log_buffer();
             }
         }
 
         print!("{}", log_str);
-    }
-
-    pub(crate) fn flush_file_log_buffer(&mut self) -> Result<(), ()> {
-        let mut buf = String::from("");
-
-        for log in &self.log_buffer {
-            buf += &self.format_log(&log);
-        }
-
-        self.log_buffer = Vec::new();
-
-        let result = append_to_file(&self.log_file_path, &buf);
-
-        match result {
-            Ok(_) => Ok(()),
-            Err(_) => Err(()),
-        }
-
     }
 
     pub(crate) fn format_log(&self, log: &LogStruct) -> String {
@@ -259,10 +236,29 @@ impl Logger {
         }
     }
 
+    pub(crate) fn flush_file_log_buffer(&mut self) -> Result<(), ()> {
+        let mut buf = String::from("");
+
+        for log in &self.log_buffer {
+            buf += &self.format_log(&log);
+        }
+
+        self.log_buffer = Vec::new();
+        let result = append_to_file(&self.log_file_path, &buf);
+
+        match result {
+            Ok(_) => Ok(()),
+            Err(_) => { 
+                self.file_logging_enabled = false;
+                Err(())
+            },
+        }
+    }
+
 
     // CONSTRUCTORS
 
-    /// Returns a `Logger` with default configuration applied.
+    /// Returns a `Logger` instance with default configuration applied.
     pub fn default() -> Self {
         Logger {
             verbosity: Verbosity::Standard,
@@ -305,6 +301,8 @@ impl Logger {
 
     // PUBLIC METHODS
 
+    /// Flushes log buffer (if file logging is enabled, it writes it to a file),
+    /// and then clears the log buffer.
     pub fn flush(&mut self) -> Result<(), ()> {
         if self.file_logging_enabled {
             self.flush_file_log_buffer()?;
