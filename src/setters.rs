@@ -3,35 +3,6 @@ use crate::{
 };
 use std::io::{Error, ErrorKind};
 
-fn format_brackets(format: &str) -> Result<(String, String), ()> {
-    let mut open_index = None;
-    let mut close_index = None;
-
-    for (i, c) in format.char_indices() {
-        if c == '{' {
-            open_index = Some(i);
-        }
-        else if c == '}' && open_index.unwrap() == i - 1 {
-            close_index = Some(i);
-            break;
-        }
-        else {
-            open_index = None;
-            close_index = None;
-        }
-    }
-
-    if open_index.is_none() || close_index.is_none() 
-    {
-        return Err(());
-    }
-    else {
-        let opening = &format[0..open_index.unwrap()];
-        let closing = &format[close_index.unwrap() + 1..format.len()];
-        return Ok((String::from(opening), String::from(closing)));
-    }
-}
-
 impl Logger {
     /// Sets logger `verbosity`.
     /// * `All` -> Don't filter any logs
@@ -52,12 +23,8 @@ impl Logger {
     /// Toggles colored log headers.
     /// * `true`  -> Log headers will have colors 
     /// * `false` -> No colors :(
-    pub fn toggle_log_color(&mut self, enabled: bool) {
-        self.log_color_enabled = enabled;
-    }
-
-    pub fn toggle_auto_spacing(&mut self, enabled: bool) {
-        self.auto_spacing = enabled;
+    pub fn toggle_log_header_color(&mut self, enabled: bool) {
+        self.log_header_color_enabled = enabled;
     }
 
     /// Sets **debug log header** color.
@@ -86,139 +53,77 @@ impl Logger {
     }
 
     /// Sets **debug log header** format.
-    pub fn set_debug_header(&mut self, format: &str) {
-        self.debug_header = format.to_string();
+    pub fn set_debug_header(&mut self, header: &str) {
+        self.debug_header = header.to_string();
     }
 
     /// Sets **info log header** format.
-    pub fn set_info_header(&mut self, format: &str) {
-        self.info_header = format.to_string();
+    pub fn set_info_header(&mut self, header: &str) {
+        self.info_header = header.to_string();
     }
 
     /// Sets **warning header** format.
-    pub fn set_warning_header(&mut self, format: &str) {
-        self.warning_header = format.to_string();
+    pub fn set_warning_header(&mut self, header: &str) {
+        self.warning_header = header.to_string();
     }
 
     /// Sets **error header** format.
-    pub fn set_error_header(&mut self, format: &str) {
-        self.error_header = format.to_string();
+    pub fn set_error_header(&mut self, header: &str) {
+        self.error_header = header.to_string();
     }
 
     /// Sets **fatal error header** format.
-    pub fn set_fatal_header(&mut self, format: &str) {
-        self.fatal_header = format.to_string();
-    }
-
-    /// Sets datetime header format.
-    ///
-    /// Note that this function sets the **header format** alone, 
-    /// not the **datetime format**!
-    ///
-    /// Format must contain `{}`, so logger knows where to put the datetime
-    /// string.
-    ///
-    /// For example, if you set the format to `<d>{}</d>`, 
-    /// a datetime header will be displayed like this:
-    /// **<d>2024-5-12 14:56</d>**
-    pub fn set_datetime_header_format(&mut self, format: &str)
-    -> Result<(), ()> {
-        match format_brackets(format) {
-            Ok(value) => {
-                self.datetime_header_left = value.0;
-                self.datetime_header_right = value.1;
-                return Ok(());
-            }
-            Err(_) => { Err(()) }
-        }
+    pub fn set_fatal_header(&mut self, header: &str) {
+        self.fatal_header = header.to_string();
     }
 
     /// Sets datetime format.
-    ///
-    /// Note that this function sets the **datetime format** alone, not the
-    /// **datetime header format**!
     pub fn set_datetime_format(&mut self, format: &str) {
         self.datetime_format = String::from(format);
     }
 
-    /// Toggles datetime header for every log.
-    /// * `true`  -> Every log will have a datetime header
-    /// * `false` -> No datetime headers
-    pub fn toggle_show_datetime(&mut self, enabled: bool) {
-        self.show_datetime = enabled;
-    }
-
-    /// Sets message format.
+    /// Sets the log format.
     ///
-    /// Format must contain the `{}` string, so logger knows where
-    /// to put the message.
+    /// There are three placeholders in a log format string (you can place
+    /// multiple placeholders of the same type in a format string):
+    /// * `%m` -> The log message (this placeholder is mandatory, you format
+    /// will get rejected if it doesn't contain this placeholder)
+    /// * `%h` -> The log header indicating the log type (debug, error, etc.)
+    /// * `%d` -> The datetime
     ///
-    /// For example, if you set the format to `<m>{}</m>`, 
-    /// a message will be displayed like this:
-    /// **<m>message!!!!!</m>**
-    pub fn set_message_format(&mut self, format: &str) -> Result<(), ()> {
-        match format_brackets(format) {
-            Ok(value) => {
-                self.message_left = value.0;
-                self.message_right = value.1;
-                return Ok(());
-            }
-            Err(_) => { Err(()) }
-        }
-    }
-
-    /// Sets log format.
-    ///
-    /// Format must contain the `{}` string, so logger knows where
-    /// to put the log.
-    ///
-    /// For example, if you set the format to `<l>{}</l>`,
-    /// a log will be displayed like this:
-    /// **<l>[LOG HEADER] [YYYY:MM:DD] Log message</l>**
-    pub fn set_log_format(&mut self, format: &str) -> Result<(), ()> {
-        match format_brackets(format) {
-            Ok(value) => {
-                self.log_left = value.0;
-                self.log_right = value.1;
-                return Ok(());
-            }
-            Err(_) => { Err(()) }
-        }
-    }
-
-    /// Toggles file logging.
-    ///
-    /// Before enabling file logging, ensure that the log file path is set.
-    /// This method will check if the specified log file is writable before 
-    /// enabling file logging, to prevent errors related to file access.
-    ///
-    /// ```ignore
+    /// # Set an XML-like log format;
+    /// ```
     /// # use prettylogger::logging::Logger;
     /// # let mut l = Logger::default();
-    /// // We need to set log file path first:
-    /// l.set_log_file_path("/path/to/file.log"); // a valid file path
-    /// l.toggle_file_logging(true); // Then we can enable file logging
+    /// l.set_log_format("<l> <h>%h</h> <m>%m</m> </l>");
+    /// l.error("A nice debug log!");
     /// ```
-    pub fn toggle_file_logging(&mut self, enabled: bool) -> Result<(), Error> {
-        if !enabled {
-            self.file_logging_enabled = false;
+    ///
+    /// Returns an error when the `%m` placeholder is missing.
+    pub fn set_log_format(&mut self, format: &str) -> Result<(), &'static str> {
+        if format.contains("%m") {
+            self.log_format = String::from(format);
+            self.show_datetime = format.contains("%d");
             Ok(())
         }
         else {
-            if is_file_writable(&self.log_file_path) {
-                self.file_logging_enabled = true;
-                Ok(())
-            }
-            else {
-                self.error(&format!("Failed to open file '{}' for writing!",
-                    self.log_file_path));
-                Err(Error::new(ErrorKind::PermissionDenied,
-                    "File is not writable!"))
-            }
+            Err("Expected a message placeholder ('%m')!")
         }
     }
 
     /// Sets log file path.
+    ///
+    /// Returns an error if the path is inaccessible.
+    ///
+    /// # Make sure to actually enable file logging:
+    /// ```ignore
+    /// # use prettylogger::logging::Logger;
+    /// # let mut l = Logger::default();
+    /// // Set the log file path first:
+    /// l.set_log_file_path("/path/to/file.log");
+    /// // Then enable file logging:
+    /// l.toggle_file_logging(true);
+    /// ```
     pub fn set_log_file_path(&mut self, path: &str) -> Result<(), Error> {
         if is_file_writable(path) {
             self.log_file_path = path.to_string();
@@ -239,31 +144,67 @@ impl Logger {
         }
     }
 
-    /// Sets the maximum size of a log buffer.
+    /// Toggles file logging.
     ///
-    /// When log buffer exceeds this value, it will be flushed automatically.
+    /// Before enabling file logging, ensure that the log file path is set. 
+    /// This is because the method checks if the log file is writable. If the
+    /// log  file path is not set, or the file is not writable, enabling file
+    /// logging will result in an error.
     ///
-    /// When set to `0`, log buffer won't be flushed automatically.
+    /// # Enabling file logging:
+    /// ```ignore
+    /// # use prettylogger::logging::Logger;
+    /// # let mut l = Logger::default();
+    /// // Set the log file path first:
+    /// l.set_log_file_path("/path/to/file.log");
+    /// // Then enable file logging:
+    /// l.toggle_file_logging(true);
+    /// ```
+    pub fn toggle_file_logging(&mut self, enabled: bool) -> Result<(), Error> {
+        if !enabled {
+            self.file_logging_enabled = false;
+            Ok(())
+        }
+        else {
+            if is_file_writable(&self.log_file_path) {
+                self.file_logging_enabled = true;
+                Ok(())
+            }
+            else {
+                self.error(&format!("Failed to open file '{}' for writing!",
+                    self.log_file_path));
+                Err(Error::new(ErrorKind::PermissionDenied,
+                    "File is not writable!"))
+            }
+        }
+    }
+
+    /// Sets the maximum size of the log buffer.
+    ///
+    /// This method sets the maximum allowed size for the log buffer. When the
+    /// buffer exceeds this size, it will be automatically flushed to the log
+    /// file. If the buffer size is set to `0`, automatic flushing is disabled,
+    /// and the buffer can only be flushed manually.
+    ///
+    /// If a log file lock is active, the log buffer will not be flushed
+    /// automatically, regardless of the size limit.
     pub fn set_max_log_buffer_size(&mut self, size: usize) {
         self.log_buffer_max_size = size;
     }
-}
 
-mod tests {
-    // linter bug?
-    #[allow(unused_imports)]
-    use super::*; 
-
-    #[test]
-    fn test_bracket_formatting() {
-        if format_brackets("{]]") != Err(()) {
-            panic!("format_brackets should throw an error!");
-        }
-        if format_brackets("aaaaaaaa") != Err(()) {
-            panic!("format_brackets should throw an error!");
-        }
-        if format_brackets("{}") == Err(()) {
-            panic!("format_brackets shouldn't throw an error!");
-        }
+    /// Log file lock can be used to prevent race conditions when there is one
+    /// thread reading from the log file and another thread writing to the log
+    /// file.
+    ///
+    /// # WARNING: LEAVING THIS OPTION **ON** FOR A LONG PERIOD OF TIME CAN CAUSE
+    /// HIGH MEMORY USAGE AND STUTTERING!
+    ///
+    /// `true`  -> When log file lock is enabled, logger won't flush into the
+    /// log file. Instead, it will wait until the lock is disabled. You will
+    /// not loose any logs, they will be stored in the log buffer even when it
+    /// exceeds its size limit.
+    /// `false` -> Logger will write to the log file normally.
+    pub fn toggle_log_file_lock(&mut self, enabled: bool) {
+        self.log_file_lock = enabled;
     }
 }

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use lazy_static::lazy_static;
+use std::fmt::{Display, Formatter};
 
 static BLACK: &str = "\x1b[30m";
 static BLUE: &str = "\x1b[34m";
@@ -13,9 +14,12 @@ static WHITE: &str = "\x1b[37m";
 static YELLOW: &str = "\x1b[33m";
 pub(crate) static RESET: &str = "\x1b[0m";
 
-#[derive(Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default,
+    Serialize, Deserialize)]
+/// Used to set log header colors.
 pub enum Color
 {
+    #[default]
     None = 0,
     Black = 1,
     Blue = 2,
@@ -26,6 +30,60 @@ pub enum Color
     Red = 7,
     White = 8,
     Yellow = 9,
+}
+
+impl Display for Color {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        let level_str = match *self {
+            Color::None => "None",
+            Color:: Black => "Black",
+            Color::Blue => "Blue",
+            Color::Cyan => "Cyan",
+            Color::Green => "Green",
+            Color::Gray => "Gray",
+            Color::Magenta => "Magenta",
+            Color::Red => "Red",
+            Color::White => "White",
+            Color::Yellow => "Yellow",
+        };
+        write!(f, "{}", level_str)
+    }
+}
+
+impl TryFrom<i32> for Color {
+    type Error = &'static str;
+    fn try_from(value: i32) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Color::None),
+            1 => Ok(Color::Black),
+            2 => Ok(Color::Blue),
+            3 => Ok(Color::Cyan),
+            4 => Ok(Color::Green),
+            5 => Ok(Color::Gray),
+            6 => Ok(Color::Magenta),
+            7 => Ok(Color::Red),
+            8 => Ok(Color::White),
+            9 => Ok(Color::Yellow),
+            _ => Err("Invalid value! Please provide a value in range 0-9."),
+        }
+    }
+}
+
+impl AsRef<str> for Color {
+    fn as_ref(&self) -> &str {
+        match self {
+            Color::None => "None",
+            Color::Black => "Black",
+            Color::Blue => "Blue",
+            Color::Cyan => "Cyan",
+            Color::Green => "Green",
+            Color::Gray => "Gray",
+            Color::Magenta => "Magenta",
+            Color::Red => "Red",
+            Color::White => "White",
+            Color::Yellow => "Yellow",
+        }
+    }
 }
 
 lazy_static! {
@@ -46,7 +104,7 @@ lazy_static! {
     };
 }
 
-pub fn get_color_code(color: Color) -> String {
+pub(crate) fn get_color_code(color: Color) -> String {
     let key = color as i32;
     if COLOR_MAP.contains_key(&key) {
         return COLOR_MAP[&key].to_string();
