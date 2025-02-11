@@ -3,7 +3,7 @@ use crate::{
 };
 use std::io::{Error, ErrorKind};
 
-fn format_brackets(format: &str) -> Result<(String, String), ()> {
+fn format_brackets(format: &str) -> Result<(String, String), &str> {
     let mut open_index = None;
     let mut close_index = None;
 
@@ -23,7 +23,7 @@ fn format_brackets(format: &str) -> Result<(String, String), ()> {
 
     if open_index.is_none() || close_index.is_none() 
     {
-        return Err(());
+        return Err("Failed to set the format! Malformed or nonexistent placeholder.");
     }
     else {
         let opening = &format[0..open_index.unwrap()];
@@ -121,15 +121,15 @@ impl Logger {
     /// For example, if you set the format to `<d>{}</d>`, 
     /// a datetime header will be displayed like this:
     /// **<d>2024-5-12 14:56</d>**
-    pub fn set_datetime_header_format(&mut self, format: &str)
-    -> Result<(), ()> {
+    pub fn set_datetime_header_format<'a>(&'a mut self, format: &'a str)
+    -> Result<(), &'a str> {
         match format_brackets(format) {
             Ok(value) => {
                 self.datetime_header_left = value.0;
                 self.datetime_header_right = value.1;
                 return Ok(());
             }
-            Err(_) => { Err(()) }
+            Err(value) => { Err(value) }
         }
     }
 
@@ -156,14 +156,15 @@ impl Logger {
     /// For example, if you set the format to `<m>{}</m>`, 
     /// a message will be displayed like this:
     /// **<m>message!!!!!</m>**
-    pub fn set_message_format(&mut self, format: &str) -> Result<(), ()> {
+    pub fn set_message_format<'a>(&'a mut self, format: &'a str)
+    -> Result<(), &'a str> {
         match format_brackets(format) {
             Ok(value) => {
                 self.message_left = value.0;
                 self.message_right = value.1;
                 return Ok(());
             }
-            Err(_) => { Err(()) }
+            Err(value) => { Err(value) }
         }
     }
 
@@ -175,14 +176,15 @@ impl Logger {
     /// For example, if you set the format to `<l>{}</l>`,
     /// a log will be displayed like this:
     /// **<l>[LOG HEADER] [YYYY:MM:DD] Log message</l>**
-    pub fn set_log_format(&mut self, format: &str) -> Result<(), ()> {
+    pub fn set_log_format<'a>(&'a mut self, format: &'a str)
+    -> Result<(), &'a str> {
         match format_brackets(format) {
             Ok(value) => {
                 self.log_left = value.0;
                 self.log_right = value.1;
                 return Ok(());
             }
-            Err(_) => { Err(()) }
+            Err(value) => { Err(value) }
         }
     }
 
@@ -256,14 +258,19 @@ mod tests {
 
     #[test]
     fn test_bracket_formatting() {
-        if format_brackets("{]]") != Err(()) {
-            panic!("format_brackets should throw an error!");
+        match format_brackets("{]]") {
+            Err(_) => {},
+            _ => panic!("format_brackets should throw an error!"),
         }
-        if format_brackets("aaaaaaaa") != Err(()) {
-            panic!("format_brackets should throw an error!");
+
+        match format_brackets("aaaaaaaa") {
+            Err(_) => {},
+            _ => panic!("format_brackets should throw an error!"),
         }
-        if format_brackets("{}") == Err(()) {
-            panic!("format_brackets shouldn't throw an error!");
+
+        match format_brackets("{}") {
+            Ok(_) => {},
+            Err(_) => panic!("format_brackets shouldn't throw an error!"),
         }
     }
 }

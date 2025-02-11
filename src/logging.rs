@@ -3,21 +3,76 @@ use crate::{
 };
 use chrono::{Local, DateTime};
 use serde::{Serialize, Deserialize};
+use std::fmt::{Display, Formatter};
 
-#[derive(Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default,
+    Serialize, Deserialize)]
 pub enum LogType {
+    #[default]
     Debug = 0,
     Info = 1,
     Warning = 2,
-    Error = 3,
+    Err = 3,
     FatalError = 4,
 }
 
-#[derive(Clone)]
+impl TryFrom<i32> for LogType {
+    type Error = &'static str;
+    fn try_from(value: i32) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(LogType::Debug),
+            1 => Ok(LogType::Info),
+            2 => Ok(LogType::Warning),
+            3 => Ok(LogType::Err),
+            4 => Ok(LogType::FatalError),
+            _ => Err("Invalid value! Please provide a value in range 0-9."),
+        }
+    }
+}
+
+impl Display for LogType {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        let level_str = match *self {
+            LogType::Debug => "Debug",
+            LogType::Info => "Info",
+            LogType::Warning => "Warning",
+            LogType::Err => "Error",
+            LogType::FatalError => "FatalError",
+        };
+        write!(f, "{}", level_str)
+    }
+}
+
+impl AsRef<str> for LogType {
+    fn as_ref(&self) -> &str {
+        match self {
+            LogType::Debug => "Debug",
+            LogType::Info => "Info",
+            LogType::Warning => "Warning",
+            LogType::Err => "Err",
+            LogType::FatalError => "Fatal Error",
+        }
+    }
+}
+
+
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
 pub struct LogStruct {
     pub message: String,
     pub log_type: LogType,
     pub datetime: DateTime<Local>,
+}
+
+impl Display for LogStruct {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Log: {}\nType: {:?}\nDateTime: {}",
+            self.message,
+            self.log_type,
+            self.datetime
+        )
+    }
 }
 
 /// A logger struct used for printing logs.
@@ -43,7 +98,8 @@ pub struct LogStruct {
 /// l.error("error message");
 /// l.fatal("fatal error message");
 /// ```
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Eq, PartialOrd, Ord, Hash, Debug, Default,
+    Serialize, Deserialize)]
 pub struct Logger {
     pub(crate) verbosity: Verbosity,
     pub(crate) filtering_enabled: bool,
@@ -120,7 +176,9 @@ impl PartialEq<Logger> for Logger {
         self.datetime_header_right == other.datetime_header_right &&
 
         self.file_logging_enabled == other.file_logging_enabled &&
-        self.log_file_path == other.log_file_path
+        self.log_file_path == other.log_file_path &&
+
+        self.log_buffer_max_size == other.log_buffer_max_size
     }
 }
 
@@ -208,7 +266,7 @@ impl Logger {
             LogType::Warning => {
                 self.colorify(&self.warning_header, self.get_color(log_type))
             }
-            LogType::Error => {
+            LogType::Err => {
                 self.colorify(&self.error_header, self.get_color(log_type))
             }
             LogType::FatalError => {
@@ -222,7 +280,7 @@ impl Logger {
             LogType::Debug => { self.debug_color.clone() }
             LogType::Info => { self.info_color.clone() }
             LogType::Warning => { self.warning_color.clone() }
-            LogType::Error => { self.error_color.clone() }
+            LogType::Err => { self.error_color.clone() }
             LogType::FatalError => { self.fatal_color.clone() }
         }
     }
@@ -236,7 +294,7 @@ impl Logger {
         }
     }
 
-    pub(crate) fn flush_file_log_buffer(&mut self) -> Result<(), ()> {
+    pub(crate) fn flush_file_log_buffer(&mut self) -> Result<(), &str> {
         let mut buf = String::from("");
 
         for log in &self.log_buffer {
@@ -250,7 +308,7 @@ impl Logger {
             Ok(_) => Ok(()),
             Err(_) => { 
                 self.file_logging_enabled = false;
-                Err(())
+                Err("Failed to write log buffer to a file!")
             },
         }
     }
@@ -303,7 +361,7 @@ impl Logger {
 
     /// Flushes log buffer (if file logging is enabled, it writes it to a file),
     /// and then clears the log buffer.
-    pub fn flush(&mut self) -> Result<(), ()> {
+    pub fn flush(&mut self) -> Result<(), &str> {
         if self.file_logging_enabled {
             self.flush_file_log_buffer()?;
         }
@@ -386,7 +444,7 @@ impl Logger {
     pub fn error(&mut self, message: &str) {
         let log = LogStruct {
             message: message.to_string(),
-            log_type: LogType::Error,
+            log_type: LogType::Err,
             datetime: self.get_datetime(),
         };
         self.print_log(&log);
@@ -500,8 +558,8 @@ mod tests {
             panic!("Warning headers do not match!");
         }
         l.set_error_header(header);
-        if l.get_header(&LogType::Error) != 
-        l.colorify(header, l.get_color(&LogType::Error)) {
+        if l.get_header(&LogType::Err) != 
+        l.colorify(header, l.get_color(&LogType::Err)) {
             panic!("Error headers do not match!");
         }
         l.set_fatal_header(header);
@@ -527,14 +585,17 @@ mod tests {
         
         let mut logger = Logger::default();
 
-        if logger.set_datetime_header_format("[{}]") == Err(()) {
-            panic!("Error while setting datetime header format!");
+        match logger.set_datetime_header_format("[{}]") {
+            Err(_) => { panic!("Error while setting datetime header format!"); },
+            _ => {}
         }
-        if logger.set_datetime_header_format("{}") == Err(()) {
-            panic!("Error while setting datetime header format!");
+        match logger.set_datetime_header_format("{}") {
+            Err(_) => { panic!("Error while setting datetime header format!"); },
+            _ => {}
         }
-        if logger.set_datetime_header_format("[]") != Err(()) {
-            panic!("Format invalid, but no error thrown!");
+        match logger.set_datetime_header_format("[]") {
+            Ok(_) => { panic!("Format invalid, but no error thrown!"); },
+            _ => {}
         }
     }
 
@@ -613,9 +674,9 @@ mod tests {
                 l.format_log(&logstruct));
         }
 
-        logstruct.log_type = LogType::Error;
+        logstruct.log_type = LogType::Err;
         comp = format!("<l> {} <d>aaa</d> <m>aaa</m> </l>\n",
-            l.colorify("<h>E</h>", l.get_color(&LogType::Error))
+            l.colorify("<h>E</h>", l.get_color(&LogType::Err))
         );
         if l.format_log(&logstruct) != comp {
             panic!("Bad log formatting, expected \n'{}', got \n'{}'",
@@ -673,3 +734,4 @@ mod tests {
         }
     }
 }
+
