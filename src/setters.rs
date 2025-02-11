@@ -3,35 +3,6 @@ use crate::{
 };
 use std::io::{Error, ErrorKind};
 
-fn format_brackets(format: &str) -> Result<(String, String), &str> {
-    let mut open_index = None;
-    let mut close_index = None;
-
-    for (i, c) in format.char_indices() {
-        if c == '{' {
-            open_index = Some(i);
-        }
-        else if c == '}' && open_index.unwrap() == i - 1 {
-            close_index = Some(i);
-            break;
-        }
-        else {
-            open_index = None;
-            close_index = None;
-        }
-    }
-
-    if open_index.is_none() || close_index.is_none() 
-    {
-        return Err("Failed to set the format! Malformed or nonexistent placeholder.");
-    }
-    else {
-        let opening = &format[0..open_index.unwrap()];
-        let closing = &format[close_index.unwrap() + 1..format.len()];
-        return Ok((String::from(opening), String::from(closing)));
-    }
-}
-
 impl Logger {
     /// Sets logger `verbosity`.
     /// * `All` -> Don't filter any logs
@@ -110,29 +81,6 @@ impl Logger {
         self.fatal_header = format.to_string();
     }
 
-    /// Sets datetime header format.
-    ///
-    /// Note that this function sets the **header format** alone, 
-    /// not the **datetime format**!
-    ///
-    /// Format must contain `{}`, so logger knows where to put the datetime
-    /// string.
-    ///
-    /// For example, if you set the format to `<d>{}</d>`, 
-    /// a datetime header will be displayed like this:
-    /// **<d>2024-5-12 14:56</d>**
-    pub fn set_datetime_header_format<'a>(&'a mut self, format: &'a str)
-    -> Result<(), &'a str> {
-        match format_brackets(format) {
-            Ok(value) => {
-                self.datetime_header_left = value.0;
-                self.datetime_header_right = value.1;
-                return Ok(());
-            }
-            Err(value) => { Err(value) }
-        }
-    }
-
     /// Sets datetime format.
     ///
     /// Note that this function sets the **datetime format** alone, not the
@@ -146,46 +94,6 @@ impl Logger {
     /// * `false` -> No datetime headers
     pub fn toggle_show_datetime(&mut self, enabled: bool) {
         self.show_datetime = enabled;
-    }
-
-    /// Sets message format.
-    ///
-    /// Format must contain the `{}` string, so logger knows where
-    /// to put the message.
-    ///
-    /// For example, if you set the format to `<m>{}</m>`, 
-    /// a message will be displayed like this:
-    /// **<m>message!!!!!</m>**
-    pub fn set_message_format<'a>(&'a mut self, format: &'a str)
-    -> Result<(), &'a str> {
-        match format_brackets(format) {
-            Ok(value) => {
-                self.message_left = value.0;
-                self.message_right = value.1;
-                return Ok(());
-            }
-            Err(value) => { Err(value) }
-        }
-    }
-
-    /// Sets log format.
-    ///
-    /// Format must contain the `{}` string, so logger knows where
-    /// to put the log.
-    ///
-    /// For example, if you set the format to `<l>{}</l>`,
-    /// a log will be displayed like this:
-    /// **<l>[LOG HEADER] [YYYY:MM:DD] Log message</l>**
-    pub fn set_log_format<'a>(&'a mut self, format: &'a str)
-    -> Result<(), &'a str> {
-        match format_brackets(format) {
-            Ok(value) => {
-                self.log_left = value.0;
-                self.log_right = value.1;
-                return Ok(());
-            }
-            Err(value) => { Err(value) }
-        }
     }
 
     /// Toggles file logging.
@@ -249,28 +157,14 @@ impl Logger {
     pub fn set_max_log_buffer_size(&mut self, size: usize) {
         self.log_buffer_max_size = size;
     }
-}
 
-mod tests {
-    // linter bug?
-    #[allow(unused_imports)]
-    use super::*; 
-
-    #[test]
-    fn test_bracket_formatting() {
-        match format_brackets("{]]") {
-            Err(_) => {},
-            _ => panic!("format_brackets should throw an error!"),
+    pub fn set_log_format(&mut self, format: &str) -> Result<(), &'static str> {
+        if format.contains("%m") {
+            self.log_format = String::from(format);
+            Ok(())
         }
-
-        match format_brackets("aaaaaaaa") {
-            Err(_) => {},
-            _ => panic!("format_brackets should throw an error!"),
-        }
-
-        match format_brackets("{}") {
-            Ok(_) => {},
-            Err(_) => panic!("format_brackets shouldn't throw an error!"),
+        else {
+            Err("Expected a message placeholder ('%m')!")
         }
     }
 }

@@ -4,6 +4,7 @@ use crate::{
 use chrono::{Local, DateTime};
 use serde::{Serialize, Deserialize};
 use std::fmt::{Display, Formatter};
+use derivative::Derivative;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default,
     Serialize, Deserialize)]
@@ -98,7 +99,8 @@ impl Display for LogStruct {
 /// l.error("error message");
 /// l.fatal("fatal error message");
 /// ```
-#[derive(Clone, Eq, PartialOrd, Ord, Hash, Debug, Default,
+#[derive(Derivative)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default,
     Serialize, Deserialize)]
 pub struct Logger {
     pub(crate) verbosity: Verbosity,
@@ -119,66 +121,23 @@ pub struct Logger {
     pub(crate) error_header: String,
     pub(crate) fatal_header: String,
 
-    pub(crate) message_left: String,
-    pub(crate) message_right: String,
+    pub(crate) log_format: String,
     
-    pub(crate) log_left: String,
-    pub(crate) log_right: String,
-
     pub(crate) show_datetime: bool,
     pub(crate) datetime_format: String,
-    pub(crate) datetime_header_left: String,
-    pub(crate) datetime_header_right: String,
 
     pub(crate) file_logging_enabled: bool,
     pub(crate) log_file_path: String,
 
     pub(crate) log_buffer_max_size: usize,
     #[serde(skip)]
+    #[derivative(PartialEq="ignore")]
     pub(crate) log_buffer: Vec<LogStruct>,
 }
 
 impl Drop for Logger {
     fn drop(&mut self) {
         let _ = self.flush();
-    }
-}
-
-impl PartialEq<Logger> for Logger {
-    fn eq(&self, other: &Logger) -> bool {
-        self.verbosity == other.verbosity &&
-        self.filtering_enabled == other.filtering_enabled &&
-        self.auto_spacing == other.auto_spacing &&
-
-        self.log_color_enabled == other.log_color_enabled &&
-
-        self.debug_color == other.debug_color &&
-        self.info_color == other.info_color &&
-        self.warning_color == other.warning_color &&
-        self.error_color == other.error_color &&
-        self.fatal_color == other.fatal_color &&
-
-        self.debug_header == other.debug_header &&
-        self.info_header == other.info_header &&
-        self.warning_header == other.warning_header &&
-        self.error_header == other.error_header &&
-        self.fatal_header == other.fatal_header &&
-
-        self.message_left == other.message_left &&
-        self.message_right == other.message_right &&
-
-        self.log_left == other.log_left &&
-        self.log_right == other.log_right &&
-
-        self.show_datetime == other.show_datetime &&
-        self.datetime_format == other.datetime_format &&
-        self.datetime_header_left == other.datetime_header_left &&
-        self.datetime_header_right == other.datetime_header_right &&
-
-        self.file_logging_enabled == other.file_logging_enabled &&
-        self.log_file_path == other.log_file_path &&
-
-        self.log_buffer_max_size == other.log_buffer_max_size
     }
 }
 
@@ -199,37 +158,50 @@ impl Logger {
         print!("{}", log_str);
     }
 
-    pub(crate) fn format_log(&self, log: &LogStruct) -> String {
-        let message = self.message_left.clone()
-            +&log.message + &self.message_right;
+    pub(crate) fn get_log_headers(&self, log: &LogStruct)
+    -> (String, String, String) {
+        let header = self.get_header(&log.log_type);
+        let datetime = self.get_datetime_formatted(&log.datetime);
+        return (header, datetime, log.message.clone());
+    }
 
-        if self.auto_spacing {
-            if self.show_datetime {
-                return format!("{} {} {} {} {}\n",
-                    self.log_left.clone(),
-                    self.get_header(&log.log_type),
-                    self.get_datetime_header(&log.datetime),
-                    message.to_string(),
-                    self.log_right,
-                );
-            }
-            else {
-                return format!("{} {} {}{} {}\n",
-                    self.log_left.clone(),
-                    self.get_header(&log.log_type),
-                    self.get_datetime_header(&log.datetime),
-                    message.to_string(),
-                    self.log_right,
-                );
+    pub(crate) fn format_log(&self, log: &LogStruct) -> String {
+        let headers = self.get_log_headers(&log);
+        let mut result = String::new();
+        let mut char_iter = self.log_format.char_indices().peekable();
+
+        while let Some((_, c)) = char_iter.next() {
+            match c {
+                '%' => {
+                    if let Some((_, nc)) = char_iter.peek() {
+                        match nc {
+                            'h' => {
+                                result += &headers.0;
+                                char_iter.next();
+                            }
+                            'd' => {
+                                result += &headers.1;
+                                char_iter.next();
+                            }
+                            'm' => {
+                                result += &headers.2;
+                                char_iter.next();
+                            }
+                            _ => {
+                                result += &format!("%{}", nc);
+                                char_iter.next();
+                            }
+                        }
+                    }
+                }
+                _ => {
+                    result += &c.to_string();
+                }
             }
         }
-        return format!("{}{}{}{}{}\n",
-            self.log_left.clone(),
-            self.get_header(&log.log_type),
-            self.get_datetime_header(&log.datetime),
-            message.to_string(),
-            self.log_right,
-        );
+
+        result += &"\n";
+        return result;
     }
 
     pub(crate) fn filter_log(&self, log_type: LogType) -> bool {
@@ -237,14 +209,11 @@ impl Logger {
             || ((log_type as i32) < self.verbosity.clone() as i32)
     }
 
-    pub(crate) fn get_datetime_header(&self,
+    pub(crate) fn get_datetime_formatted(&self,
     datetime: &DateTime<Local>) -> String {
         if self.show_datetime {
             let datetime_formatted = datetime.format(&self.datetime_format);
-            let left = &self.datetime_header_left;
-            let right = &self.datetime_header_right;
-            // and here is the missing space
-            return format!("{left}{datetime_formatted}{right}");
+            return datetime_formatted.to_string();
         }
         else {
             return String::from("");
@@ -337,19 +306,13 @@ impl Logger {
             error_header: "[ERR]".to_string(),
             fatal_header: "[FATAL]".to_string(),
 
-            message_left: String::from(""),
-            message_right: String::from(""),
-
-            log_left: String::from(""),
-            log_right: String::from(""),
-
             show_datetime: false,
             datetime_format: String::from("%Y-%m-%d %H:%M:%S"),
-            datetime_header_left: "[".to_string(),
-            datetime_header_right: "]".to_string(),
 
             file_logging_enabled: false,
             log_file_path: "".to_string(),
+
+            log_format: "%h %m".to_string(),
 
             log_buffer_max_size: 128,
             log_buffer: Vec::new(),
@@ -580,26 +543,6 @@ mod tests {
     }
 
     #[test]
-    fn test_datetime_header() {
-        // Test if datetime header format is parsed correctly
-        
-        let mut logger = Logger::default();
-
-        match logger.set_datetime_header_format("[{}]") {
-            Err(_) => { panic!("Error while setting datetime header format!"); },
-            _ => {}
-        }
-        match logger.set_datetime_header_format("{}") {
-            Err(_) => { panic!("Error while setting datetime header format!"); },
-            _ => {}
-        }
-        match logger.set_datetime_header_format("[]") {
-            Ok(_) => { panic!("Format invalid, but no error thrown!"); },
-            _ => {}
-        }
-    }
-
-    #[test]
     fn test_templates() {
         let file_name = "/templates/test.json";
         match get_current_dir() {
@@ -630,22 +573,20 @@ mod tests {
         l.toggle_show_datetime(true);
 
         l.set_datetime_format("aaa");
-        let _ = l.set_log_format("<l>{}</l>");
-        l.set_debug_header("<h>d</h>");
-        l.set_info_header("<h>i</h>");
-        l.set_warning_header("<h>W</h>");
-        l.set_error_header("<h>E</h>");
-        l.set_fatal_header("<h>!</h>");
-        let _ = l.set_datetime_header_format("<d>{}</d>");
-        let _ = l.set_message_format("<m>{}</m>");
+        l.set_debug_header("d");
+        l.set_info_header("i");
+        l.set_warning_header("W");
+        l.set_error_header("E");
+        l.set_fatal_header("!");
+        let _ = l.set_log_format("<l> <h>%h</h> <d>%d</d> <m>%m</m> </l>");
 
         let mut logstruct = LogStruct {
             datetime: l.get_datetime(),
             log_type: LogType::Debug,
             message: "aaa".to_string(),
         };
-        let mut comp = format!("<l> {} <d>aaa</d> <m>aaa</m> </l>\n",
-            l.colorify("<h>d</h>", l.get_color(&LogType::Debug))
+        let mut comp = format!("<l> <h>{}</h> <d>aaa</d> <m>aaa</m> </l>\n",
+            l.colorify("d", l.get_color(&LogType::Debug))
         );
 
         if l.format_log(&logstruct) != comp {
@@ -655,8 +596,8 @@ mod tests {
         }
 
         logstruct.log_type = LogType::Info;
-        comp = format!("<l> {} <d>aaa</d> <m>aaa</m> </l>\n",
-            l.colorify("<h>i</h>", l.get_color(&LogType::Info))
+        comp = format!("<l> <h>{}</h> <d>aaa</d> <m>aaa</m> </l>\n",
+            l.colorify("i", l.get_color(&LogType::Info))
         );
         if l.format_log(&logstruct) != comp {
             panic!("Bad log formatting, expected \n'{}', got \n'{}'",
@@ -665,8 +606,8 @@ mod tests {
         }
 
         logstruct.log_type = LogType::Warning;
-        comp = format!("<l> {} <d>aaa</d> <m>aaa</m> </l>\n",
-            l.colorify("<h>W</h>", l.get_color(&LogType::Warning))
+        comp = format!("<l> <h>{}</h> <d>aaa</d> <m>aaa</m> </l>\n",
+            l.colorify("W", l.get_color(&LogType::Warning))
         );
         if l.format_log(&logstruct) != comp {
             panic!("Bad log formatting, expected \n'{}', got \n'{}'",
@@ -675,8 +616,8 @@ mod tests {
         }
 
         logstruct.log_type = LogType::Err;
-        comp = format!("<l> {} <d>aaa</d> <m>aaa</m> </l>\n",
-            l.colorify("<h>E</h>", l.get_color(&LogType::Err))
+        comp = format!("<l> <h>{}</h> <d>aaa</d> <m>aaa</m> </l>\n",
+            l.colorify("E", l.get_color(&LogType::Err))
         );
         if l.format_log(&logstruct) != comp {
             panic!("Bad log formatting, expected \n'{}', got \n'{}'",
@@ -685,8 +626,8 @@ mod tests {
         }
 
         logstruct.log_type = LogType::FatalError;
-        comp = format!("<l> {} <d>aaa</d> <m>aaa</m> </l>\n",
-            l.colorify("<h>!</h>", l.get_color(&LogType::FatalError))
+        comp = format!("<l> <h>{}</h> <d>aaa</d> <m>aaa</m> </l>\n",
+            l.colorify("!", l.get_color(&LogType::FatalError))
         );
         if l.format_log(&logstruct) != comp {
             panic!("Bad log formatting, expected \n'{}', got \n'{}'",
@@ -734,4 +675,3 @@ mod tests {
         }
     }
 }
-
