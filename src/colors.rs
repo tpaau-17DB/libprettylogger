@@ -16,6 +16,7 @@ pub(crate) static RESET: &str = "\x1b[0m";
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default,
     Serialize, Deserialize)]
+/// Used to set log header colors.
 pub enum Color
 {
     #[default]
@@ -103,7 +104,7 @@ lazy_static! {
     };
 }
 
-pub fn get_color_code(color: Color) -> String {
+pub(crate) fn get_color_code(color: Color) -> String {
     let key = color as i32;
     if COLOR_MAP.contains_key(&key) {
         return COLOR_MAP[&key].to_string();

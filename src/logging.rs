@@ -8,9 +8,56 @@ use derivative::Derivative;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default,
     Serialize, Deserialize)]
-pub enum LogType {
+/// Defines the policy for handling log file flushing when the logger is
+/// dropped.
+///
+/// The available options are:
+/// - `IgnoreLogFileLock`: Completely ignores any log file lock and forces the
+/// log entries to be written to the file regardless of the lock status.
+/// - `DiscardLogBuffer`: If a log file lock is enabled, the log buffer is
+/// discarded instead of writing to the file. This prevents race conditions.
+///
+/// The default policy is `DiscardLogBuffer`.
+pub enum OnDropPolicy {
+    /// Completely ignore log file lock and write to file anyway.
+    IgnoreLogFileLock,
     #[default]
+    /// Don't write to the log file when lock is enabled.
+    DiscardLogBuffer,
+}
+
+impl Display for OnDropPolicy {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        let level_str = match *self {
+            OnDropPolicy::IgnoreLogFileLock => "IgnoreLogFileLock",
+            OnDropPolicy::DiscardLogBuffer => "DiscardLogBuffer",
+        };
+        write!(f, "{}", level_str)
+    }
+}
+
+
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default,
+    Serialize, Deserialize)]
+/// Represents the different types of log messages.
+///
+/// This enum is used to categorize the severity or type of a log message. 
+/// The variants correspond to different levels of logging, from debugging 
+/// information to fatal errors.
+/// 
+/// The variants are:
+/// * `Debug`: Represents debug-level log messages, typically used for
+/// detailed internal information during development.
+/// * `Info`: Represents informational log messages.
+/// * `Warning`: Represents warning messages.
+/// * `Err`: Represents error messages.
+/// * `FatalError`: Represents critical errors that usually lead to program
+/// termination or an unrecoverable state.
+///
+/// The default variant is `Info`.
+pub enum LogType {
     Debug = 0,
+    #[default]
     Info = 1,
     Warning = 2,
     Err = 3,
@@ -58,9 +105,21 @@ impl AsRef<str> for LogType {
 
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
+/// Represents a single log entry.
+///
+/// This struct is used to store information about a single log message.
+/// It includes the log's message, its type (e.g., 
+/// `Debug`, `Error`, etc.), and the date and time when the log was created.
+/// It can be used for storing logs in memory more efficiently.
+///
+/// Fields:
+/// - `message`: The actual log message as a string.
+/// - `log_type`: The type of the log (e.g., `Debug`, `Error`, `Info`, etc.).
+/// - `datetime`: The timestamp of when the log entry was created.
 pub struct LogStruct {
     pub message: String,
     pub log_type: LogType,
+    /// The date and time at which the log was created.
     pub datetime: DateTime<Local>,
 }
 
@@ -75,6 +134,7 @@ impl Display for LogStruct {
         )
     }
 }
+
 
 /// A logger struct used for printing logs.
 ///
@@ -105,9 +165,8 @@ impl Display for LogStruct {
 pub struct Logger {
     pub(crate) verbosity: Verbosity,
     pub(crate) filtering_enabled: bool,
-    pub(crate) auto_spacing: bool,
 
-    pub(crate) log_color_enabled: bool,
+    pub(crate) log_header_color_enabled: bool,
 
     pub(crate) debug_color: Color,
     pub(crate) info_color: Color,
@@ -128,16 +187,19 @@ pub struct Logger {
 
     pub(crate) file_logging_enabled: bool,
     pub(crate) log_file_path: String,
+    pub(crate) log_file_lock: bool,
 
     pub(crate) log_buffer_max_size: usize,
     #[serde(skip)]
     #[derivative(PartialEq="ignore")]
     pub(crate) log_buffer: Vec<LogStruct>,
+
+    pub(crate) on_drop_policy: OnDropPolicy,
 }
 
 impl Drop for Logger {
     fn drop(&mut self) {
-        let _ = self.flush();
+        let _ = self.flush_file_log_buffer(true);
     }
 }
 
@@ -150,8 +212,9 @@ impl Logger {
         if self.file_logging_enabled {
             self.log_buffer.push(log.clone());
 
-            if self.log_buffer.len() >= self.log_buffer_max_size {
-                let _ = self.flush_file_log_buffer();
+            if self.log_buffer_max_size != 0
+            && self.log_buffer.len() >= self.log_buffer_max_size {
+                let _ = self.flush_file_log_buffer(false);
             }
         }
 
@@ -160,12 +223,155 @@ impl Logger {
 
     pub(crate) fn get_log_headers(&self, log: &LogStruct)
     -> (String, String, String) {
-        let header = self.get_header(&log.log_type);
+        let header = self.get_main_header(&log.log_type);
         let datetime = self.get_datetime_formatted(&log.datetime);
         return (header, datetime, log.message.clone());
     }
 
-    pub(crate) fn format_log(&self, log: &LogStruct) -> String {
+    pub(crate) fn get_main_header(&self, log_type: &LogType) -> String {
+        match log_type {
+            LogType::Debug => { 
+                self.colorify(&self.debug_header, self.log_header_color(log_type))
+            }
+            LogType::Info => {
+                self.colorify(&self.info_header, self.log_header_color(log_type))
+            }
+            LogType::Warning => {
+                self.colorify(&self.warning_header, self.log_header_color(log_type))
+            }
+            LogType::Err => {
+                self.colorify(&self.error_header, self.log_header_color(log_type))
+            }
+            LogType::FatalError => {
+                self.colorify(&self.fatal_header, self.log_header_color(log_type))
+            }
+        }
+    }
+
+    pub(crate) fn get_datetime_formatted(&self,
+    datetime: &DateTime<Local>) -> String {
+        if self.show_datetime {
+            let datetime_formatted = datetime.format(&self.datetime_format);
+            return datetime_formatted.to_string();
+        }
+        else {
+            return String::from("");
+        }
+    }
+
+    pub(crate) fn colorify<'a>(&self, text: &str, color: Color) -> String {
+        if self.log_header_color_enabled {
+            if color != Color::None {
+                return get_color_code(color) + text + &RESET;
+            }
+            else {
+                return text.to_string();
+            }
+        }
+        else {
+            return text.to_string();
+        }
+    }
+
+    pub(crate) fn filter_log(&self, log_type: LogType) -> bool {
+        return !self.filtering_enabled
+            || ((log_type as i32) < self.verbosity.clone() as i32)
+    }
+
+    pub(crate) fn get_datetime(&self) -> DateTime<Local> {
+        return Local::now();
+    }
+
+    pub(crate) fn log_header_color(&self, log_type: &LogType) -> Color {
+        match log_type {
+            LogType::Debug => { self.debug_color.clone() }
+            LogType::Info => { self.info_color.clone() }
+            LogType::Warning => { self.warning_color.clone() }
+            LogType::Err => { self.error_color.clone() }
+            LogType::FatalError => { self.fatal_color.clone() }
+        }
+    }
+
+    pub(crate) fn flush_file_log_buffer(&mut self, is_drop_flush: bool)
+    -> Result<(), String> {
+        if self.log_file_lock {
+            if is_drop_flush {
+                match self.on_drop_policy {
+                    OnDropPolicy::IgnoreLogFileLock => { }
+                    OnDropPolicy::DiscardLogBuffer => {
+                        let message = format!("Log file lock enabled and on
+                            drop policy set to {}!",
+                            self.on_drop_policy);
+                        return Err(message);
+                    }
+                }
+            }
+            else {
+               return Err(String::from("Log file lock enabled!"))
+            }
+        }
+        let mut buf = String::from("");
+
+        for log in &self.log_buffer {
+            buf += &self.format_log(&log);
+        }
+
+        self.log_buffer = Vec::new();
+        let result = append_to_file(&self.log_file_path, &buf);
+
+        match result {
+            Ok(_) => Ok(()),
+            Err(_) => { 
+                self.file_logging_enabled = false;
+                Err(String::from("Failed to write log buffer to a file!"))
+            },
+        }
+    }
+
+    // CONSTRUCTORS
+
+    /// Returns a `Logger` instance with default configuration applied.
+    pub fn default() -> Self {
+        Logger {
+            verbosity: Verbosity::default(),
+            filtering_enabled: true,
+
+            log_header_color_enabled: true,
+
+            debug_color: Color::Blue,
+            info_color: Color::Green,
+            warning_color: Color::Yellow,
+            error_color: Color::Red,
+            fatal_color: Color::Magenta,
+
+            debug_header: "DBG".to_string(),
+            info_header: "INF".to_string(),
+            warning_header: "WAR".to_string(),
+            error_header: "ERR".to_string(),
+            fatal_header: "FATAL".to_string(),
+
+            show_datetime: false,
+            datetime_format: String::from("%Y-%m-%d %H:%M:%S"),
+
+            file_logging_enabled: false,
+            log_file_path: "".to_string(),
+            log_file_lock: false,
+
+            log_format: "[%h] %m".to_string(),
+
+            log_buffer_max_size: 128,
+            log_buffer: Vec::new(),
+
+            on_drop_policy: OnDropPolicy::default(),
+        }
+    }
+
+
+    // PUBLIC METHODS
+
+    /// Returns a log entry out of a `LogStruct` based on current `Logger`
+    /// configuration.
+    pub fn format_log(&self, log: &LogStruct) -> String {
         let headers = self.get_log_headers(&log);
         let mut result = String::new();
         let mut char_iter = self.log_format.char_indices().peekable();
@@ -204,134 +410,20 @@ impl Logger {
         return result;
     }
 
-    pub(crate) fn filter_log(&self, log_type: LogType) -> bool {
-        return !self.filtering_enabled
-            || ((log_type as i32) < self.verbosity.clone() as i32)
-    }
-
-    pub(crate) fn get_datetime_formatted(&self,
-    datetime: &DateTime<Local>) -> String {
-        if self.show_datetime {
-            let datetime_formatted = datetime.format(&self.datetime_format);
-            return datetime_formatted.to_string();
-        }
-        else {
-            return String::from("");
-        }
-    }
-
-    pub(crate) fn get_datetime(&self) -> DateTime<Local> {
-        return Local::now();
-    }
-
-    pub(crate) fn get_header(&self, log_type: &LogType) -> String {
-        match log_type {
-            LogType::Debug => { 
-                self.colorify(&self.debug_header, self.get_color(log_type))
-            }
-            LogType::Info => {
-                self.colorify(&self.info_header, self.get_color(log_type))
-            }
-            LogType::Warning => {
-                self.colorify(&self.warning_header, self.get_color(log_type))
-            }
-            LogType::Err => {
-                self.colorify(&self.error_header, self.get_color(log_type))
-            }
-            LogType::FatalError => {
-                self.colorify(&self.fatal_header, self.get_color(log_type))
-            }
-        }
-    }
-
-    pub(crate) fn get_color(&self, log_type: &LogType) -> Color {
-        match log_type {
-            LogType::Debug => { self.debug_color.clone() }
-            LogType::Info => { self.info_color.clone() }
-            LogType::Warning => { self.warning_color.clone() }
-            LogType::Err => { self.error_color.clone() }
-            LogType::FatalError => { self.fatal_color.clone() }
-        }
-    }
-
-    pub(crate) fn colorify(&self, text: &str, color: Color) -> String {
-        if self.log_color_enabled {
-            return get_color_code(color) + text + &RESET;
-        }
-        else {
-            return text.to_string();
-        }
-    }
-
-    pub(crate) fn flush_file_log_buffer(&mut self) -> Result<(), &str> {
-        let mut buf = String::from("");
-
-        for log in &self.log_buffer {
-            buf += &self.format_log(&log);
-        }
-
-        self.log_buffer = Vec::new();
-        let result = append_to_file(&self.log_file_path, &buf);
-
-        match result {
-            Ok(_) => Ok(()),
-            Err(_) => { 
-                self.file_logging_enabled = false;
-                Err("Failed to write log buffer to a file!")
-            },
-        }
-    }
-
-
-    // CONSTRUCTORS
-
-    /// Returns a `Logger` instance with default configuration applied.
-    pub fn default() -> Self {
-        Logger {
-            verbosity: Verbosity::Standard,
-            filtering_enabled: true,
-            auto_spacing: true,
-
-            log_color_enabled: true,
-
-            debug_color: Color::Blue,
-            info_color: Color::Green,
-            warning_color: Color::Yellow,
-            error_color: Color::Red,
-            fatal_color: Color::Magenta,
-
-            debug_header: "[DBG]".to_string(),
-            info_header: "[INF]".to_string(),
-            warning_header: "[WAR]".to_string(),
-            error_header: "[ERR]".to_string(),
-            fatal_header: "[FATAL]".to_string(),
-
-            show_datetime: false,
-            datetime_format: String::from("%Y-%m-%d %H:%M:%S"),
-
-            file_logging_enabled: false,
-            log_file_path: "".to_string(),
-
-            log_format: "%h %m".to_string(),
-
-            log_buffer_max_size: 128,
-            log_buffer: Vec::new(),
-        }
-    }
-
-
-    // PUBLIC METHODS
-
-    /// Flushes log buffer (if file logging is enabled, it writes it to a file),
-    /// and then clears the log buffer.
-    pub fn flush(&mut self) -> Result<(), &str> {
+    /// Flushes log buffer (if file logging is enabled and log file lock
+    /// disabled, it writes the log buffer to a file) and then clears the log
+    /// buffer.
+    ///
+    /// Returns an error when there is an issue writing to a file or log file
+    /// lock is enabled.
+    pub fn flush(&mut self) -> Result<(), String> {
         if self.file_logging_enabled {
-            self.flush_file_log_buffer()?;
+            self.flush_file_log_buffer(false)?;
         }
         return Ok(());
     }
 
-    /// Prints a **debug log**.
+    /// Prints a **debug message**.
     pub fn debug(&mut self, message: &str) {
         if self.filter_log(LogType::Debug)
         {
@@ -345,7 +437,7 @@ impl Logger {
         self.print_log(&log);
     }
 
-    /// Prints a **debug log**, bypasses filtering.
+    /// Prints a **debug message**, bypasses filtering.
     pub fn debug_no_filtering(&mut self, message: &str) {
         let log = LogStruct {
             message: message.to_string(),
@@ -355,7 +447,7 @@ impl Logger {
         self.print_log(&log);
     }
 
-    /// Prints **info log**.
+    /// Prints **info message**.
     pub fn info(&mut self, message: &str) {
         if self.filter_log(LogType::Info)
         {
@@ -369,7 +461,7 @@ impl Logger {
         self.print_log(&log);
     }
 
-    /// Prints **info log**, bypasses filtering.
+    /// Prints **info message**, bypasses filtering.
     pub fn info_no_filtering(&mut self, message: &str) {
         let log = LogStruct {
             message: message.to_string(),
@@ -506,28 +598,28 @@ mod tests {
         let mut l = Logger::default();
 
         l.set_debug_header(header);
-        if l.get_header(&LogType::Debug) != 
-        l.colorify(header, l.get_color(&LogType::Debug)) {
+        if l.get_main_header(&LogType::Debug) != 
+        l.colorify(header, l.log_header_color(&LogType::Debug)) {
             panic!("Debug headers do not match!");
         }
         l.set_info_header(header);
-        if l.get_header(&LogType::Info) != 
-        l.colorify(header, l.get_color(&LogType::Info)) {
+        if l.get_main_header(&LogType::Info) != 
+        l.colorify(header, l.log_header_color(&LogType::Info)) {
             panic!("Info headers do not match!");
         }
         l.set_warning_header(header);
-        if l.get_header(&LogType::Warning) !=
-        l.colorify(header, l.get_color(&LogType::Warning)) {
+        if l.get_main_header(&LogType::Warning) !=
+        l.colorify(header, l.log_header_color(&LogType::Warning)) {
             panic!("Warning headers do not match!");
         }
         l.set_error_header(header);
-        if l.get_header(&LogType::Err) != 
-        l.colorify(header, l.get_color(&LogType::Err)) {
+        if l.get_main_header(&LogType::Err) != 
+        l.colorify(header, l.log_header_color(&LogType::Err)) {
             panic!("Error headers do not match!");
         }
         l.set_fatal_header(header);
-        if l.get_header(&LogType::FatalError) != 
-        l.colorify(header, l.get_color(&LogType::FatalError)) {
+        if l.get_main_header(&LogType::FatalError) != 
+        l.colorify(header, l.log_header_color(&LogType::FatalError)) {
             panic!("Fatal error headers do not match!");
         }
     }
@@ -570,8 +662,6 @@ mod tests {
     fn test_formats() {
         let mut l = Logger::default();
 
-        l.toggle_show_datetime(true);
-
         l.set_datetime_format("aaa");
         l.set_debug_header("d");
         l.set_info_header("i");
@@ -586,7 +676,7 @@ mod tests {
             message: "aaa".to_string(),
         };
         let mut comp = format!("<l> <h>{}</h> <d>aaa</d> <m>aaa</m> </l>\n",
-            l.colorify("d", l.get_color(&LogType::Debug))
+            l.colorify("d", l.log_header_color(&LogType::Debug))
         );
 
         if l.format_log(&logstruct) != comp {
@@ -597,7 +687,7 @@ mod tests {
 
         logstruct.log_type = LogType::Info;
         comp = format!("<l> <h>{}</h> <d>aaa</d> <m>aaa</m> </l>\n",
-            l.colorify("i", l.get_color(&LogType::Info))
+            l.colorify("i", l.log_header_color(&LogType::Info))
         );
         if l.format_log(&logstruct) != comp {
             panic!("Bad log formatting, expected \n'{}', got \n'{}'",
@@ -607,7 +697,7 @@ mod tests {
 
         logstruct.log_type = LogType::Warning;
         comp = format!("<l> <h>{}</h> <d>aaa</d> <m>aaa</m> </l>\n",
-            l.colorify("W", l.get_color(&LogType::Warning))
+            l.colorify("W", l.log_header_color(&LogType::Warning))
         );
         if l.format_log(&logstruct) != comp {
             panic!("Bad log formatting, expected \n'{}', got \n'{}'",
@@ -617,7 +707,7 @@ mod tests {
 
         logstruct.log_type = LogType::Err;
         comp = format!("<l> <h>{}</h> <d>aaa</d> <m>aaa</m> </l>\n",
-            l.colorify("E", l.get_color(&LogType::Err))
+            l.colorify("E", l.log_header_color(&LogType::Err))
         );
         if l.format_log(&logstruct) != comp {
             panic!("Bad log formatting, expected \n'{}', got \n'{}'",
@@ -627,7 +717,7 @@ mod tests {
 
         logstruct.log_type = LogType::FatalError;
         comp = format!("<l> <h>{}</h> <d>aaa</d> <m>aaa</m> </l>\n",
-            l.colorify("!", l.get_color(&LogType::FatalError))
+            l.colorify("!", l.log_header_color(&LogType::FatalError))
         );
         if l.format_log(&logstruct) != comp {
             panic!("Bad log formatting, expected \n'{}', got \n'{}'",

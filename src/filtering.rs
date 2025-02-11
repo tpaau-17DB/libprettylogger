@@ -3,11 +3,16 @@ use serde::{Serialize, Deserialize};
 
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, Debug, Default,
     Serialize, Deserialize)]
+/// Defines logger verbosity levels.
 pub enum Verbosity {
-    #[default]
+    /// Don't filter any logs.
     All = 0,
+    #[default]
+    /// Just filter debug logs.
     Standard = 1,
+    /// Only let warnings and errors to be displayed.
     Quiet = 2,
+    /// I'm not gonna explain this one
     ErrorsOnly = 3,
 }
 
