@@ -1,6 +1,8 @@
 # libprettylogger
 A Rust logger library, focused on stability and customizability.
 
+This project is yet to be released on [crates.io](https://crates.io/).
+
 
 ## Table of Contents
 * [TL;DR](#tldr)
@@ -12,16 +14,30 @@ A Rust logger library, focused on stability and customizability.
     * [Logging Methods](#the-logger_logging-methods)
     * [Setters](#the-logger_setters)
     * [Other Methods](#the-logger_other-methods)
+* [Log Filtering](#log-filtering)
+* [File Logging](#file-logging)
 
 
 <a name="tldr"></a>
 ## TL;DR
-**Installation**:
-* `git clone https://github.com/tpaau-17DB/libprettylogger.git`
-* `cd libprettylogger`
-* `cargo build --release`
+**Installing**:
 
-**Use the `.rlib` file in your project**:
+Clone the repository:
+```
+git clone https://github.com/tpaau-17DB/libprettylogger.git
+```
+
+Navigate to the cloned repository:
+```
+cd libprettylogger
+```
+
+Build the library with `Cargo`:
+```
+cargo build --release
+```
+
+**Including the `.rlib` file in your project**:
 * Move `target/release/libprettylogger.rlib` to your project directory
 * Include it in `Cargo.toml`:
 ```toml
@@ -36,7 +52,7 @@ prettylogger = "/path/to/libprettylogger.rlib"
 <!--prettylogger = "0.1.0"-->
 <!--```-->
 
-**Using in your project**:
+**Using the library in your project**:
 <!--Make sure this matches the example from lib.rs-->
 ```rust
 // Include stuff from the library:
@@ -63,12 +79,13 @@ logger.fatal("A fatal error!");
 <a name="installation_with-cargo"></a>
 ### With `Cargo`
 **CURRENTLY NOT SUPPORTED**
+
 To install the library with `cargo`, run:
 ```
 cargo install prettylogger
 ```
 
-To use it in your own project, add this to your `Cargo.toml`:
+And add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 prettylogger = "0.1.0"
@@ -79,6 +96,8 @@ prettylogger = "0.1.0"
 Currently, the only way to install the library is to download it from its 
 repository and build it manually with cargo:
 ```
+git clone https://github.com/tpaau-17DB/libprettylogger.git &&
+cd libprettylogger &&
 cargo build --release
 ```
 This will produce a `libprettylogger.rlib` in the `target/release/` directory.
@@ -92,20 +111,17 @@ prettylogger = "/path/to/your/repo/lib/libprettylogger.rlib"
 <a name="the-log-anatomy"></a>
 ## The Log Anatomy
 A log consists of several headers:
-* **Log header** -> Determined by the type of the log (eg. debug, info, warning)
+* **Log header** -> Determined by the type of the log (debug, info, warning etc.)
 * **Timestamp** -> Contains the date and time the log was created
 * **Message** -> The actual log message
 
-Here is a log message with all its parts highlighted:
+Here is a log message with all its parts marked:
 ```
 [ DEBUG 21:52:37 An example debug message ]
   ^^^^^ ^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^
   |     |        |
-  |     |        |
   |     |        the message
-  |     |
   |     timestamp
-  |
   log header
 ```
 This specific effect was achieved by setting the datetime format to `%H:%M:%S`,
@@ -117,7 +133,7 @@ log format to `[ %h %d %m ]` and the debug header to `DEBUG`.
 The `Logger` struct is the **core** of the entire project.
 This is what you are going to use when you want to print a log, set filtering
 rules or modify log formatting. 
-All of its fields are private, only allowing for configuration via **setters**.
+All of its fields are private, only allowing for modification via setters.
 
 Creating a `Logger` struct with default configuration:
 ```rust
@@ -131,7 +147,8 @@ let mut logger = Logger::default();
 * `warning(&mut self, message: &str)` -> Prints a **warning**.
 * `error(&mut self, message: &str)` -> Prints an **error**.
 * `fatal(&mut self, message: &str)` -> Prints a **fatal error**.
-BTW, `debug`, `info` and `warning` methods have their variants that bypass
+
+**BTW**, `debug`, `info` and `warning` methods have their variants that bypass
 filtering:
 * `debug_no_filtering(&mut self, message: &str)` -> Prints a **debug message**,
 bypasses filtering.
@@ -139,8 +156,9 @@ bypasses filtering.
 bypasses filtering.
 * `warning_no_filtering(&mut self, message: &str)` -> Prints a **warning**,
 bypasses filtering.
+
 Note that`error` and `fatal` methods don't have `_no_filtering` variants.
-That is because errors **can't be suppressed**.
+This is because errors **can't be suppressed**.
 
 <a name="the-logger_setters"></a>
 ### Setters:
@@ -148,7 +166,7 @@ That is because errors **can't be suppressed**.
 * `set_verbosity(&mut self, verbosity: Verbosity)` -> Sets the `Logger` verbosity. The `Verbosity` `enum` is declared in `prettylogger::filtering`.
 * `toggle_log_filtering(&mut self, enabled: bool)` -> Toggles log filtering.
 
-**Log format** (see [this](#the-log-anatomy)):
+**Log formatting** (see [this](#the-log-anatomy)):
 * `toggle_log_header_color(&mut self, enabled: bool)` -> Toggles log header color,
 same as setting all the log header colors to `Color::None`.
 * `set_debug/info/warning/error/fatal_header(&mut self, header: &str)` -> Sets
