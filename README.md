@@ -1,6 +1,7 @@
 # libprettylogger
 A highly customizable logger library written in Rust.
 
+![Build Status](https://img.shields.io/github/workflow/status/tpaau-17DB/libprettylogger/CI%20workflow?label=CI%20Ubuntu)
 
 ## Table of Contents
 * [TL;DR](#tldr)
