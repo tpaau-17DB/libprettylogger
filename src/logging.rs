@@ -179,12 +179,14 @@ pub struct Logger {
     pub(crate) fatal_header: String,
 
     pub(crate) log_format: String,
-    
+
+    #[serde(skip)]
     pub(crate) show_datetime: bool,
     pub(crate) datetime_format: String,
 
     pub(crate) file_logging_enabled: bool,
     pub(crate) log_file_path: String,
+    #[serde(skip)]
     pub(crate) log_file_lock: bool,
 
     pub(crate) log_buffer_max_size: usize,

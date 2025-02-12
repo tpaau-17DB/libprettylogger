@@ -88,7 +88,7 @@ impl Logger {
     /// multiple placeholders of the same type in a format string):
     /// * `%m` -> The log message (this placeholder is mandatory, you format
     /// will get rejected if it doesn't contain this placeholder)
-    /// * `%h` -> The log header indicating the log type (debug, error, etc.)
+    /// * `%h` -> The log type header (debug, error, etc.)
     /// * `%d` -> The datetime
     ///
     /// # Set an XML-like log format;

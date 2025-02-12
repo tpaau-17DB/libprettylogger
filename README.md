@@ -1,14 +1,10 @@
 # libprettylogger
-A highly customizable Rust logger library.
-
-This project is yet to be released on [crates.io](https://crates.io/).
+A highly customizable logger library written in Rust.
 
 
 ## Table of Contents
 * [TL;DR](#tldr)
 * [Installation](#installation)
-    * [With Cargo](#installation_with-cargo)
-    * [Manually](#installation_manually)
 * [The Log Anatomy](#the-log-anatomy)
 * [The Logger](#the-logger)
     * [Constructors](#the-logger_constructors)
@@ -24,39 +20,14 @@ This project is yet to be released on [crates.io](https://crates.io/).
 
 <a name="tldr"></a>
 ## TL;DR
-**Installing**:
-
-Clone the repository:
-```
-git clone https://github.com/tpaau-17DB/libprettylogger.git
-```
-
-Navigate to the cloned repository:
-```
-cd libprettylogger
-```
-
-Build the library with `Cargo`:
-```
-cargo build --release
-```
-
-**Including the `.rlib` file in your project**:
-* Move `target/release/libprettylogger.rlib` to your project directory
-* Include it in `Cargo.toml`:
+**Include the library in your Cargo.toml**:
+Update your `Cargo.toml`:
 ```toml
 [dependencies]
-prettylogger = "/path/to/libprettylogger.rlib"
+prettylogger = "0.1.0"
 ```
 
-<!--**Installation**:-->
-<!--Update your `Cargo.toml`:-->
-<!--```toml-->
-<!--[dependencies]-->
-<!--prettylogger = "0.1.0"-->
-<!--```-->
-
-**Using the library in your project**:
+**Use the library in your project**:
 <!--Make sure this matches the example from lib.rs-->
 ```rust
 // Include stuff from the library:
@@ -80,10 +51,6 @@ logger.fatal("A fatal error!");
 
 <a name="installation"></a>
 ## Installation
-<a name="installation_with-cargo"></a>
-### With `Cargo`
-**CURRENTLY NOT SUPPORTED**
-
 To install the library with `cargo`, run:
 ```
 cargo install prettylogger
@@ -94,42 +61,6 @@ And add this to your `Cargo.toml`:
 [dependencies]
 prettylogger = "0.1.0"
 ```
-
-<a name="installation_manually"></a>
-### Manual installation
-Currently, the only way to install the library is to download it from its 
-repository and build it manually with cargo:
-```
-git clone https://github.com/tpaau-17DB/libprettylogger.git &&
-cd libprettylogger &&
-cargo build --release
-```
-This will produce a `libprettylogger.rlib` in the `target/release/` directory.
-You can copy this file to your project's directory and include it in `Cargo.toml`:
-```toml
-[dependencies]
-prettylogger = "/path/to/your/repo/lib/libprettylogger.rlib"
-```
-
-
-<a name="the-log-anatomy"></a>
-## The Log Anatomy
-A log consists of several headers:
-* **Log header** -> Determined by the type of the log (debug, info, warning etc.)
-* **Timestamp** -> Contains the date and time the log was created
-* **Message** -> The actual log message
-
-Here is a log message with all its parts marked:
-```
-[ DEBUG 21:52:37 An example debug message ]
-  ^^^^^ ^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^
-  |     |        |
-  |     |        the message
-  |     timestamp
-  log header
-```
-This specific effect was achieved by setting the datetime format to `%H:%M:%S`,
-log format to `[ %h %d %m ]` and the debug header to `DEBUG`.
 
 
 <a name="the-logger"></a>
@@ -178,12 +109,12 @@ This is because errors **can't be suppressed**.
 * `toggle_log_filtering(&mut self, enabled: &bool)` -> Toggles log filtering.
 
 **Log formatting** (see [this](#the-log-anatomy)):
-* `toggle_log_header_color(&mut self, enabled: &bool)` -> Toggles log header color,
-same as setting all the log header colors to `Color::None`.
+* `toggle_log_header_color(&mut self, enabled: &bool)` -> Toggles log type header color,
+same as setting all the log type header colors to `Color::None`.
 * `set_debug/info/warning/error/fatal_header(&mut self, header: &str)` -> Sets
-the log header for different log types (debug, info, warning, error, fatal).
+the log type header for different log types (debug, info, warning, error, fatal).
 * `set_debug/info/warning/error/fatal_color(&mut self, color: &Color)` -> Sets
-the log header color for different log types. The `Color` enum is declared in
+the log type header color for different log types. The `Color` enum is declared in
 `prettylogger::colors`.
 * `set_datetime_format(&mut self, format: &str)` -> Sets the timestamp format. 
 * `set_log_format(&mut self, format: &str)` -> Sets the log format.
@@ -204,6 +135,27 @@ used to avoid race conditions.
 * `flush(&mut self)` -> Flushes the log buffer.
 * `save_template(&self, path: &str)` -> Serializes `Logger` into a JSON template
 file. (see [this](#logger-templates))
+
+
+<a name="the-log-anatomy"></a>
+## The Log Anatomy
+A log consists of several headers:
+* **Log Type** -> The type of the log (debug, info, warning etc.)
+* **Timestamp** -> Contains the date and time the log was created
+* **Message** -> The actual log message
+
+Here is a log message with all its parts marked:
+```
+[ DEBUG 21:52:37 An example debug message ]
+  ^^^^^ ^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^
+  |     |        |
+  |     |        the message
+  |     timestamp
+  log type 
+```
+This specific effect was achieved by setting the datetime format to `%H:%M:%S`,
+log format to `[ %h %d %m ]` and the debug log type header to `DEBUG`.
+
 
 
 <a name="log-filtering"></a>
@@ -235,7 +187,7 @@ logger.toggle_log_filtering(&mut self, enabled: &bool);
 File logging is a feature that allows you to automatically save log output to a
 file.
 
-Enabling file logging:
+**Enabling file logging**:
 ```rust
 // Set the log file path first:
 logger.set_log_file_path("/path/to/file.log");
@@ -256,13 +208,17 @@ error.
 The log file can be locked to prevent race conditions when there are multiple
 threads accessing it at the same time. It prevents `Logger` from writing to the
 log file until the lock has been released. `Logger` only ignores the log file
-lock when its being dropped and the `OnDropPolicy` is set to `IgnoreLogFileLock`.
+lock when its being dropped and the `OnDropPolicy` is set to `IgnoreLogFileLock`
+(off by default).
+
+Note that log file lock is not persistent (its not saved when calling 
+`logger.save_template("path")`).
 
 To toggle log file lock, use:
 ```rust
 logger.toggle_lock_file_lock(&true);
 
-// Do some write operations on the log file here
+// Do some I/O operations on the log file here
 
 logger.toggle_lock_file_lock(&false);
 ```
@@ -274,8 +230,9 @@ logger.set_on_drop_file_policy(&OnDropPolicy::IgnoreLogFileLock);
 
 `OnDropPolicy` is declared in the `logging` module, and all its possible values
 are:
-* `IgnoreLogFileLock` -> Ignore the log file lock and write to the log file anyway 
-* `DiscardLogBuffer` (default) -> Don't write to the log file
+* `IgnoreLogFileLock` -> Ignore the log file lock and write to the log file
+anyway. 
+* `DiscardLogBuffer` (default) -> Don't write to the log file.
 
 <a name="file-logging_automatic-log-buffer-flushing"></a>
 ### Automatic Log Buffer Flushing
@@ -285,7 +242,7 @@ based on the log buffer size:
 logger.set_log_file_path("/path/to/file.log");
 logger.toggle_file_logging(true);
 
-// This will force `Logger` to flush the log buffer every 16 logs:
+// This will make `Logger` to flush the log buffer every 16 logs:
 logger.set_max_log_buffer_size(&16);
 
 let mut i = 0;
@@ -305,7 +262,7 @@ A **Logger Template** is a JSON file that defines the configuration of a
 `Logger` struct. This allows you to easily manage and store logging settings in a
 file.
 
-Here’s an example of what a `Logger` struct looks like in JSON format:
+Here’s an example of how a `Logger` struct looks like in JSON format:
 ```json
 {
   "verbosity": "Standard",
@@ -322,11 +279,9 @@ Here’s an example of what a `Logger` struct looks like in JSON format:
   "error_header": "ERR",
   "fatal_header": "FATAL",
   "log_format": "[%h] %m",
-  "show_datetime": false,
   "datetime_format": "%Y-%m-%d %H:%M:%S",
   "file_logging_enabled": false,
   "log_file_path": "",
-  "log_file_lock": false,
   "log_buffer_max_size": 128,
   "on_drop_policy": "DiscardLogBuffer"
 }
