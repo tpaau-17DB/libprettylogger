@@ -7,15 +7,19 @@ This project is yet to be released on [crates.io](https://crates.io/).
 ## Table of Contents
 * [TL;DR](#tldr)
 * [Installation](#installation)
-    * [With `Cargo`](#installation_with-cargo)
+    * [With Cargo](#installation_with-cargo)
     * [Manually](#installation_manually)
 * [The Log Anatomy](#the-log-anatomy)
 * [The Logger](#the-logger)
+    * [Constructors](#the-logger_constructors)
     * [Logging Methods](#the-logger_logging-methods)
     * [Setters](#the-logger_setters)
     * [Other Methods](#the-logger_other-methods)
 * [Log Filtering](#log-filtering)
 * [File Logging](#file-logging)
+    * [Automatic Log File Flushing](#file-logging_automatic-log-buffer-flushing)
+    * [Locking the Log File](#file-logging_locking-the-log-file)
+* [Logger Templates](#logger-templates)
 
 
 <a name="tldr"></a>
@@ -60,10 +64,10 @@ use prettylogger::logging::Logger;
 use prettylogger::filtering::Verbosity;
 
 // A `Logger struct with default configuration`
-let mut logger = Logger::default();///
+let mut logger = Logger::default();
 
 // Configure `Logger` to your liking
-logger.set_verbosity(Verbosity::All); // Don't suppress any log messages
+logger.set_verbosity(&Verbosity::All); // Don't suppress any log messages
 
 // Print logs: 
 logger.debug("A debug message!");
@@ -140,6 +144,12 @@ Creating a `Logger` struct with default configuration:
 let mut logger = Logger::default();
 ```
 
+<a name="the-logger_constructors"></a>
+### Constructors:
+* `default()` -> `Logger` with default configuration.
+* `from_template(path: &str)` -> Deserializes `Logger` from a JSON template file.
+(see [this](#logger-templates))
+
 <a name="the-logger_logging-methods"></a>
 ### Logging Methods:
 * `debug(&mut self, message: &str)` -> Prints a **debug message**.
@@ -163,26 +173,27 @@ This is because errors **can't be suppressed**.
 <a name="the-logger_setters"></a>
 ### Setters:
 **Log filtering** (see [this](#log-filtering)):
-* `set_verbosity(&mut self, verbosity: Verbosity)` -> Sets the `Logger` verbosity. The `Verbosity` `enum` is declared in `prettylogger::filtering`.
-* `toggle_log_filtering(&mut self, enabled: bool)` -> Toggles log filtering.
+* `set_verbosity(&mut self, verbosity: &Verbosity)` -> Sets the `Logger` verbosity.
+`Verbosity` is declared in `prettylogger::filtering`.
+* `toggle_log_filtering(&mut self, enabled: &bool)` -> Toggles log filtering.
 
 **Log formatting** (see [this](#the-log-anatomy)):
-* `toggle_log_header_color(&mut self, enabled: bool)` -> Toggles log header color,
+* `toggle_log_header_color(&mut self, enabled: &bool)` -> Toggles log header color,
 same as setting all the log header colors to `Color::None`.
 * `set_debug/info/warning/error/fatal_header(&mut self, header: &str)` -> Sets
 the log header for different log types (debug, info, warning, error, fatal).
-* `set_debug/info/warning/error/fatal_color(&mut self, color: Color)` -> Sets
-the log header color for different log types. The `Color` `enum` is declared in
+* `set_debug/info/warning/error/fatal_color(&mut self, color: &Color)` -> Sets
+the log header color for different log types. The `Color` enum is declared in
 `prettylogger::colors`.
 * `set_datetime_format(&mut self, format: &str)` -> Sets the timestamp format. 
 * `set_log_format(&mut self, format: &str)` -> Sets the log format.
 
 **File logging** (see [this](#file-logging)):
 * `set_log_file_path(&mut self, path: &str)` -> Sets the log file path.
-* `toggle_file_logging(&ut self, enabled: bool)` -> Toggles file logging.
-* `set_max_log_buffer_size(&mut self, size: usize)` -> Sets the maximum size
+* `toggle_file_logging(&ut self, enabled: &bool)` -> Toggles file logging.
+* `set_max_log_buffer_size(&mut self, size: &usize)` -> Sets the maximum size
 of the log buffer. When log buffer exceeds this limit, it gets flushed.
-* `toggle_log_file_lock(&mut self, enabled: bool)` -> Toggles log file lock
+* `toggle_log_file_lock(&mut self, enabled: &bool)` -> Toggles log file lock
 used to avoid race conditions.
 
 <a name="the-logger_other-methods"></a>
@@ -191,13 +202,143 @@ used to avoid race conditions.
 `LogStruct` and `Logger` configuration. The `LogStruct` is declared in
 `prettylogger::logging`.
 * `flush(&mut self)` -> Flushes the log buffer.
+* `save_template(&self, path: &str)` -> Serializes `Logger` into a JSON template
+file. (see [this](#logger-templates))
 
 
 <a name="log-filtering"></a>
-## Log filtering
-Lorem ipsum
+## Log Filtering
+Logs are filtered based on the current `LogLevel` and the `Logger`'s `Verbosity`
+setting.
+
+The `Verbosity` level determines which logs are filtered out:
+- `Verbosity::All`: Disables log filtering, allowing all logs to pass through.
+- `Verbosity::Standard` (default): Filters out debug logs.
+- `Verbosity::Quiet`: Only allows errors and warnings to be displayed.
+- `Verbosity::ErrorsOnly`: Only allows errors to be shown.
+
+The `Verbosity` enum is defined in `prettylogger::filtering`.
+
+To modify the `Verbosity` of the `Logger`, use:
+```rust
+logger.set_verbosity(&mut self, verbosity: Verbosity);
+```
+
+To temporarily disable or enable log filtering, use:
+```rust
+logger.toggle_log_filtering(&mut self, enabled: &bool);
+```
 
 
 <a name="file-logging"></a>
 ## File Logging
-Lorem ipsum
+File logging is a feature that allows you to automatically save log output to a
+file.
+
+Enabling file logging:
+```rust
+// Set the log file path first:
+logger.set_log_file_path("/path/to/file.log");
+// Then enable file logging:
+logger.toggle_file_logging(true);
+
+logger.info("Yay!"); // Yay!
+logger.flush(); // Flush the log buffer to a file
+```
+
+It is **CRUTIAL** to set the log file path **FIRST**. This is because when
+you attempt to enable file logging, `Logger` will check if the log file path is
+correct and since the default log file path is an empty string, you will get an
+error.
+
+<a name="file-logging_locking-the-log-file"></a>
+### Locking the Log File
+The log file can be locked to prevent race conditions when there are multiple
+threads accessing it at the same time. It prevents `Logger` from writing to the
+log file until the lock has been released. `Logger` only ignores the log file
+lock when its being dropped and the `OnDropPolicy` is set to `IgnoreLogFileLock`.
+
+To toggle log file lock, use:
+```rust
+logger.toggle_lock_file_lock(&true);
+
+// Do some write operations on the log file here
+
+logger.toggle_lock_file_lock(&false);
+```
+
+To set the on drop log file policy, use:
+```rust
+logger.set_on_drop_file_policy(&OnDropPolicy::IgnoreLogFileLock);
+```
+
+`OnDropPolicy` is declared in the `logging` module, and all its possible values
+are:
+* `IgnoreLogFileLock` -> Ignore the log file lock and write to the log file anyway 
+* `DiscardLogBuffer` (default) -> Don't write to the log file
+
+<a name="file-logging_automatic-log-buffer-flushing"></a>
+### Automatic Log Buffer Flushing
+You can either flush the log buffer automatically or set up automatic flushing
+based on the log buffer size:
+```rust
+logger.set_log_file_path("/path/to/file.log");
+logger.toggle_file_logging(true);
+
+// This will force `Logger` to flush the log buffer every 16 logs:
+logger.set_max_log_buffer_size(&16);
+
+let mut i = 0;
+loop {
+    logger.info("Yay!");
+    i += 1;
+    if i >= 16 {
+        break;
+    }
+}
+```
+
+
+<a name="logger-templates"></a>
+## Logger Templates
+A **Logger Template** is a JSON file that defines the configuration of a
+`Logger` struct. This allows you to easily manage and store logging settings in a
+file.
+
+Here’s an example of what a `Logger` struct looks like in JSON format:
+```json
+{
+  "verbosity": "Standard",
+  "filtering_enabled": true,
+  "log_header_color_enabled": true,
+  "debug_color": "Blue",
+  "info_color": "Green",
+  "warning_color": "Yellow",
+  "error_color": "Red",
+  "fatal_color": "Magenta",
+  "debug_header": "DBG",
+  "info_header": "INF",
+  "warning_header": "WAR",
+  "error_header": "ERR",
+  "fatal_header": "FATAL",
+  "log_format": "[%h] %m",
+  "show_datetime": false,
+  "datetime_format": "%Y-%m-%d %H:%M:%S",
+  "file_logging_enabled": false,
+  "log_file_path": "",
+  "log_file_lock": false,
+  "log_buffer_max_size": 128,
+  "on_drop_policy": "DiscardLogBuffer"
+}
+```
+
+Deserializing `Logger` from a template file:
+```rust
+let mut logger = Logger::from_template("/path/to/template.json");
+```
+
+Serializing `Logger` to a template file:
+```rust
+let mut logger = Logger::default(); // Create a default `Logger`
+logger.save_template("/path/to/template.json");
+```

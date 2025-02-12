@@ -104,8 +104,8 @@ lazy_static! {
     };
 }
 
-pub(crate) fn get_color_code(color: Color) -> String {
-    let key = color as i32;
+pub(crate) fn get_color_code(color: &Color) -> String {
+    let key = *color as i32;
     if COLOR_MAP.contains_key(&key) {
         return COLOR_MAP[&key].to_string();
     }

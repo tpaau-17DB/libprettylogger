@@ -11,7 +11,7 @@
 /// let mut logger = Logger::default();///
 ///
 /// // Configure `Logger` to your liking
-/// logger.set_verbosity(Verbosity::All); // Don't suppress any log messages
+/// logger.set_verbosity(&Verbosity::All); // Don't suppress any log messages
 ///
 /// // Print logs: 
 /// logger.debug("A debug message!");
