@@ -1,5 +1,5 @@
 # libprettylogger
-A Rust logger library, focused on stability and customizability.
+A highly customizable Rust logger library.
 
 This project is yet to be released on [crates.io](https://crates.io/).
 
