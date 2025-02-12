@@ -9,8 +9,7 @@ readme = "README.md"
 homepage = "https://github.com/tpaau-17DB/libprettylogger"
 repository = "https://github.com/tpaau-17DB/libprettylogger"
 license = "(MIT OR Apache-2.0) AND Unicode-3.0"
-keywords = ["logger", "customizable", "configurable", "file-logging", "log-levels",
-"log-filtering", "log-formatting"]
+keywords = ["logger", "customizable", "log-levels", "log-filtering", "log-formatting"]
 categories = ["logger"]
 exclude = ["output.log", "templates/test.json"]
 
