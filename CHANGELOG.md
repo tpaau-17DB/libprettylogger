@@ -5,4 +5,4 @@
 references to owned values.
 
 ## Patches:
-* Introduced automatic argument casting for `Logger`'s setter methods ([C_GENERIC](https://rust-lang.github.io/api-guidelines/flexibility.html#c-generic)).
+* Introduced automatic argument casting for some of `Logger`'s setter methods ([C_GENERIC](https://rust-lang.github.io/api-guidelines/flexibility.html#c-generic)).

@@ -1,12 +1,14 @@
 # libprettylogger
 A highly customizable logger library written in Rust.
 
-![Build Status](https://img.shields.io/github/workflow/status/tpaau-17DB/libprettylogger/CI%20workflow?label=CI%20Ubuntu)
+![CI Ubuntu](https://img.shields.io/github/actions/workflow/status/tpaau-17DB/libprettylogger/Ubuntu.yml?branch=main)
+![Crates.io](https://img.shields.io/crates/v/libprettylogger.svg)
+
 
 ## Table of Contents
 * [TL;DR](#tldr)
 * [Installation](#installation)
-* [The Log Anatomy](#the-log-anatomy)
+* [The Log Anatomy](#log-format)
 * [The Logger](#the-logger)
     * [Constructors](#the-logger_constructors)
     * [Logging Methods](#the-logger_logging-methods)
@@ -68,7 +70,7 @@ libprettylogger = "0.1.0"
 The `Logger` struct is the **core** of the entire project.
 This is what you are going to use when you want to print a log, set filtering
 rules or modify log formatting. 
-All of its fields are private, only allowing for modification via setters.
+All of it's fields are private, only allowing for modification via setters.
 
 Creating a `Logger` struct with default configuration:
 ```rust
@@ -105,10 +107,10 @@ This is because errors **can't be suppressed**.
 ### Setters:
 **Log filtering** (see [this](#log-filtering)):
 * `set_verbosity(verbosity: Verbosity)` **->** Sets the `Logger`
-verbosity. `Verbosity` is declared in `prettylogger::filtering`.
+verbosity.
 * `toggle_log_filtering(enabled: &bool)` **->** Toggles log filtering.
 
-**Log formatting** (see [this](#the-log-anatomy)):
+**Log formatting** (see [this](#log-format)):
 * `toggle_log_header_color(enabled: &bool)` **->** Toggles log type
 header color, same as setting all the log type header colors to `Color::None`.
 * `set_debug/info/warning/error/fatal_header(header: &str)` **->** Sets
@@ -137,14 +139,14 @@ the `LogStruct` and `Logger` configuration. The `LogStruct` is declared in
 template file. (see [this](#logger-templates))
 
 
-<a name="the-log-anatomy"></a>
-## The Log Anatomy
+<a name="log-format"></a>
+## Log Format and Log Headers 
 A log consists of several headers:
 * **Log Type** **->** The type of the log (debug, info, warning etc.)
 * **Timestamp** **->** Contains the date and time the log was created
 * **Message** **->** The actual log message
 
-Here is a log message with all its parts marked:
+Here is a log message with all it's parts marked:
 ```
 [ DEBUG 21:52:37 An example debug message ]
   ^^^^^ ^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -157,17 +159,16 @@ This specific effect was achieved by setting the datetime format to `%H:%M:%S`,
 log format to `[ %h %d %m ]` and the debug log type header to `DEBUG`.
 
 
-
 <a name="log-filtering"></a>
 ## Log Filtering
 Logs are filtered based on the current `LogLevel` and the `Logger`'s `Verbosity`
 setting.
 
 The `Verbosity` level determines which logs are filtered out:
-- `Verbosity::All`: Disables log filtering, allowing all logs to pass through.
-- `Verbosity::Standard` (default): Filters out debug logs.
-- `Verbosity::Quiet`: Only allows errors and warnings to be displayed.
-- `Verbosity::ErrorsOnly`: Only allows errors to be shown.
+- `All`: Disables log filtering, allowing all logs to pass through.
+- `Standard` (default): Filters out debug logs.
+- `Quiet`: Only allows errors and warnings to be displayed.
+- `ErrorsOnly`: Only allows errors to be shown.
 
 The `Verbosity` enum is defined in `prettylogger::filtering`.
 
@@ -198,7 +199,7 @@ logger.info("Yay!"); // Yay!
 logger.flush(); // Flush the log buffer to a file
 ```
 
-It is **CRUTIAL** to set the log file path **FIRST**. This is because when
+It is **CRUCIAL** to set the log file path **FIRST**. This is because when
 you attempt to enable file logging, `Logger` will check if the log file path is
 correct and since the default log file path is an empty string, you will get an
 error.
@@ -208,10 +209,10 @@ error.
 The log file can be locked to prevent race conditions when there are multiple
 threads accessing it at the same time. It prevents `Logger` from writing to the
 log file until the lock has been released. `Logger` only ignores the log file
-lock when its being dropped and the `OnDropPolicy` is set to `IgnoreLogFileLock`
+lock when it's being dropped and the `OnDropPolicy` is set to `IgnoreLogFileLock`
 (off by default).
 
-Note that log file lock is not persistent (its not saved when calling 
+Note that log file lock is not persistent (it's not saved when calling 
 `logger.save_template("path")`).
 
 To toggle log file lock, use:
@@ -228,7 +229,7 @@ To set the on drop log file policy, use:
 logger.set_on_drop_file_policy(&OnDropPolicy::IgnoreLogFileLock);
 ```
 
-`OnDropPolicy` is declared in the `logging` module, and all its possible values
+`OnDropPolicy` is declared in the `logging` module, and all it's possible values
 are:
 * `IgnoreLogFileLock` **->** Ignore the log file lock and write to the log file
 anyway. 
@@ -262,7 +263,7 @@ A **Logger Template** is a JSON file that defines the configuration of a
 `Logger` struct. This allows you to easily manage and store logging settings in a
 file.
 
-Here’s an example of how a `Logger` struct looks like in JSON format:
+Here’s an example of what a `Logger` struct looks like in JSON format:
 ```json
 {
   "verbosity": "Standard",
