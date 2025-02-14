@@ -30,7 +30,7 @@ libprettylogger = "0.1.0"
 ```
 
 **Include the library in your project**:
-<!--Make sure this matches the example from lib.rs-**->**
+<!--Make sure this matches the example from lib.rs-->
 ```rust
 // Include stuff from the library:
 use prettylogger::logging::Logger;
