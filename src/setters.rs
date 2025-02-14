@@ -9,47 +9,48 @@ impl Logger {
     /// * `Standard` -> Just filter debug logs
     /// * `Quiet` -> Only let warnings and errors to be displayed
     /// * `ErrorsOnly` -> I'm not gonna explain this one
-    pub fn set_verbosity(&mut self, verbosity: &Verbosity) {
-        self.verbosity = *verbosity;
+    pub fn set_verbosity<I: Into<Verbosity>>(&mut self, verbosity: I) {
+        self.verbosity = verbosity.into();
     }
+
 
     /// Toggles log filtering.
     /// * **true**  -> logs will get filtered based on verbosity
     /// * **false** -> log filtering will be disabled globally
-    pub fn toggle_log_filtering(&mut self, enabled: &bool) {
-        self.filtering_enabled = *enabled;
+    pub fn toggle_log_filtering<I: Into<bool>>(&mut self, enabled: I) {
+        self.filtering_enabled = enabled.into();
     }
 
     /// Toggles colored log headers.
     /// * `true`  -> Log headers will have colors 
     /// * `false` -> No colors :(
-    pub fn toggle_log_header_color(&mut self, enabled: &bool) {
-        self.log_header_color_enabled = *enabled;
+    pub fn toggle_log_header_color<I: Into<bool>>(&mut self, enabled: I) {
+        self.log_header_color_enabled = enabled.into();
     }
 
     /// Sets **debug log header** color.
-    pub fn set_debug_color(&mut self, color: &Color) {
-        self.debug_color = *color;
+    pub fn set_debug_color<I: Into<Color>>(&mut self, color: I) {
+        self.debug_color = color.into();
     }
 
     /// Sets **info log header** color.
-    pub fn set_info_color(&mut self, color: &Color) {
-        self.info_color = *color;
+    pub fn set_info_color<I: Into<Color>>(&mut self, color: I) {
+        self.info_color = color.into();
     }
 
     /// Sets **warning header** color.
-    pub fn set_warning_color(&mut self, color: &Color) {
-        self. warning_color = *color;
+    pub fn set_warning_color<I: Into<Color>>(&mut self, color: I) {
+        self. warning_color = color.into();
     }
 
     /// Sets **error header** color.
-    pub fn set_error_color(&mut self, color: &Color) {
-        self.error_color = *color;
+    pub fn set_error_color<I: Into<Color>>(&mut self, color: I) {
+        self.error_color = color.into();
     }
 
     /// Sets **fatal error header** color.
-    pub fn set_fatal_color(&mut self, color: &Color) {
-        self.fatal_color = *color;
+    pub fn set_fatal_color<I: Into<Color>>(&mut self, color: I) {
+        self.fatal_color = color.into();
     }
 
     /// Sets **debug log header** format.
@@ -160,8 +161,9 @@ impl Logger {
     /// // Then enable file logging:
     /// logger.toggle_file_logging(true);
     /// ```
-    pub fn toggle_file_logging(&mut self, enabled: &bool) -> Result<(), Error> {
-        if !enabled {
+    pub fn toggle_file_logging<I: Into<bool>>(&mut self, enabled: I)
+    -> Result<(), Error> {
+        if !enabled.into() {
             self.file_logging_enabled = false;
             Ok(())
         }
@@ -207,15 +209,15 @@ impl Logger {
     ///     }
     /// }
     /// ```
-    pub fn set_max_log_buffer_size(&mut self, size: &usize) {
-        self.log_buffer_max_size = *size;
+    pub fn set_max_log_buffer_size<I: Into<usize>>(&mut self, size: I) {
+        self.log_buffer_max_size = size.into();
     }
 
     /// Log file lock can be used to prevent race conditions when there is one
     /// thread reading from the log file and another thread writing to the log
     /// file.
     ///
-    /// # WARNING: LEAVING THIS OPTION **ON** FOR A LONG PERIOD OF TIME CAN CAUSE
+    /// # WARNING: LEAVING THIS OPTION ON FOR A LONG PERIOD OF TIME CAN CAUSE
     /// HIGH MEMORY USAGE AND STUTTERING!
     ///
     /// `true`  -> When log file lock is enabled, logger won't flush into the
@@ -223,8 +225,8 @@ impl Logger {
     /// not loose any logs, they will be stored in the log buffer even when it
     /// exceeds its size limit.
     /// `false` -> Logger will write to the log file normally.
-    pub fn toggle_log_file_lock(&mut self, enabled: &bool) {
-        self.log_file_lock = *enabled;
+    pub fn toggle_log_file_lock<I: Into<bool>>(&mut self, enabled: I) {
+        self.log_file_lock = enabled.into();
     }
 
     /// Sets `Logger`'s on drop log file policy.
@@ -232,9 +234,9 @@ impl Logger {
     /// ```
     /// # use prettylogger::logging::{Logger, OnDropPolicy};
     /// # let mut logger = Logger::default();
-    /// logger.set_on_drop_file_policy(&OnDropPolicy::IgnoreLogFileLock);
+    /// logger.set_on_drop_file_policy(OnDropPolicy::IgnoreLogFileLock);
     /// ```
-    pub fn set_on_drop_file_policy(&mut self, policy: &OnDropPolicy) {
-        self.on_drop_policy = *policy;
+    pub fn set_on_drop_file_policy<I: Into<OnDropPolicy>>(&mut self, policy: I) {
+        self.on_drop_policy = policy.into();
     }
 }

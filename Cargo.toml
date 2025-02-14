@@ -1,6 +1,6 @@
 [package]
 name = "libprettylogger"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["tpaau-17DB"]
 edition = "2021"
 rust-versions = "1.78.0"

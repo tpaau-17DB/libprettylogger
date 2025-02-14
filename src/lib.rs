@@ -1,17 +1,16 @@
-/// A feature-rich logger library to automatically handle log formatting and
-/// filtering.
+/// A highly customizable logger library.
 ///
-/// # Using in your project:
+/// # How to use:
 /// ```
 /// // Include stuff from the library:
 /// use prettylogger::logging::Logger;
 /// use prettylogger::filtering::Verbosity;
 ///
-/// // A `Logger struct with default configuration`
+/// // A `Logger` struct with default configuration
 /// let mut logger = Logger::default();///
 ///
 /// // Configure `Logger` to your liking
-/// logger.set_verbosity(&Verbosity::All); // Don't suppress any log messages
+/// logger.set_verbosity(Verbosity::All); // Don't suppress any log messages
 ///
 /// // Print logs: 
 /// logger.debug("A debug message!");
