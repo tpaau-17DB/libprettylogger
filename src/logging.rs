@@ -163,7 +163,6 @@ impl Display for LogStruct {
 pub struct Logger {
     pub(crate) verbosity: Verbosity,
     pub(crate) filtering_enabled: bool,
-
     pub(crate) log_header_color_enabled: bool,
 
     pub(crate) debug_color: Color,
@@ -179,21 +178,20 @@ pub struct Logger {
     pub(crate) fatal_header: String,
 
     pub(crate) log_format: String,
-
-    #[serde(skip)]
-    pub(crate) show_datetime: bool,
     pub(crate) datetime_format: String,
 
     pub(crate) file_logging_enabled: bool,
     pub(crate) log_file_path: String,
-    #[serde(skip)]
-    pub(crate) log_file_lock: bool,
-
     pub(crate) log_buffer_max_size: usize,
+    pub(crate) on_drop_policy: OnDropPolicy,
+
+    // Dynamic variables that should not be included in the template file:
     #[serde(skip)]
     pub(crate) log_buffer: Vec<LogStruct>,
-
-    pub(crate) on_drop_policy: OnDropPolicy,
+    #[serde(skip)]
+    pub(crate) show_datetime: bool,
+    #[serde(skip)]
+    pub(crate) log_file_lock: bool,
 }
 
 impl Drop for Logger {
@@ -345,7 +343,6 @@ impl Logger {
         Logger {
             verbosity: Verbosity::default(),
             filtering_enabled: true,
-
             log_header_color_enabled: true,
 
             debug_color: Color::Blue,
@@ -360,19 +357,17 @@ impl Logger {
             error_header: "ERR".to_string(),
             fatal_header: "FATAL".to_string(),
 
-            show_datetime: false,
+            log_format: "[%h] %m".to_string(),
             datetime_format: String::from("%Y-%m-%d %H:%M:%S"),
 
             file_logging_enabled: false,
             log_file_path: "".to_string(),
-            log_file_lock: false,
-
-            log_format: "[%h] %m".to_string(),
-
             log_buffer_max_size: 128,
-            log_buffer: Vec::new(),
-
             on_drop_policy: OnDropPolicy::default(),
+
+            show_datetime: false,
+            log_buffer: Vec::new(),
+            log_file_lock: false,
         }
     }
 
@@ -541,8 +536,8 @@ mod tests {
     #[test]
     fn test_log_filtering() {
         let mut l = Logger::default();
-        l.toggle_log_filtering(&true);
-        l.set_verbosity(&Verbosity::ErrorsOnly);
+        l.toggle_log_filtering(true);
+        l.set_verbosity(Verbosity::ErrorsOnly);
 
         if !l.filter_log(&LogType::Debug) {
             panic!("A debug log should get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
@@ -554,7 +549,7 @@ mod tests {
             panic!("A warning log should get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
         }
 
-        l.set_verbosity(&Verbosity::Quiet);
+        l.set_verbosity(Verbosity::Quiet);
         if !l.filter_log(&LogType::Debug) {
             panic!("A debug log should get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
         }
@@ -565,7 +560,7 @@ mod tests {
             panic!("A warning log not should get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
         }
 
-        l.set_verbosity(&Verbosity::Standard);
+        l.set_verbosity(Verbosity::Standard);
         if !l.filter_log(&LogType::Debug) {
             panic!("A debug log should get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
         }
@@ -576,7 +571,7 @@ mod tests {
             panic!("A warning log not should get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
         }
 
-        l.set_verbosity(&Verbosity::All);
+        l.set_verbosity(Verbosity::All);
         if l.filter_log(&LogType::Debug) {
             panic!("A debug log should not get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
         }
@@ -587,8 +582,8 @@ mod tests {
             panic!("A warning log not should get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
         }
 
-        l.set_verbosity(&Verbosity::All);
-        l.toggle_log_filtering(&true);
+        l.set_verbosity(Verbosity::All);
+        l.toggle_log_filtering(true);
         if l.filter_log(&LogType::Debug) {
             panic!("A debug log should not get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
         }
@@ -739,9 +734,9 @@ mod tests {
     #[test]
     fn test_file_logging() {
         let file_name = "/output.log";
-        let max_size = 16;
+        let max_size: usize = 16;
         let mut l = Logger::default();
-        l.set_max_log_buffer_size(&max_size);
+        l.set_max_log_buffer_size(max_size);
 
         let current_dir = get_current_dir();
 
@@ -756,7 +751,7 @@ mod tests {
 
                 match result {
                     Ok(()) => {
-                        let _ = l.toggle_file_logging(&true);
+                        let _ = l.toggle_file_logging(true);
                         let mut i = 0;
                         loop {
                             l.fatal(&format!("i: {}", i));
