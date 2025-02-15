@@ -99,7 +99,7 @@ filtering.
 * `warning_no_filtering(message: &str)` **→** Prints a **warning**, bypasses
 filtering.
 
-Note that`error` and `fatal` methods don't have `_no_filtering` variants.
+Note that `error` and `fatal` methods don't have `_no_filtering` variants.
 This is because errors **can't be suppressed**.
 
 <a name="the-logger_setters"></a>
@@ -157,6 +157,55 @@ Here is a log message with all it's parts marked:
 This specific effect was achieved by setting the datetime format to `%H:%M:%S`,
 log format to `[ %h %d %m ]` and the debug log type header to `DEBUG`.
 
+You can use this method to set the datetime format of a `Logger`:
+```rust
+logger.set_datetime_format("%H:%M:%S");
+```
+
+Log format can be customized using:
+```rust
+logger.set_log_format("[ %h %d %m ]");
+```
+**Note**: The `%m` placeholder is mandatory and you will get an error unless you
+include it in your format string.
+
+And log type headers can be customized with their corresponding methods:
+```rust
+logger.set_debug_header("DEBUG");
+logger.set_info_header("INFO");
+logger.set_warning_header("WARNING");
+logger.set_error_header("ERROR");
+logger.set_fatal_header("FATAL ERROR");
+```
+
+Log type headers can be further customized by changing their colors:
+```rust
+logger.set_debug_color(Color::Blue);
+logger.set_info_color(Color::Green);
+logger.set_warning_color(Color::Yellow);
+logger.set_error_color(Color::Red);
+logger.set_fatal_color(Color::Magenta);
+```
+
+The `Color` enum is declared in `prettylogger::colors`. It can hold one of the
+following values:
+
+- <span style="color: black;">`None`</span> **→** Represents no color. When a log
+type header color is set to this value, it will appear as regular text.
+- <span style="color: black;">`Black`</span> **→** Black color.
+- <span style="color: blue;">`Blue`</span> **→** The default color for **debug**
+header.
+- <span style="color: cyan;">`Cyan`</span>
+- <span style="color: green;">`Green`</span> **→** The default color for **info**
+header.
+- <span style="color: gray;">`Gray`</span>
+- <span style="color: magenta;">`Magenta`</span> **→** The default color for
+**fatal** header.
+- <span style="color: red;">`Red`</span> **→** The default color for **error**
+header.
+- <span style="color: white;">`White`</span>
+- <span style="color: yellow;">`Yellow`</span> **→** The default color for
+**warning** header.
 
 <a name="log-filtering"></a>
 ## Log Filtering
@@ -164,10 +213,10 @@ Logs are filtered based on the current `LogLevel` and the `Logger`'s `Verbosity`
 setting.
 
 The `Verbosity` level determines which logs are filtered out:
-- `All`: Disables log filtering, allowing all logs to pass through.
-- `Standard` (default): Filters out debug logs.
-- `Quiet`: Only allows errors and warnings to be displayed.
-- `ErrorsOnly`: Only allows errors to be shown.
+- `All` **→** Disables log filtering, allowing all logs to pass through.
+- `Standard` (default) **→** Filters out debug logs.
+- `Quiet` **→** Only allows errors and warnings to be displayed.
+- `ErrorsOnly` **→** Only allows errors to be shown.
 
 The `Verbosity` enum is defined in `prettylogger::filtering`.
 
@@ -176,7 +225,7 @@ To modify the `Verbosity` of the `Logger`, use:
 logger.set_verbosity(verbosity: Verbosity);
 ```
 
-To temporarily disable or enable log filtering, use:
+To toggle log filtering, use:
 ```rust
 logger.toggle_log_filtering(enabled: bool);
 ```
@@ -206,12 +255,12 @@ error.
 <a name="file-logging_locking-the-log-file"></a>
 ### Locking the Log File
 The log file can be locked to prevent race conditions when there are multiple
-threads accessing it at the same time. It prevents `Logger` from writing to the
-log file until the lock has been released. `Logger` only ignores the log file
+threads accessing it at the same time. The lock prevents `Logger` from writing to
+the log file until the lock has been released. `Logger` only ignores the log file
 lock when it's being dropped and the `OnDropPolicy` is set to `IgnoreLogFileLock`
 (off by default).
 
-Note that log file lock is not persistent (it's not saved when calling 
+**Note**: Log file lock is not persistent (it's not saved when calling 
 `logger.save_template("path")`).
 
 To toggle log file lock, use:

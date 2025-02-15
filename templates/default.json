@@ -13,11 +13,9 @@
   "error_header": "ERR",
   "fatal_header": "FATAL",
   "log_format": "[%h] %m",
-  "show_datetime": false,
   "datetime_format": "%Y-%m-%d %H:%M:%S",
   "file_logging_enabled": false,
   "log_file_path": "",
-  "log_file_lock": false,
   "log_buffer_max_size": 128,
   "on_drop_policy": "DiscardLogBuffer"
 }
