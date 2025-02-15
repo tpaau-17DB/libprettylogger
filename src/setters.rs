@@ -198,7 +198,7 @@ impl Logger {
     /// logger.toggle_file_logging(true);
     ///
     /// // This will force `Logger` to flush the log buffer every 16 logs:
-    /// logger.set_max_log_buffer_size(&16);
+    /// logger.set_max_log_buffer_size(16);
     ///
     /// let mut i = 0;
     /// loop {

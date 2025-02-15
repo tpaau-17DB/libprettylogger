@@ -23,10 +23,9 @@ A highly customizable logger library written in Rust.
 
 <a name="tldr"></a>
 ## TL;DR
-**Update your `Cargo.toml`**:
-```toml
-[dependencies]
-libprettylogger = "0.1.0"
+**Install the library**:
+```
+cargo add libprettylogger
 ```
 
 **Include the library in your project**:
@@ -58,10 +57,10 @@ To install the library with `cargo`, run:
 cargo add libprettylogger
 ```
 
-And add this to your `Cargo.toml`:
+Or add this to your `Cargo.toml`:
 ```toml
 [dependencies]
-libprettylogger = "0.1.0"
+libprettylogger = "1.0.0"
 ```
 
 
@@ -79,25 +78,25 @@ let mut logger = Logger::default();
 
 <a name="the-logger_constructors"></a>
 ### Constructors:
-* `default()` **->** `Logger` with default configuration.
-* `from_template(path: &str)` **->** Deserializes `Logger` from a JSON template
-file. (see [this](#logger-templates))
+* `default()` **→** `Logger` with default configuration.
+* `from_template(path: &str)` **→** Deserializes `Logger` from a JSON template
+file (see [this](#logger-templates)).
 
 <a name="the-logger_logging-methods"></a>
 ### Logging Methods:
-* `debug(message: &str)` ****->**** Prints a **debug message**.
-* `info(message: &str)` **->** Prints **info message**.
-* `warning(message: &str)` **->** Prints a **warning**.
-* `error(message: &str)` **->** Prints an **error**.
-* `fatal(message: &str)` **->** Prints a **fatal error**.
+* `debug(message: &str)` ****→**** Prints a **debug message**.
+* `info(message: &str)` **→** Prints **info message**.
+* `warning(message: &str)` **→** Prints a **warning**.
+* `error(message: &str)` **→** Prints an **error**.
+* `fatal(message: &str)` **→** Prints a **fatal error**.
 
 **BTW**, `debug`, `info` and `warning` methods have their variants that bypass
 filtering:
-* `debug_no_filtering(message: &str)` **->** Prints a **debug message**,
+* `debug_no_filtering(message: &str)` **→** Prints a **debug message**,
 bypasses filtering.
-* `info_no_filtering(message: &str)` **->** Prints **info message**, bypasses
+* `info_no_filtering(message: &str)` **→** Prints **info message**, bypasses
 filtering.
-* `warning_no_filtering(message: &str)` **->** Prints a **warning**, bypasses
+* `warning_no_filtering(message: &str)` **→** Prints a **warning**, bypasses
 filtering.
 
 Note that`error` and `fatal` methods don't have `_no_filtering` variants.
@@ -106,45 +105,45 @@ This is because errors **can't be suppressed**.
 <a name="the-logger_setters"></a>
 ### Setters:
 **Log filtering** (see [this](#log-filtering)):
-* `set_verbosity(verbosity: Verbosity)` **->** Sets the `Logger`
+* `set_verbosity(verbosity: Verbosity)` **→** Sets the `Logger`
 verbosity.
-* `toggle_log_filtering(enabled: &bool)` **->** Toggles log filtering.
+* `toggle_log_filtering(enabled: bool)` **→** Toggles log filtering.
 
 **Log formatting** (see [this](#log-format)):
-* `toggle_log_header_color(enabled: &bool)` **->** Toggles log type
+* `toggle_log_header_color(enabled: bool)` **→** Toggles log type
 header color, same as setting all the log type header colors to `Color::None`.
-* `set_debug/info/warning/error/fatal_header(header: &str)` **->** Sets
+* `set_debug/info/warning/error/fatal_header(header: &str)` **→** Sets
 the log type header for different log types (debug, info, warning, error, fatal).
-* `set_debug/info/warning/error/fatal_color(color: &Color)` **->** Sets
+* `set_debug/info/warning/error/fatal_color(color: Color)` **→** Sets
 the log type header color for different log types. The `Color` enum is declared in
 `prettylogger::colors`.
-* `set_datetime_format(format: &str)` **->** Sets the timestamp format. 
-* `set_log_format(format: &str)` **->** Sets the log format.
+* `set_datetime_format(format: &str)` **→** Sets the timestamp format. 
+* `set_log_format(format: &str)` **→** Sets the log format.
 
 **File logging** (see [this](#file-logging)):
-* `set_log_file_path(path: &str)` **->** Sets the log file path.
-* `toggle_file_logging(enabled: &bool)` **->** Toggles file logging.
-* `set_max_log_buffer_size(size: &usize)` **->** Sets the maximum size
+* `set_log_file_path(path: &str)` **→** Sets the log file path.
+* `toggle_file_logging(enabled: bool)` **→** Toggles file logging.
+* `set_max_log_buffer_size(size: usize)` **→** Sets the maximum size
 of the log buffer. When log buffer exceeds this limit, it gets flushed.
-* `toggle_log_file_lock(enabled: &bool)` **->** Toggles log file lock
+* `toggle_log_file_lock(enabled: bool)` **→** Toggles log file lock
 used to avoid race conditions.
 
 <a name="the-logger_other-methods"></a>
 ### Other Methods:
-* `format_log(log: &LogStruct)` **->** Returns a formatted log based on
+* `format_log(log: &LogStruct)` **→** Returns a formatted log based on
 the `LogStruct` and `Logger` configuration. The `LogStruct` is declared in
 `prettylogger::logging`.
-* `flush()` **->** Flushes the log buffer.
-* `save_template(str)` **->** Serializes `Logger` into a JSON
+* `flush()` **→** Flushes the log buffer.
+* `save_template(path: &str)` **→** Serializes `Logger` into a JSON
 template file. (see [this](#logger-templates))
 
 
 <a name="log-format"></a>
 ## Log Format and Log Headers 
 A log consists of several headers:
-* **Log Type** **->** The type of the log (debug, info, warning etc.)
-* **Timestamp** **->** Contains the date and time the log was created
-* **Message** **->** The actual log message
+* **Log Type** **→** The type of the log (debug, info, warning etc.)
+* **Timestamp** **→** Contains the date and time the log was created
+* **Message** **→** The actual log message
 
 Here is a log message with all it's parts marked:
 ```
@@ -179,7 +178,7 @@ logger.set_verbosity(verbosity: Verbosity);
 
 To temporarily disable or enable log filtering, use:
 ```rust
-logger.toggle_log_filtering(enabled: &bool);
+logger.toggle_log_filtering(enabled: bool);
 ```
 
 
@@ -217,23 +216,25 @@ Note that log file lock is not persistent (it's not saved when calling
 
 To toggle log file lock, use:
 ```rust
-logger.toggle_lock_file_lock(&true);
+logger.toggle_lock_file_lock(true);
 
 // Do some I/O operations on the log file here
 
-logger.toggle_lock_file_lock(&false);
+logger.toggle_lock_file_lock(false);
 ```
 
 To set the on drop log file policy, use:
 ```rust
-logger.set_on_drop_file_policy(&OnDropPolicy::IgnoreLogFileLock);
+// Ignore the log file lock and write to the log file anyway.
+logger.set_on_drop_file_policy(OnDropPolicy::IgnoreLogFileLock);
 ```
 
 `OnDropPolicy` is declared in the `logging` module, and all it's possible values
 are:
-* `IgnoreLogFileLock` **->** Ignore the log file lock and write to the log file
+* `IgnoreLogFileLock` **→** Ignore the log file lock and write to the log file
 anyway. 
-* `DiscardLogBuffer` (default) **->** Don't write to the log file.
+* `DiscardLogBuffer` (default) **→** Don't write to the log file on drop (discard
+all logs from log buffer).
 
 <a name="file-logging_automatic-log-buffer-flushing"></a>
 ### Automatic Log Buffer Flushing
@@ -244,7 +245,7 @@ logger.set_log_file_path("/path/to/file.log");
 logger.toggle_file_logging(true);
 
 // This will make `Logger` to flush the log buffer every 16 logs:
-logger.set_max_log_buffer_size(&16);
+logger.set_max_log_buffer_size(16);
 
 let mut i = 0;
 loop {
