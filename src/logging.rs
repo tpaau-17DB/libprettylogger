@@ -52,10 +52,10 @@ impl Display for OnDropPolicy {
     Serialize, Deserialize)]
 /// Represents the different types of log messages.
 ///
-/// This enum is used to categorize the severity or type of a log message. 
-/// The variants correspond to different levels of logging, from debugging 
+/// This enum is used to categorize the severity or type of a log message.
+/// The variants correspond to different levels of logging, from debugging
 /// information to fatal errors.
-/// 
+///
 /// The variants are:
 /// * `Debug`: Represents debug-level log messages, typically used for
 /// detailed internal information during development.
@@ -119,7 +119,7 @@ impl AsRef<str> for LogType {
 /// Represents a single log entry.
 ///
 /// This struct is used to store information about a single log message.
-/// It includes the log's message, its type (e.g., 
+/// It includes the log's message, its type (e.g.,
 /// `Debug`, `Error`, etc.), and the date and time when the log was created.
 /// It can be used for storing logs in memory more efficiently.
 ///
@@ -239,7 +239,7 @@ impl Logger {
 
     pub(crate) fn get_main_header(&self, log_type: LogType) -> String {
         match log_type {
-            LogType::Debug => { 
+            LogType::Debug => {
                 self.colorify(&self.debug_header,
                     self.log_header_color(log_type))
             }
@@ -341,7 +341,7 @@ impl Logger {
 
         match result {
             Ok(_) => Ok(()),
-            Err(_) => { 
+            Err(_) => {
                 self.file_logging_enabled = false;
                 Err(String::from("Failed to write log buffer to a file!"))
             },
@@ -615,12 +615,12 @@ mod tests {
         let mut l = Logger::default();
 
         l.set_debug_header(header);
-        if l.get_main_header(LogType::Debug) != 
+        if l.get_main_header(LogType::Debug) !=
         l.colorify(header, l.log_header_color(LogType::Debug)) {
             panic!("Debug headers do not match!");
         }
         l.set_info_header(header);
-        if l.get_main_header(LogType::Info) != 
+        if l.get_main_header(LogType::Info) !=
         l.colorify(header, l.log_header_color(LogType::Info)) {
             panic!("Info headers do not match!");
         }
@@ -630,12 +630,12 @@ mod tests {
             panic!("Warning headers do not match!");
         }
         l.set_error_header(header);
-        if l.get_main_header(LogType::Err) != 
+        if l.get_main_header(LogType::Err) !=
         l.colorify(header, l.log_header_color(LogType::Err)) {
             panic!("Error headers do not match!");
         }
         l.set_fatal_header(header);
-        if l.get_main_header(LogType::FatalError) != 
+        if l.get_main_header(LogType::FatalError) !=
         l.colorify(header, l.log_header_color(LogType::FatalError)) {
             panic!("Fatal error headers do not match!");
         }
@@ -770,7 +770,7 @@ mod tests {
 
                             if i >= max_size {
                                 break;
-                            } 
+                            }
                             i += 1;
                         }
                     },

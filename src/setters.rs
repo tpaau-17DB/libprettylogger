@@ -22,7 +22,7 @@ impl Logger {
     }
 
     /// Toggles colored log headers.
-    /// * `true`  -> Log headers will have colors 
+    /// * `true`  -> Log headers will have colors
     /// * `false` -> No colors :(
     pub fn toggle_log_header_color<I: Into<bool>>(&mut self, enabled: I) {
         self.log_header_color_enabled = enabled.into();
@@ -136,7 +136,7 @@ impl Logger {
                         format!("Failed to overwrite file: {}", e))
                 })?;
             Ok(())
-        } 
+        }
         else {
             self.error(&format!("Failed to open file '{}' for writing!",
                 self.log_file_path));
@@ -147,7 +147,7 @@ impl Logger {
 
     /// Toggles file logging.
     ///
-    /// Before enabling file logging, ensure that the log file path is set. 
+    /// Before enabling file logging, ensure that the log file path is set.
     /// This is because the method checks if the log file is writable. If the
     /// log  file path is not set, or the file is not writable, enabling file
     /// logging will result in an error.

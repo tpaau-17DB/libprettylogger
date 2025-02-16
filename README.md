@@ -8,7 +8,7 @@ A highly customizable logger library written in Rust.
 ## Table of Contents
 * [TL;DR](#tldr)
 * [Installation](#installation)
-* [The Log Anatomy](#log-format)
+* [Log Format](#log-format)
 * [The Logger](#the-logger)
     * [Constructors](#the-logger_constructors)
     * [Logging Methods](#the-logger_logging-methods)
@@ -41,7 +41,7 @@ let mut logger = Logger::default();
 // Configure `Logger` to your liking
 logger.set_verbosity(Verbosity::All); // Don't suppress any log messages
 
-// Print logs: 
+// Print logs:
 logger.debug("A debug message!");
 logger.info("Info message!");
 logger.warning("A warning!");
@@ -68,7 +68,7 @@ libprettylogger = "1.0.0"
 ## The Logger
 The `Logger` struct is the **core** of the entire project.
 This is what you are going to use when you want to print a log, set filtering
-rules or modify log formatting. 
+rules or modify log formatting.
 All of it's fields are private, only allowing for modification via setters.
 
 Creating a `Logger` struct with default configuration:
@@ -117,7 +117,7 @@ the log type header for different log types (debug, info, warning, error, fatal)
 * `set_debug/info/warning/error/fatal_color(color: Color)` **→** Sets
 the log type header color for different log types. The `Color` enum is declared in
 `prettylogger::colors`.
-* `set_datetime_format(format: &str)` **→** Sets the timestamp format. 
+* `set_datetime_format(format: &str)` **→** Sets the timestamp format.
 * `set_log_format(format: &str)` **→** Sets the log format.
 
 **File logging** (see [this](#file-logging)):
@@ -139,7 +139,7 @@ template file. (see [this](#logger-templates))
 
 
 <a name="log-format"></a>
-## Log Format and Log Headers 
+## Log Format
 A log consists of several headers:
 * **Log Type** **→** The type of the log (debug, info, warning etc.)
 * **Timestamp** **→** Contains the date and time the log was created
@@ -152,7 +152,7 @@ Here is a log message with all it's parts marked:
   |     |        |
   |     |        the message
   |     timestamp
-  log type 
+  log type
 ```
 This specific effect was achieved by setting the datetime format to `%H:%M:%S`,
 log format to `[ %h %d %m ]` and the debug log type header to `DEBUG`.
@@ -255,7 +255,7 @@ the log file until the lock has been released. `Logger` only ignores the log fil
 lock when it's being dropped and the `OnDropPolicy` is set to `IgnoreLogFileLock`
 (off by default).
 
-**Note**: Log file lock is not persistent (it's not saved when calling 
+**Note**: Log file lock is not persistent (it's not saved when calling
 `logger.save_template("path")`).
 
 To toggle log file lock, use:
@@ -276,7 +276,7 @@ logger.set_on_drop_file_policy(OnDropPolicy::IgnoreLogFileLock);
 `OnDropPolicy` is declared in the `logging` module, and all it's possible values
 are:
 * `IgnoreLogFileLock` **→** Ignore the log file lock and write to the log file
-anyway. 
+anyway.
 * `DiscardLogBuffer` (default) **→** Don't write to the log file on drop (discard
 all logs from log buffer).
 

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+root=$(git rev-parse --show-toplevel)
+
+grep -n '[[:space:]]$' $root/README.md\
+    $root/Cargo.toml\
+    $root/CHANGELOG.md\
+    $root/deny.toml\
+    $root/output.log\
+    $root/README.md\
+    $root/scripts/*\
+    $root/src/*\
+    $root/templates/*\

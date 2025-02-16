@@ -12,7 +12,7 @@
 /// // Configure `Logger` to your liking
 /// logger.set_verbosity(Verbosity::All); // Don't suppress any log messages
 ///
-/// // Print logs: 
+/// // Print logs:
 /// logger.debug("A debug message!");
 /// logger.info("Info message!");
 /// logger.warning("A warning!");
