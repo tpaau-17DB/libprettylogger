@@ -21,8 +21,8 @@
 /// ```
 
 pub mod logging;
-pub mod setters;
 pub mod colors;
 pub mod filtering;
+mod setters;
 mod json;
 mod fileio;

@@ -1,3 +1,15 @@
+/// Holds implementation of the most crucial structs and enums of the entire
+/// library.
+///
+/// # Structs:
+/// `Logger` -> The core of the library.
+/// `LogStruct` -> Representation of a single log message.
+///
+/// # Enums:
+/// `OnDropPolicy` -> Used to set the on drop policy of the `Logger` (see https://github.com/tpaau-17DB/libprettylogger?tab=readme-ov-file#file-logging).
+/// /// `LogType` -> Represents various types of logs, such as debug, info,
+/// warning, etc.
+
 use crate::{
     colors::*, fileio::append_to_file, filtering::*
 };

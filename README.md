@@ -190,22 +190,17 @@ logger.set_fatal_color(Color::Magenta);
 The `Color` enum is declared in `prettylogger::colors`. It can hold one of the
 following values:
 
-- <span style="color: black;">`None`</span> **→** Represents no color. When a log
-type header color is set to this value, it will appear as regular text.
-- <span style="color: black;">`Black`</span> **→** Black color.
-- <span style="color: blue;">`Blue`</span> **→** The default color for **debug**
-header.
-- <span style="color: cyan;">`Cyan`</span>
-- <span style="color: green;">`Green`</span> **→** The default color for **info**
-header.
-- <span style="color: gray;">`Gray`</span>
-- <span style="color: magenta;">`Magenta`</span> **→** The default color for
-**fatal** header.
-- <span style="color: red;">`Red`</span> **→** The default color for **error**
-header.
-- <span style="color: white;">`White`</span>
-- <span style="color: yellow;">`Yellow`</span> **→** The default color for
-**warning** header.
+- `None` **→** Represents no color. When a log type header color is set to this
+value, it will appear as regular text.
+- `Black` **→** Black color.
+- `Blue` **→** The default color for **debug** header.
+- `Cyan`
+- `Green` **→** The default color for **info** header.
+- `Gray`
+- `Magenta` **→** The default color for **fatal** header.
+- `Red` **→** The default color for **error** header.
+- `White`
+- `Yellow` **→** The default color for **warning** header.
 
 <a name="log-filtering"></a>
 ## Log Filtering

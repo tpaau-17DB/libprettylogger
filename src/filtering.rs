@@ -1,3 +1,5 @@
+/// This module holds the implementation of `Verbosity` used for log filtering.
+
 use std::fmt;
 use serde::{Serialize, Deserialize};
 

@@ -1,3 +1,6 @@
+/// This module contains the implementation of `Color` used to color text
+/// as well as `color_text(...)` function used to color text.
+
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use lazy_static::lazy_static;
@@ -16,7 +19,8 @@ pub(crate) static RESET: &str = "\x1b[0m";
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default,
     Serialize, Deserialize)]
-/// Used to set log header colors.
+/// Represents different color values. Used to color text or set log type
+/// header colors.
 pub enum Color
 {
     #[default]
@@ -99,7 +103,6 @@ lazy_static! {
         m.insert(Color::Red as i32, RED);
         m.insert(Color::White as i32, WHITE);
         m.insert(Color::Yellow as i32, YELLOW);
-        m.insert(Color::None as i32, "");
         return m;
     };
 }
@@ -112,4 +115,16 @@ pub(crate) fn get_color_code(color: Color) -> String {
     else {
         return RESET.to_string();
     }
+}
+
+/// Colors given text based on `color` value using ANSII escape codes.
+///
+/// # Example
+/// ```
+/// # use prettylogger::colors::{Color, color_text};
+/// let colored_text = color_text("a", Color::Red);
+/// assert_eq!(colored_text, "\x1b[31ma\x1b[0m");
+/// ```
+pub fn color_text(text: &str, color: Color) -> String {
+    return get_color_code(color) + text + RESET;
 }
