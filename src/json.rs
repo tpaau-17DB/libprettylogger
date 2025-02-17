@@ -1,4 +1,4 @@
-use crate::logging::*;
+use crate::*;
 use serde_json;
 use std::{
     fs::*,
@@ -18,8 +18,10 @@ impl Logger {
     pub fn from_template(path: &str) -> Logger {
         let file = read_to_string(path)
             .expect("Unable to read file!");
-        let logger: Logger = serde_json::from_str(&file)
+        let mut logger: Logger = serde_json::from_str(&file)
             .expect("Invalid JSON file!");
+        logger.log_count += 1;
+
 
         return logger;
     }

@@ -1,5 +1,6 @@
+use crate::*;
 use crate::{
-    colors::*, fileio::*, filtering::*, logging::*
+    colors::*, fileio::*, config::*,
 };
 use std::io::{Error, ErrorKind};
 
@@ -87,14 +88,15 @@ impl Logger {
     ///
     /// There are three placeholders in a log format string (you can place
     /// multiple placeholders of the same type in a format string):
-    /// * `%m` -> The log message (this placeholder is mandatory, you format
-    /// will get rejected if it doesn't contain this placeholder)
-    /// * `%h` -> The log type header (debug, error, etc.)
-    /// * `%d` -> The datetime
+    /// * `%c` -> Ascending log count starting at 1.
+    /// * `%d` -> The timestamp.
+    /// * `%h` -> The header indicating the log type (e.g., debug, error, etc.)
+    /// * `%m` -> The log message (this placeholder is mandatory, you will get
+    /// an error if you don't include this in your log format).
     ///
-    /// # Set an XML-like log format;
+    /// # Setting an XML-like log format;
     /// ```
-    /// # use prettylogger::logging::Logger;
+    /// # use prettylogger::Logger;
     /// # let mut l = Logger::default();
     /// l.set_log_format("<l> <h>%h</h> <m>%m</m> </l>");
     /// l.error("A nice debug log!");
@@ -210,15 +212,15 @@ impl Logger {
     /// }
     /// ```
     pub fn set_max_log_buffer_size<I: Into<usize>>(&mut self, size: I) {
-        self.log_buffer_max_size = size.into();
+        self.file_log_buffer_max_size = size.into();
     }
 
     /// Log file lock can be used to prevent race conditions when there is one
     /// thread reading from the log file and another thread writing to the log
     /// file.
     ///
-    /// # WARNING: LEAVING THIS OPTION ON FOR A LONG PERIOD OF TIME CAN CAUSE
-    /// HIGH MEMORY USAGE AND STUTTERING!
+    /// # WARNING: LEAVING THIS OPTION ON FOR A LONG PERIOD OF TIME MAY CAUSE
+    /// HIGH MEMORY USAGE!
     ///
     /// `true`  -> When log file lock is enabled, logger won't flush into the
     /// log file. Instead, it will wait until the lock is disabled. You will
@@ -232,11 +234,19 @@ impl Logger {
     /// Sets `Logger`'s on drop log file policy.
     ///
     /// ```
-    /// # use prettylogger::logging::{Logger, OnDropPolicy};
+    /// # use prettylogger::{Logger, config::OnDropPolicy};
     /// # let mut logger = Logger::default();
     /// logger.set_on_drop_file_policy(OnDropPolicy::IgnoreLogFileLock);
     /// ```
     pub fn set_on_drop_file_policy<I: Into<OnDropPolicy>>(&mut self, policy: I) {
         self.on_drop_policy = policy.into();
+    }
+
+    /// Toggles printing logs to `stdout`.
+    ///
+    /// `true` -> Logs will be printed in your terminal's `stdout`.
+    /// `false` -> No log output in your terminal.
+    pub fn toggle_stdout<I: Into<bool>>(&mut self, enabled: I) {
+        self.stdout_enabled = enabled.into();
     }
 }

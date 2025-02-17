@@ -1,5 +1,13 @@
-/// This module contains the implementation of `Color` used to color text
-/// as well as `color_text(...)` function used to color text.
+//! Contains color-related utilities.
+
+/// Contains various color-related utilities.
+///
+/// # enums:
+/// * `Color` -> A representation of a color.
+///
+/// # functions:
+/// * `color_text(text: &str, color: Color)` -> Used to color text based on the
+/// color value.
 
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
