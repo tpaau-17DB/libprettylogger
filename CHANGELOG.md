@@ -8,10 +8,14 @@
 * Added a new function in `colors` module that colors text using ANSII escape
 codes.
 * Added a new option in `Logger` to toggle logging to `stdout`.
-* Added a `print_log(...)` method in `Logger` that prints logs custom `LogStruct`
-structs.
+* Added a `print_log(...)` method in `Logger` that prints logs from `LogStruct`
+instances.
+* Added a `format_log(...)` method in `Logger` that formats logs from `LogStruct`
+instances.
 * Added a new `Logger` feature that allows you to store logs in a log buffer
 inside `Logger` for later use.
+* Added 5 new constructors to the `LogStruct`, each one representing a different
+log type.
 
 ## Patches
 * Changed `prettylogger::setters` module accessibility to private.

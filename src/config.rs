@@ -163,19 +163,76 @@ impl AsRef<str> for LogType {
 /// Represents a single log entry.
 ///
 /// This struct is used to store information about a single log message.
-/// It includes the log's message, its type (e.g.,
-/// `Debug`, `Error`, etc.), and the date and time when the log was created.
-/// It can be used for storing logs in memory more efficiently.
+/// It includes the log's message, its type (e.g., `Debug`, `Error`, etc.),
+/// and the date and time when the log was created. It can be used for storing
+/// logs in memory more efficiently.
 ///
-/// Fields:
-/// - `message`: The actual log message as a string.
-/// - `log_type`: The type of the log (e.g., `Debug`, `Error`, `Info`, etc.).
-/// - `datetime`: The timestamp of when the log entry was created.
+/// # Fields:
+/// * `message`: The actual log message as a string.
+/// * `log_type`: The type of the log (e.g., `Debug`, `Error`, `Info`, etc.).
+/// * `datetime`: The timestamp of when the log entry was created.
+///
+/// # Creating a `LogStruct` instance:
+/// ```
+/// # use prettylogger::config::LogStruct;
+/// let debug = LogStruct::debug("A debug log!");
+/// let info = LogStruct::info("Info message!");
+/// let warning = LogStruct::warning("A warning!");
+/// let error = LogStruct::error("An error!");
+/// let fatal_error = LogStruct::fatal_error("A fatal error!");
+/// ```
 pub struct LogStruct {
     pub message: String,
     pub log_type: LogType,
     /// The date and gime at which the log was created.
     pub datetime: DateTime<Local>,
+}
+
+impl LogStruct {
+    /// Returns a `LogStruct` with **debug** preset applied.
+    pub fn debug(message: &str) -> LogStruct {
+        LogStruct {
+            message: message.to_string(),
+            log_type: LogType::Debug,
+            datetime: Local::now(),
+        }
+    }
+
+    /// Returns a `LogStruct` with **info** preset applied.
+    pub fn info(message: &str) -> LogStruct {
+        LogStruct {
+            message: message.to_string(),
+            log_type: LogType::Info,
+            datetime: Local::now(),
+        }
+    }
+
+    /// Returns a `LogStruct` with **warning** preset applied.
+    pub fn warning(message: &str) -> LogStruct {
+        LogStruct {
+            message: message.to_string(),
+            log_type: LogType::Warning,
+            datetime: Local::now(),
+        }
+    }
+
+    /// Returns a `LogStruct` with **error** preset applied.
+    pub fn error(message: &str) -> LogStruct {
+        LogStruct {
+            message: message.to_string(),
+            log_type: LogType::Err,
+            datetime: Local::now(),
+        }
+    }
+
+    /// Returns a `LogStruct` with **fatal error** preset applied.
+    pub fn fatal_error(message: &str) -> LogStruct {
+        LogStruct {
+            message: message.to_string(),
+            log_type: LogType::FatalError,
+            datetime: Local::now(),
+        }
+    }
 }
 
 impl Display for LogStruct {

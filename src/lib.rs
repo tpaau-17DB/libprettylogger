@@ -159,10 +159,6 @@ impl Logger {
         return false;
     }
 
-    pub(crate) fn get_datetime(&self) -> DateTime<Local> {
-        return Local::now();
-    }
-
     pub(crate) fn log_header_color(&self, log_type: LogType) -> Color {
         match log_type {
             LogType::Debug => { self.debug_color.clone() }
@@ -280,7 +276,6 @@ impl Logger {
                 let _ = self.flush_file_log_buffer(false);
             }
         }
-
     }
 
     /// Returns a log entry out of a `LogStruct` based on current `Logger`
@@ -343,21 +338,13 @@ impl Logger {
         {
             return;
         }
-        let log = LogStruct {
-            message: message.to_string(),
-            log_type: LogType::Debug,
-            datetime: self.get_datetime(),
-        };
+        let log = LogStruct::debug(message);
         self.print_log(&log);
     }
 
     /// Prints a **debug message**, bypasses filtering.
     pub fn debug_no_filtering(&mut self, message: &str) {
-        let log = LogStruct {
-            message: message.to_string(),
-            log_type: LogType::Debug,
-            datetime: self.get_datetime(),
-        };
+        let log = LogStruct::debug(message);
         self.print_log(&log);
     }
 
@@ -367,21 +354,13 @@ impl Logger {
         {
             return;
         }
-        let log = LogStruct {
-            message: message.to_string(),
-            log_type: LogType::Info,
-            datetime: self.get_datetime(),
-        };
+        let log = LogStruct::info(message);
         self.print_log(&log);
     }
 
     /// Prints **info message**, bypasses filtering.
     pub fn info_no_filtering(&mut self, message: &str) {
-        let log = LogStruct {
-            message: message.to_string(),
-            log_type: LogType::Info,
-            datetime: self.get_datetime(),
-        };
+        let log = LogStruct::info(message);
         self.print_log(&log);
     }
 
@@ -391,41 +370,25 @@ impl Logger {
         {
             return;
         }
-        let log = LogStruct {
-            message: message.to_string(),
-            log_type: LogType::Warning,
-            datetime: self.get_datetime(),
-        };
+        let log = LogStruct::warning(message);
         self.print_log(&log);
     }
 
     /// Prints a **warning**, bypasses filtering.
     pub fn warning_no_filtering(&mut self, message: &str) {
-        let log = LogStruct {
-            message: message.to_string(),
-            log_type: LogType::Warning,
-            datetime: self.get_datetime(),
-        };
+        let log = LogStruct::warning(message);
         self.print_log(&log);
     }
 
     /// Prints an **error** (errors cannot be suppressed).
     pub fn error(&mut self, message: &str) {
-        let log = LogStruct {
-            message: message.to_string(),
-            log_type: LogType::Err,
-            datetime: self.get_datetime(),
-        };
+        let log = LogStruct::error(message);
         self.print_log(&log);
     }
 
     /// Prints a **fatal error** (errors cannot be suppressed).
     pub fn fatal(&mut self, message: &str) {
-        let log = LogStruct {
-            message: message.to_string(),
-            log_type: LogType::FatalError,
-            datetime: self.get_datetime(),
-        };
+        let log = LogStruct::fatal_error(message);
         self.print_log(&log);
     }
 
@@ -589,11 +552,7 @@ mod tests {
         l.set_fatal_header("!");
         let _ = l.set_log_format("<l> <h>%h</h> <d>%d</d> <m>%m</m> </l>");
 
-        let mut logstruct = LogStruct {
-            datetime: l.get_datetime(),
-            log_type: LogType::Debug,
-            message: "aaa".to_string(),
-        };
+        let mut logstruct = LogStruct::debug("aaa");
         let mut comp = format!("<l> <h>{}</h> <d>aaa</d> <m>aaa</m> </l>\n",
             l.colorify("d", l.log_header_color(LogType::Debug))
         );

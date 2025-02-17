@@ -1,19 +1,15 @@
-# libprettylogger
-A highly customizable logger library written in Rust.
+![libprettylogger logo](https://raw.githubusercontent.com/tpaau-17DB/libprettylogger/main/img/libprettylogger-logo.png)
 
 ![CI Ubuntu](https://img.shields.io/github/actions/workflow/status/tpaau-17DB/libprettylogger/Ubuntu.yml?branch=main)
 ![Crates.io](https://img.shields.io/crates/v/libprettylogger.svg)
-
 
 ## Table of Contents
 * [TL;DR](#tldr)
 * [Installation](#installation)
 * [Log Format](#log-format)
 * [The Logger](#the-logger)
-    * [Constructors](#the-logger_constructors)
-    * [Logging Methods](#the-logger_logging-methods)
-    * [Setters](#the-logger_setters)
-    * [Other Methods](#the-logger_other-methods)
+    * [Controlling `stdout`](#the-logger_custom-log-buffer)
+    * [Custom Log Buffer](#the-logger_controlling-stdout)
 * [Log Filtering](#log-filtering)
 * [File Logging](#file-logging)
     * [Automatic Log File Flushing](#file-logging_automatic-log-buffer-flushing)
@@ -32,8 +28,8 @@ cargo add libprettylogger
 <!--Make sure this matches the example from lib.rs-->
 ```rust
 // Include stuff from the library:
-use prettylogger::logging::Logger;
-use prettylogger::filtering::Verbosity;
+use prettylogger::Logger;
+use prettylogger::config::Verbosity;
 
 // A `Logger` struct with default configuration
 let mut logger = Logger::default();
@@ -76,66 +72,28 @@ Creating a `Logger` struct with default configuration:
 let mut logger = Logger::default();
 ```
 
-<a name="the-logger_constructors"></a>
-### Constructors:
-* `default()` **→** `Logger` with default configuration.
-* `from_template(path: &str)` **→** Deserializes `Logger` from a JSON template
-file (see [this](#logger-templates)).
+<a name="the-logger_controlling-stdout"></a>
+### Controlling `stdout`
+By default, `Logger` will put all logs in `stdout`. If you only want to write logs
+to a file or store them in a custom log buffer, use:
+```rust
+logger.toggle_stdout(false);
+```
 
-<a name="the-logger_logging-methods"></a>
-### Logging Methods:
-* `debug(message: &str)` ****→**** Prints a **debug message**.
-* `info(message: &str)` **→** Prints **info message**.
-* `warning(message: &str)` **→** Prints a **warning**.
-* `error(message: &str)` **→** Prints an **error**.
-* `fatal(message: &str)` **→** Prints a **fatal error**.
+<a name="the-logger_custom-log-buffer"></a>
+### Custom Log Buffer
+You can make `Logger` store all the log you create in a buffer inside of itself.
+Later, you can clone that buffer and use it for whatever you want.
 
-**BTW**, `debug`, `info` and `warning` methods have their variants that bypass
-filtering:
-* `debug_no_filtering(message: &str)` **→** Prints a **debug message**,
-bypasses filtering.
-* `info_no_filtering(message: &str)` **→** Prints **info message**, bypasses
-filtering.
-* `warning_no_filtering(message: &str)` **→** Prints a **warning**, bypasses
-filtering.
+Enabling custom log buffer:
+```rust
+logger.toggle_custom_log_buffer(true);
+```
 
-Note that `error` and `fatal` methods don't have `_no_filtering` variants.
-This is because errors **can't be suppressed**.
-
-<a name="the-logger_setters"></a>
-### Setters:
-**Log filtering** (see [this](#log-filtering)):
-* `set_verbosity(verbosity: Verbosity)` **→** Sets the `Logger`
-verbosity.
-* `toggle_log_filtering(enabled: bool)` **→** Toggles log filtering.
-
-**Log formatting** (see [this](#log-format)):
-* `toggle_log_header_color(enabled: bool)` **→** Toggles log type
-header color, same as setting all the log type header colors to `Color::None`.
-* `set_debug/info/warning/error/fatal_header(header: &str)` **→** Sets
-the log type header for different log types (debug, info, warning, error, fatal).
-* `set_debug/info/warning/error/fatal_color(color: Color)` **→** Sets
-the log type header color for different log types. The `Color` enum is declared in
-`prettylogger::colors`.
-* `set_datetime_format(format: &str)` **→** Sets the timestamp format.
-* `set_log_format(format: &str)` **→** Sets the log format.
-
-**File logging** (see [this](#file-logging)):
-* `set_log_file_path(path: &str)` **→** Sets the log file path.
-* `toggle_file_logging(enabled: bool)` **→** Toggles file logging.
-* `set_max_log_buffer_size(size: usize)` **→** Sets the maximum size
-of the log buffer. When log buffer exceeds this limit, it gets flushed.
-* `toggle_log_file_lock(enabled: bool)` **→** Toggles log file lock
-used to avoid race conditions.
-
-<a name="the-logger_other-methods"></a>
-### Other Methods:
-* `format_log(log: &LogStruct)` **→** Returns a formatted log based on
-the `LogStruct` and `Logger` configuration. The `LogStruct` is declared in
-`prettylogger::logging`.
-* `flush()` **→** Flushes the log buffer.
-* `save_template(path: &str)` **→** Serializes `Logger` into a JSON
-template file. (see [this](#logger-templates))
+And when you need a copy of that buffer, call:
+```rust
+let buffer = logger.clone_log_buffer();
+```
 
 
 <a name="log-format"></a>
@@ -187,12 +145,12 @@ logger.set_error_color(Color::Red);
 logger.set_fatal_color(Color::Magenta);
 ```
 
-The `Color` enum is declared in `prettylogger::colors`. It can hold one of the
+The `Color` enum is declared in `prettylogger::colors`. It can have one of the
 following values:
 
-- `None` **→** Represents no color. When a log type header color is set to this
+- `None` **→** Represents no color. When the log type header color is set to this
 value, it will appear as regular text.
-- `Black` **→** Black color.
+- `Black`
 - `Blue` **→** The default color for **debug** header.
 - `Cyan`
 - `Green` **→** The default color for **info** header.
@@ -201,6 +159,20 @@ value, it will appear as regular text.
 - `Red` **→** The default color for **error** header.
 - `White`
 - `Yellow` **→** The default color for **warning** header.
+
+### Using the `LogStruct`
+`LogStruct` is a type that represents a single log entry. You can create a
+`LogStruct` instance using one of it's constructors:
+* `debug(message: &str)`
+* `info(message: &str)`
+* `warning(message: &str)`
+* `error(message: &str)`
+* `fatal_error(message: &str)`
+
+Using one of `LogStruct`'s constructors to create it's instance with a message:
+```rust
+let log_formatted = logger.format(LogStruct::debug("A debug log!"));
+```
 
 <a name="log-filtering"></a>
 ## Log Filtering
@@ -213,7 +185,7 @@ The `Verbosity` level determines which logs are filtered out:
 - `Quiet` **→** Only allows errors and warnings to be displayed.
 - `ErrorsOnly` **→** Only allows errors to be shown.
 
-The `Verbosity` enum is defined in `prettylogger::filtering`.
+The `Verbosity` enum is defined in `prettylogger::config`.
 
 To modify the `Verbosity` of the `Logger`, use:
 ```rust
@@ -273,7 +245,7 @@ To set the on drop log file policy, use:
 logger.set_on_drop_file_policy(OnDropPolicy::IgnoreLogFileLock);
 ```
 
-`OnDropPolicy` is declared in the `logging` module, and all it's possible values
+`OnDropPolicy` is declared in the `config` module, and all it's possible values
 are:
 * `IgnoreLogFileLock` **→** Ignore the log file lock and write to the log file
 anyway.
