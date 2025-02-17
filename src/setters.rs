@@ -219,20 +219,21 @@ impl Logger {
     /// thread reading from the log file and another thread writing to the log
     /// file.
     ///
-    /// # WARNING: LEAVING THIS OPTION ON FOR A LONG PERIOD OF TIME MAY CAUSE
-    /// HIGH MEMORY USAGE!
+    /// # WARNING: leaving this option on for a long period of time will cause
+    /// high memory usage!
     ///
-    /// `true`  -> When log file lock is enabled, logger won't flush into the
+    /// * `true`  -> When log file lock is enabled, logger won't flush into the
     /// log file. Instead, it will wait until the lock is disabled. You will
     /// not loose any logs, they will be stored in the log buffer even when it
     /// exceeds its size limit.
-    /// `false` -> Logger will write to the log file normally.
+    /// * `false` -> Logger will write to the log file normally.
     pub fn toggle_log_file_lock<I: Into<bool>>(&mut self, enabled: I) {
         self.log_file_lock = enabled.into();
     }
 
     /// Sets `Logger`'s on drop log file policy.
     ///
+    /// # Example
     /// ```
     /// # use prettylogger::{Logger, config::OnDropPolicy};
     /// # let mut logger = Logger::default();
@@ -243,10 +244,23 @@ impl Logger {
     }
 
     /// Toggles printing logs to `stdout`.
-    ///
-    /// `true` -> Logs will be printed in your terminal's `stdout`.
-    /// `false` -> No log output in your terminal.
+    /// * `true` -> Logs will be printed in your terminal's `stdout`.
+    /// * `false` -> No log output in your terminal.
     pub fn toggle_stdout<I: Into<bool>>(&mut self, enabled: I) {
         self.stdout_enabled = enabled.into();
+    }
+
+    /// Toggles the usage of a custom log buffer.
+    /// * `true` -> Logs will be stored in a buffer inside `Logger` and can be
+    /// cloned using the `clone_log_buffer()` method. Be aware that this can
+    /// lead to high memory usage if turned on for a log period of time.
+    /// * `false` -> Logs will not be stored in a log buffer.
+    pub fn toggle_custom_log_buffer<I: Into<bool>>(&mut self, enabled: I) {
+        self.use_custom_log_buffer = enabled.into();
+    }
+
+    /// Clears the custom log buffer.
+    pub fn clear_log_buffer(&mut self) {
+        self.custom_log_buffer = Vec::new();
     }
 }

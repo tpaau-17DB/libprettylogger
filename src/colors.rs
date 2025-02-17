@@ -6,8 +6,8 @@
 /// * `Color` -> A representation of a color.
 ///
 /// # functions:
-/// * `color_text(text: &str, color: Color)` -> Used to color text based on the
-/// color value.
+/// * `color_text(text: &str, color: Color)` -> Colors text based on the color
+/// value.
 
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};

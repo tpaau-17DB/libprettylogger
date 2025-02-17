@@ -5,12 +5,17 @@
 * Moved `prettylogger::logging::Logger` to `prettylogger::Logger`.
 
 ## Minor changes
-* Added a new function in `colors` module that can be used to color text using
-ANSII escape codes.
-* Added an option to toggle logging to `stdout`.
+* Added a new function in `colors` module that colors text using ANSII escape
+codes.
+* Added a new option in `Logger` to toggle logging to `stdout`.
+* Added a `print_log(...)` method in `Logger` that prints logs custom `LogStruct`
+structs.
+* Added a new `Logger` feature that allows you to store logs in a log buffer
+inside `Logger` for later use.
 
 ## Patches
 * Changed `prettylogger::setters` module accessibility to private.
+* Fixed a bug where log filtering toggle would not work as expected.
 
 
 # v1.0.0

@@ -19,7 +19,7 @@ use serde::{Serialize, Deserialize};
 use colors::*;
 use config::*;
 
-/// The `Logger` struct used for printing logs.
+/// The `Logger` struct used to print logs.
 ///
 /// # You can create a `Logger` instance with the default configuration using:
 /// ```
@@ -75,6 +75,8 @@ pub struct Logger {
 
     // Dynamic variables that shouldn't be included in the template file:
     #[serde(skip)]
+    pub(crate) custom_log_buffer: Vec<LogStruct>,
+    #[serde(skip)]
     pub(crate) file_log_buffer: Vec<LogStruct>,
     #[serde(skip)]
     pub(crate) show_datetime: bool,
@@ -92,24 +94,6 @@ impl Drop for Logger {
 
 impl Logger {
     // INTERNAL METHODS
-
-    pub(crate) fn print_log(&mut self, log: &LogStruct) {
-        self.log_count += 1;
-        let log_str = self.format_log(log);
-
-        if self.file_logging_enabled {
-            self.file_log_buffer.push(log.clone());
-
-            if self.file_log_buffer_max_size != 0
-            && self.file_log_buffer.len() >= self.file_log_buffer_max_size {
-                let _ = self.flush_file_log_buffer(false);
-            }
-        }
-
-        if self.stdout_enabled {
-            print!("{}", log_str);
-        }
-    }
 
     pub(crate) fn get_log_headers(&self, log: &LogStruct)
     -> (String, String, String) {
@@ -169,8 +153,10 @@ impl Logger {
     }
 
     pub(crate) fn filter_log(&self, log_type: LogType) -> bool {
-        return !self.filtering_enabled
-            || ((log_type as i32) < self.verbosity as i32)
+        if self.filtering_enabled {
+            return (log_type as i32) < self.verbosity as i32;
+        }
+        return false;
     }
 
     pub(crate) fn get_datetime(&self) -> DateTime<Local> {
@@ -262,8 +248,9 @@ impl Logger {
             file_log_buffer_max_size: 128,
             on_drop_policy: OnDropPolicy::default(),
 
-            show_datetime: false,
+            custom_log_buffer: Vec::new(),
             file_log_buffer: Vec::new(),
+            show_datetime: false,
             log_file_lock: false,
             log_count: 1,
         }
@@ -271,6 +258,30 @@ impl Logger {
 
 
     // PUBLIC METHODS
+
+    /// Used to print a log out of a `LogStruct` structure.
+    pub fn print_log(&mut self, log: &LogStruct) {
+        self.log_count += 1;
+        let log_str = self.format_log(log);
+
+        if self.stdout_enabled {
+            print!("{}", log_str);
+        }
+
+        if self.use_custom_log_buffer {
+            self.custom_log_buffer.push(log.clone());
+        }
+
+        if self.file_logging_enabled {
+            self.file_log_buffer.push(log.clone());
+
+            if self.file_log_buffer_max_size != 0
+            && self.file_log_buffer.len() >= self.file_log_buffer_max_size {
+                let _ = self.flush_file_log_buffer(false);
+            }
+        }
+
+    }
 
     /// Returns a log entry out of a `LogStruct` based on current `Logger`
     /// configuration.
@@ -417,6 +428,11 @@ impl Logger {
         };
         self.print_log(&log);
     }
+
+    /// Returns a clone of the custom log buffer.
+    pub fn clone_log_buffer(&self) -> Vec<LogStruct> {
+        return self.custom_log_buffer.clone();
+    }
 }
 
 #[cfg(test)]
@@ -435,8 +451,8 @@ mod tests {
     fn test_log_filtering() {
         let mut l = Logger::default();
         l.toggle_log_filtering(true);
-        l.set_verbosity(Verbosity::ErrorsOnly);
 
+        l.set_verbosity(Verbosity::ErrorsOnly);
         if !l.filter_log(LogType::Debug) {
             panic!("A debug log should get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
         }
@@ -481,7 +497,7 @@ mod tests {
         }
 
         l.set_verbosity(Verbosity::All);
-        l.toggle_log_filtering(true);
+        l.toggle_log_filtering(false);
         if l.filter_log(LogType::Debug) {
             panic!("A debug log should not get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
         }
@@ -665,6 +681,40 @@ mod tests {
                 }
             },
             Err(_) => { panic!("Failed to get current directory!") },
+        }
+    }
+
+    #[test]
+    fn test_custom_log_buffer() {
+        let iter = 100;
+        let mut logger = Logger::default();
+        logger.toggle_log_filtering(false);
+        logger.toggle_custom_log_buffer(true);
+
+        let mut i = 0;
+        loop {
+            logger.debug("debug");
+            i += 1;
+            if i > iter - 1 {
+                break;
+            }
+        }
+
+        let log_buffer = logger.clone_log_buffer();
+
+        for log in &log_buffer {
+            if log.message != "debug" {
+                panic!("Unexpected log message!");
+            }
+            if log.log_type != LogType::Debug {
+                panic!("Unexpected log type!");
+            }
+        }
+
+        if log_buffer.len() != iter {
+            panic!("Expected a buffer size of {}, got {}.",
+                iter,
+                log_buffer.len());
         }
     }
 }
