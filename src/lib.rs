@@ -6,6 +6,9 @@
 //! configuration can be saved as a JSON file, allowing you to easily manage
 //! logging settings across different environments and use cases.
 
+/// A highly customizable logger library.
+
+#[doc = include_str!("../README.md")]
 mod fileio;
 mod setters;
 mod json;
@@ -21,21 +24,10 @@ use config::*;
 
 /// The `Logger` struct used to print logs.
 ///
-/// # You can create a `Logger` instance with the default configuration using:
+/// # Example
 /// ```
 /// # use prettylogger::Logger;
-/// let logger = Logger::default();
-/// ```
-///
-/// # Alternatively, initialize a `Logger` instance from a JSON template file:
-/// ```ignore
-/// Logger::from_template("/path/to/file.json");
-/// ```
-///
-/// # Once you have a `Logger` instance, you can start printing logs:
-/// ```
-/// # use prettylogger::Logger;
-/// # let mut logger = Logger::default();
+/// let mut logger = Logger::default();
 /// logger.debug("debug message");
 /// logger.info("info message");
 /// logger.warning("warning message");
@@ -86,15 +78,7 @@ pub struct Logger {
     pub(crate) log_count: u128,
 }
 
-impl Drop for Logger {
-    fn drop(&mut self) {
-        let _ = self.drop_flush();
-    }
-}
-
 impl Logger {
-    // INTERNAL METHODS
-
     pub(crate) fn get_log_headers(&self, log: &LogStruct)
     -> (String, String, String) {
         let header = self.get_main_header(log.log_type);
@@ -211,10 +195,10 @@ impl Logger {
         }
     }
 
-    // CONSTRUCTORS
 
     /// Returns a `Logger` instance with default configuration applied.
     pub fn default() -> Self {
+        let log_format = String::from("[%h] %m");
         Logger {
             stdout_enabled: true,
 
@@ -236,7 +220,7 @@ impl Logger {
             error_header: String::from("ERR"),
             fatal_header: String::from("FATAL"),
 
-            log_format: String::from("[%h] %m"),
+            log_format: log_format.clone(),
             datetime_format: String::from("%Y-%m-%d %H:%M:%S"),
 
             file_logging_enabled: false,
@@ -246,16 +230,21 @@ impl Logger {
 
             custom_log_buffer: Vec::new(),
             file_log_buffer: Vec::new(),
-            show_datetime: false,
+            show_datetime: log_format.contains("%d"),
             log_file_lock: false,
             log_count: 1,
         }
     }
 
 
-    // PUBLIC METHODS
-
-    /// Used to print a log out of a `LogStruct` structure.
+    /// Used to print a log from a `LogStruct`.
+    ///
+    /// # Example:
+    /// ```
+    /// # use prettylogger::{Logger, config::LogStruct};
+    /// # let mut logger = Logger::default();
+    /// logger.print_log(&LogStruct::error("&%$#@!"));
+    /// ```
     pub fn print_log(&mut self, log: &LogStruct) {
         self.log_count += 1;
         let log_str = self.format_log(log);
@@ -278,8 +267,15 @@ impl Logger {
         }
     }
 
-    /// Returns a log entry out of a `LogStruct` based on current `Logger`
+    /// Returns a log entry from a `LogStruct` based on current `Logger`
     /// configuration.
+    ///
+    /// # Example:
+    /// ```
+    /// # use prettylogger::{Logger, config::LogStruct};
+    /// # let mut logger = Logger::default();
+    /// let log_string = logger.format_log(&LogStruct::error("eror"));
+    /// ```
     pub fn format_log(&self, log: &LogStruct) -> String {
         let headers = self.get_log_headers(&log);
         let mut result = String::new();
@@ -320,8 +316,7 @@ impl Logger {
     }
 
     /// Flushes log buffer (if file logging is enabled and log file lock
-    /// disabled, it writes the log buffer to a file) and then clears the log
-    /// buffer.
+    /// disabled, it writes the log buffer to a file).
     ///
     /// Returns an error when there is an issue writing to a file or log file
     /// lock is enabled.
@@ -380,13 +375,13 @@ impl Logger {
         self.print_log(&log);
     }
 
-    /// Prints an **error** (errors cannot be suppressed).
+    /// Prints an **error**.
     pub fn error(&mut self, message: &str) {
         let log = LogStruct::error(message);
         self.print_log(&log);
     }
 
-    /// Prints a **fatal error** (errors cannot be suppressed).
+    /// Prints a **fatal error**.
     pub fn fatal(&mut self, message: &str) {
         let log = LogStruct::fatal_error(message);
         self.print_log(&log);
@@ -395,6 +390,12 @@ impl Logger {
     /// Returns a clone of the custom log buffer.
     pub fn clone_log_buffer(&self) -> Vec<LogStruct> {
         return self.custom_log_buffer.clone();
+    }
+}
+
+impl Drop for Logger {
+    fn drop(&mut self) {
+        let _ = self.drop_flush();
     }
 }
 
@@ -526,12 +527,15 @@ mod tests {
                     .map(|s| s.to_string() + file_name)
                     .unwrap_or_else(|| String::from(file_name));
 
-                let mut l = Logger::default();
-                l.save_template(&path);
-                l = Logger::from_template(&path);
+                Logger::default().save_template(&path);
+                let l = Logger::from_template(&path);
 
                 if l != Logger::default() {
-                    panic!("Templates are not the same!");
+                    panic!("Templates don't match!\n
+                        first: {:?}\n
+                        second: {:?}",
+                        l,
+                        Logger::default());
                 }
             }
             Err(e) => {

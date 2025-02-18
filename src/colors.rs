@@ -1,18 +1,29 @@
-//! Contains color-related utilities.
+//! Contains cosmetic color-related utilities.
 
-/// Contains various color-related utilities.
-///
-/// # enums:
-/// * `Color` -> A representation of a color.
-///
-/// # functions:
-/// * `color_text(text: &str, color: Color)` -> Colors text based on the color
-/// value.
+/// Contains various color-related utilities for cosmetic customization.
 
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use lazy_static::lazy_static;
 use std::fmt::{Display, Formatter};
+
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default,
+    Serialize, Deserialize)]
+/// Represents different colors. Used to color text or set log header colors.
+pub enum Color
+{
+    None = 0,
+    Black = 1,
+    #[default]
+    Blue = 2,
+    Cyan = 3,
+    Green = 4,
+    Gray = 5,
+    Magenta = 6,
+    Red = 7,
+    White = 8,
+    Yellow = 9,
+}
 
 static BLACK: &str = "\x1b[30m";
 static BLUE: &str = "\x1b[34m";
@@ -25,23 +36,43 @@ static WHITE: &str = "\x1b[37m";
 static YELLOW: &str = "\x1b[33m";
 pub(crate) static RESET: &str = "\x1b[0m";
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default,
-    Serialize, Deserialize)]
-/// Represents different color values. Used to color text or set log type
-/// header colors.
-pub enum Color
-{
-    #[default]
-    None = 0,
-    Black = 1,
-    Blue = 2,
-    Cyan = 3,
-    Green = 4,
-    Gray = 5,
-    Magenta = 6,
-    Red = 7,
-    White = 8,
-    Yellow = 9,
+lazy_static! {
+    static ref COLOR_MAP: HashMap<i32, &'static str> =  {
+        let mut m = HashMap::new();
+        m.insert(Color::None as i32, "");
+        m.insert(Color::Black as i32, BLACK);
+        m.insert(Color::Blue as i32, BLUE);
+        m.insert(Color::Cyan as i32, CYAN);
+        m.insert(Color::Green as i32, GREEN);
+        m.insert(Color::Gray as i32, GRAY);
+        m.insert(Color::Magenta as i32, MAGENTA);
+        m.insert(Color::Red as i32, RED);
+        m.insert(Color::White as i32, WHITE);
+        m.insert(Color::Yellow as i32, YELLOW);
+        return m;
+    };
+}
+
+/// Colors the given text based on `color` value using ANSII escape codes.
+///
+/// # Example
+/// ```
+/// # use prettylogger::colors::{Color, color_text};
+/// let colored_text = color_text("a piece of text", Color::Red);
+/// assert_eq!(colored_text, "\x1b[31ma piece of text\x1b[0m");
+/// ```
+pub fn color_text(text: &str, color: Color) -> String {
+    return get_color_code(color) + text + RESET;
+}
+
+pub(crate) fn get_color_code(color: Color) -> String {
+    let key = color as i32;
+    if COLOR_MAP.contains_key(&key) {
+        return COLOR_MAP[&key].to_string();
+    }
+    else {
+        return RESET.to_string();
+    }
 }
 
 impl Display for Color {
@@ -96,43 +127,4 @@ impl AsRef<str> for Color {
             Color::Yellow => "Yellow",
         }
     }
-}
-
-lazy_static! {
-    static ref COLOR_MAP: HashMap<i32, &'static str> =  {
-        let mut m = HashMap::new();
-        m.insert(Color::None as i32, "");
-        m.insert(Color::Black as i32, BLACK);
-        m.insert(Color::Blue as i32, BLUE);
-        m.insert(Color::Cyan as i32, CYAN);
-        m.insert(Color::Green as i32, GREEN);
-        m.insert(Color::Gray as i32, GRAY);
-        m.insert(Color::Magenta as i32, MAGENTA);
-        m.insert(Color::Red as i32, RED);
-        m.insert(Color::White as i32, WHITE);
-        m.insert(Color::Yellow as i32, YELLOW);
-        return m;
-    };
-}
-
-pub(crate) fn get_color_code(color: Color) -> String {
-    let key = color as i32;
-    if COLOR_MAP.contains_key(&key) {
-        return COLOR_MAP[&key].to_string();
-    }
-    else {
-        return RESET.to_string();
-    }
-}
-
-/// Colors given text based on `color` value using ANSII escape codes.
-///
-/// # Example
-/// ```
-/// # use prettylogger::colors::{Color, color_text};
-/// let colored_text = color_text("a", Color::Red);
-/// assert_eq!(colored_text, "\x1b[31ma\x1b[0m");
-/// ```
-pub fn color_text(text: &str, color: Color) -> String {
-    return get_color_code(color) + text + RESET;
 }

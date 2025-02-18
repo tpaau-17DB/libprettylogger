@@ -6,14 +6,16 @@ use std::io::{Error, ErrorKind};
 
 impl Logger {
     /// Sets logger `verbosity`.
-    /// * `All` -> Don't filter any logs
-    /// * `Standard` -> Just filter debug logs
-    /// * `Quiet` -> Only let warnings and errors to be displayed
-    /// * `ErrorsOnly` -> I'm not gonna explain this one
+    ///
+    /// # Example
+    /// ```
+    /// # use prettylogger::{Logger, config::Verbosity};
+    /// # let mut logger = Logger::default();
+    /// logger.set_verbosity(Verbosity::Quiet);
+    /// ```
     pub fn set_verbosity<I: Into<Verbosity>>(&mut self, verbosity: I) {
         self.verbosity = verbosity.into();
     }
-
 
     /// Toggles log filtering.
     /// * **true**  -> logs will get filtered based on verbosity
@@ -94,23 +96,23 @@ impl Logger {
     /// * `%m` -> The log message (this placeholder is mandatory, you will get
     /// an error if you don't include this in your log format).
     ///
-    /// # Setting an XML-like log format;
+    /// # Example
     /// ```
     /// # use prettylogger::Logger;
     /// # let mut l = Logger::default();
     /// l.set_log_format("<l> <h>%h</h> <m>%m</m> </l>");
-    /// l.error("A nice debug log!");
+    /// l.error("lorem ipsum");
     /// ```
     ///
     /// Returns an error when the `%m` placeholder is missing.
-    pub fn set_log_format(&mut self, format: &str) -> Result<(), &'static str> {
+    pub fn set_log_format(&mut self, format: &str) -> Result<(), String> {
         if format.contains("%m") {
             self.log_format = String::from(format);
             self.show_datetime = format.contains("%d");
             Ok(())
         }
         else {
-            Err("Expected a message placeholder ('%m')!")
+            Err(String::from("Expected a message placeholder!"))
         }
     }
 
@@ -118,7 +120,9 @@ impl Logger {
     ///
     /// Returns an error if the path is inaccessible.
     ///
-    /// # Make sure to actually enable file logging:
+    /// [File logging documentation](https://github.com/tpaau-17DB/libprettylogger?tab=readme-ov-file#file-logging)
+    ///
+    /// # Example
     /// ```ignore
     /// # use prettylogger::logging::Logger;
     /// # let mut logger = Logger::default();
@@ -150,11 +154,11 @@ impl Logger {
     /// Toggles file logging.
     ///
     /// Before enabling file logging, ensure that the log file path is set.
-    /// This is because the method checks if the log file is writable. If the
-    /// log  file path is not set, or the file is not writable, enabling file
+    /// This is because this method checks if the log file is writable. If the
+    /// log file path is not set, or the file is not writable, enabling file
     /// logging will result in an error.
     ///
-    /// # Enabling file logging:
+    /// # Example
     /// ```ignore
     /// # use prettylogger::logging::Logger;
     /// # let mut logger = Logger::default();
@@ -193,13 +197,13 @@ impl Logger {
     /// If a log file lock is active, the log buffer will not be flushed
     /// automatically, regardless of the size limit.
     ///
-    /// # Setting a custom log buffer size:
+    /// # Example
     /// ```ignore
     /// let mut logger = Logger::default();
     /// logger.set_log_file_path("/path/to/file.log");
     /// logger.toggle_file_logging(true);
     ///
-    /// // This will force `Logger` to flush the log buffer every 16 logs:
+    /// // This will make `Logger` to flush the log buffer every 16 logs:
     /// logger.set_max_log_buffer_size(16);
     ///
     /// let mut i = 0;
@@ -252,7 +256,7 @@ impl Logger {
 
     /// Toggles the usage of a custom log buffer.
     /// * `true` -> Logs will be stored in a buffer inside `Logger` and can be
-    /// cloned using the `clone_log_buffer()` method. Be aware that this can
+    /// cloned using the `clone_log_buffer()` method. Be aware that this will
     /// lead to high memory usage if turned on for a log period of time.
     /// * `false` -> Logs will not be stored in a log buffer.
     pub fn toggle_custom_log_buffer<I: Into<bool>>(&mut self, enabled: I) {

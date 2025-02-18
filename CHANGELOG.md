@@ -20,6 +20,7 @@ log type.
 ## Patches
 * Changed `prettylogger::setters` module accessibility to private.
 * Fixed a bug where log filtering toggle would not work as expected.
+* Fixed a bug where `Logger` would not add a timestamp when loaded from a template.
 
 
 # v1.0.0

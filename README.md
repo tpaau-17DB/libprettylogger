@@ -19,13 +19,12 @@
 
 <a name="tldr"></a>
 ## TL;DR
-**Install the library**:
-```
+**Installing the library**:
+```bash
 cargo add libprettylogger
 ```
 
-**Include the library in your project**:
-<!--Make sure this matches the example from lib.rs-->
+**Using the library in your project**:
 ```rust
 // Include stuff from the library:
 use prettylogger::Logger;
@@ -49,7 +48,7 @@ logger.fatal("A fatal error!");
 <a name="installation"></a>
 ## Installation
 To install the library with `cargo`, run:
-```
+```bash
 cargo add libprettylogger
 ```
 
@@ -64,47 +63,57 @@ libprettylogger = "1.0.0"
 ## The Logger
 The `Logger` struct is the **core** of the entire project.
 This is what you are going to use when you want to print a log, set filtering
-rules or modify log formatting.
-All of it's fields are private, only allowing for modification via setters.
+rules or modify log formatting. All of it's fields are private, only allowing for
+modification via setters.
 
 Creating a `Logger` struct with default configuration:
 ```rust
+# use prettylogger::Logger;
 let mut logger = Logger::default();
 ```
 
 <a name="the-logger_controlling-stdout"></a>
 ### Controlling `stdout`
 By default, `Logger` will put all logs in `stdout`. If you only want to write logs
-to a file or store them in a custom log buffer, use:
+to a file or store them in a custom buffer, use:
 ```rust
+# use prettylogger::Logger;
+# let mut logger = Logger::default();
 logger.toggle_stdout(false);
 ```
 
 <a name="the-logger_custom-log-buffer"></a>
 ### Custom Log Buffer
-You can make `Logger` store all the log you create in a buffer inside of itself.
-Later, you can clone that buffer and use it for whatever you want.
+`Logger` can store logs in a buffer instead of printing them or writing them
+to a file. Later, you can clone that buffer and do whatever you want with it.
 
 Enabling custom log buffer:
 ```rust
+# use prettylogger::Logger;
+# let mut logger = Logger::default();
 logger.toggle_custom_log_buffer(true);
 ```
 
 And when you need a copy of that buffer, call:
 ```rust
+# use prettylogger::Logger;
+# let mut logger = Logger::default();
 let buffer = logger.clone_log_buffer();
 ```
 
 
 <a name="log-format"></a>
 ## Log Format
-A log consists of several headers:
+A basic log consists of several headers:
 * **Log Type** **→** The type of the log (debug, info, warning etc.)
 * **Timestamp** **→** Contains the date and time the log was created
 * **Message** **→** The actual log message
 
-Here is a log message with all it's parts marked:
-```
+Those headers can then be formatted using a log format string, similarly to how
+you would format a datetime string.
+
+Here is a log message with all it's headers marked:
+```ignore
 [ DEBUG 21:52:37 An example debug message ]
   ^^^^^ ^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^
   |     |        |
@@ -115,20 +124,26 @@ Here is a log message with all it's parts marked:
 This specific effect was achieved by setting the datetime format to `%H:%M:%S`,
 log format to `[ %h %d %m ]` and the debug log type header to `DEBUG`.
 
-You can use this method to set the datetime format of a `Logger`:
+Use this method to set the datetime format of a `Logger`:
 ```rust
+# use prettylogger::Logger;
+# let mut logger = Logger::default();
 logger.set_datetime_format("%H:%M:%S");
 ```
 
-Log format can be customized using:
+You can set a custom log format like this:
 ```rust
+# use prettylogger::Logger;
+# let mut logger = Logger::default();
 logger.set_log_format("[ %h %d %m ]");
 ```
-**Note**: The `%m` placeholder is mandatory and you will get an error unless you
-include it in your format string.
+**Note** that the `%m` (message) placeholder is mandatory and you will get an error
+unless you include it in your format string.
 
-And log type headers can be customized with their corresponding methods:
+Log type headers can be customized with their corresponding methods:
 ```rust
+# use prettylogger::Logger;
+# let mut logger = Logger::default();
 logger.set_debug_header("DEBUG");
 logger.set_info_header("INFO");
 logger.set_warning_header("WARNING");
@@ -136,8 +151,10 @@ logger.set_error_header("ERROR");
 logger.set_fatal_header("FATAL ERROR");
 ```
 
-Log type headers can be further customized by changing their colors:
+And you can also customize their colors:
 ```rust
+# use prettylogger::{Logger, colors::Color};
+# let mut logger = Logger::default();
 logger.set_debug_color(Color::Blue);
 logger.set_info_color(Color::Green);
 logger.set_warning_color(Color::Yellow);
@@ -145,39 +162,26 @@ logger.set_error_color(Color::Red);
 logger.set_fatal_color(Color::Magenta);
 ```
 
-The `Color` enum is declared in `prettylogger::colors`. It can have one of the
-following values:
-
-- `None` **→** Represents no color. When the log type header color is set to this
-value, it will appear as regular text.
-- `Black`
-- `Blue` **→** The default color for **debug** header.
-- `Cyan`
-- `Green` **→** The default color for **info** header.
-- `Gray`
-- `Magenta` **→** The default color for **fatal** header.
-- `Red` **→** The default color for **error** header.
-- `White`
-- `Yellow` **→** The default color for **warning** header.
-
 ### Using the `LogStruct`
-`LogStruct` is a type that represents a single log entry. You can create a
-`LogStruct` instance using one of it's constructors:
+`LogStruct` is a type that represents a single log entry. You can create `LogStruct` instance using one of it's constructors:
 * `debug(message: &str)`
 * `info(message: &str)`
 * `warning(message: &str)`
 * `error(message: &str)`
 * `fatal_error(message: &str)`
 
-Using one of `LogStruct`'s constructors to create it's instance with a message:
+Using `LogStruct`'s `debug` constructor to create a debug log, and then formatting
+with `logger.format_log(...)`:
 ```rust
-let log_formatted = logger.format(LogStruct::debug("A debug log!"));
+# use prettylogger::{Logger, config::LogStruct};
+# let mut logger = Logger::default();
+let log_formatted = logger.format_log(&LogStruct::debug("A debug log!"));
 ```
 
 <a name="log-filtering"></a>
 ## Log Filtering
-Logs are filtered based on the current `LogLevel` and the `Logger`'s `Verbosity`
-setting.
+Logs are filtered based on the current `LogLevel` and the `Logger`'s verbosity
+setting. `config::Verbosity` enum can be used to set the verbosity of a `Logger`.
 
 The `Verbosity` level determines which logs are filtered out:
 - `All` **→** Disables log filtering, allowing all logs to pass through.
@@ -185,16 +189,18 @@ The `Verbosity` level determines which logs are filtered out:
 - `Quiet` **→** Only allows errors and warnings to be displayed.
 - `ErrorsOnly` **→** Only allows errors to be shown.
 
-The `Verbosity` enum is defined in `prettylogger::config`.
-
-To modify the `Verbosity` of the `Logger`, use:
+To modify the verbosity of the `Logger`, use:
 ```rust
-logger.set_verbosity(verbosity: Verbosity);
+# use prettylogger::{Logger, config::Verbosity};
+# let mut logger = Logger::default();
+logger.set_verbosity(Verbosity::All);
 ```
 
 To toggle log filtering, use:
 ```rust
-logger.toggle_log_filtering(enabled: bool);
+# use prettylogger::{Logger, config::Verbosity};
+# let mut logger = Logger::default();
+logger.toggle_log_filtering(false);
 ```
 
 
@@ -204,7 +210,9 @@ File logging is a feature that allows you to automatically save log output to a
 file.
 
 **Enabling file logging**:
-```rust
+```rust ignore
+# use prettylogger::Logger;
+# let mut logger = Logger::default();
 // Set the log file path first:
 logger.set_log_file_path("/path/to/file.log");
 // Then enable file logging:
@@ -214,49 +222,46 @@ logger.info("Yay!"); // Yay!
 logger.flush(); // Flush the log buffer to a file
 ```
 
-It is **CRUCIAL** to set the log file path **FIRST**. This is because when
-you attempt to enable file logging, `Logger` will check if the log file path is
-correct and since the default log file path is an empty string, you will get an
-error.
+It is **CRUCIAL** to set the log file path **FIRST**. If you try to enable file
+logging before specifying a valid path, `Logger` will check the log file path, and
+since the default path is an empty string, it will result in an error.
+
 
 <a name="file-logging_locking-the-log-file"></a>
 ### Locking the Log File
 The log file can be locked to prevent race conditions when there are multiple
-threads accessing it at the same time. The lock prevents `Logger` from writing to
-the log file until the lock has been released. `Logger` only ignores the log file
-lock when it's being dropped and the `OnDropPolicy` is set to `IgnoreLogFileLock`
+threads accessing it at the same time. It prevents `Logger` from writing to
+the log file until the lock has been released. The lock is only ignored when a
+`Logger` is being dropped and the `OnDropPolicy` is set to `IgnoreLogFileLock`
 (off by default).
 
 **Note**: Log file lock is not persistent (it's not saved when calling
 `logger.save_template("path")`).
 
-To toggle log file lock, use:
+Toggling log file lock:
 ```rust
-logger.toggle_lock_file_lock(true);
-
+# use prettylogger::Logger;
+# let mut logger = Logger::default();
+logger.toggle_log_file_lock(true);
 // Do some I/O operations on the log file here
-
-logger.toggle_lock_file_lock(false);
+logger.toggle_log_file_lock(false);
 ```
 
 To set the on drop log file policy, use:
 ```rust
-// Ignore the log file lock and write to the log file anyway.
+# use prettylogger::{Logger, config::OnDropPolicy};
+# let mut logger = Logger::default();
 logger.set_on_drop_file_policy(OnDropPolicy::IgnoreLogFileLock);
 ```
 
-`OnDropPolicy` is declared in the `config` module, and all it's possible values
-are:
-* `IgnoreLogFileLock` **→** Ignore the log file lock and write to the log file
-anyway.
-* `DiscardLogBuffer` (default) **→** Don't write to the log file on drop (discard
-all logs from log buffer).
 
 <a name="file-logging_automatic-log-buffer-flushing"></a>
 ### Automatic Log Buffer Flushing
 You can either flush the log buffer automatically or set up automatic flushing
 based on the log buffer size:
-```rust
+```rust ignore
+# use prettylogger::Logger;
+# let mut logger = Logger::default();
 logger.set_log_file_path("/path/to/file.log");
 logger.toggle_file_logging(true);
 
@@ -276,13 +281,15 @@ loop {
 
 <a name="logger-templates"></a>
 ## Logger Templates
-A **Logger Template** is a JSON file that defines the configuration of a
+A **Logger template** is a JSON file that defines the configuration of a
 `Logger` struct. This allows you to easily manage and store logging settings in a
 file.
 
 Here’s an example of what a `Logger` struct looks like in JSON format:
 ```json
 {
+  "stdout_enabled": true,
+  "use_custom_log_buffer": false,
   "verbosity": "Standard",
   "filtering_enabled": true,
   "log_header_color_enabled": true,
@@ -300,18 +307,20 @@ Here’s an example of what a `Logger` struct looks like in JSON format:
   "datetime_format": "%Y-%m-%d %H:%M:%S",
   "file_logging_enabled": false,
   "log_file_path": "",
-  "log_buffer_max_size": 128,
+  "file_log_buffer_max_size": 128,
   "on_drop_policy": "DiscardLogBuffer"
 }
 ```
 
-Deserializing `Logger` from a template file:
-```rust
+Loading `Logger` from a template file:
+```rust ignore
+# use prettylogger::Logger;
 let mut logger = Logger::from_template("/path/to/template.json");
 ```
 
-Serializing `Logger` to a template file:
-```rust
+Saving `Logger` to a template file:
+```rust ignore
+# use prettylogger::Logger;
 let mut logger = Logger::default(); // Create a default `Logger`
 logger.save_template("/path/to/template.json");
 ```

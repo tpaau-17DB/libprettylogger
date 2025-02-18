@@ -8,9 +8,9 @@ use std::{
 impl Logger {
     /// Creates a `Logger` instance from a template file.
     ///
-    /// [Logger templates documentation](https://github.com/tpaau-17DB/libprettylogger?tab=readme-ov-file#logger-templates)
-    /// # Deserializing `Logger` from a `json` file:
+    /// [Logger templates documentation.](https://github.com/tpaau-17DB/libprettylogger?tab=readme-ov-file#logger-templates)
     ///
+    /// # Example
     /// ```ignore
     /// # use prettylogger::logger::Logger;
     /// let mut logger = Logger::from_template("/path/to/template.json");
@@ -20,8 +20,9 @@ impl Logger {
             .expect("Unable to read file!");
         let mut logger: Logger = serde_json::from_str(&file)
             .expect("Invalid JSON file!");
-        logger.log_count += 1;
 
+        logger.log_count += 1;
+        logger.show_datetime = logger.log_format.contains("%d");
 
         return logger;
     }
@@ -30,7 +31,7 @@ impl Logger {
     ///
     /// [Logger templates documentation](https://github.com/tpaau-17DB/libprettylogger?tab=readme-ov-file#logger-templates)
     ///
-    /// # Serializing `Logger` into a `json` file
+    /// # Example
     /// ```ignore
     /// # use prettylogger::logger::Logger;
     /// let mut logger = Logger::default(); // Create a default `Logger`
