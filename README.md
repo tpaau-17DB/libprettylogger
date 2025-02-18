@@ -8,8 +8,8 @@
 * [Installation](#installation)
 * [Log Format](#log-format)
 * [The Logger](#the-logger)
-    * [Controlling `stdout`](#the-logger_custom-log-buffer)
-    * [Custom Log Buffer](#the-logger_controlling-stdout)
+    * [Controlling `stdout`](#the-logger_controlling-stdout)
+    * [Custom Log Buffer](#the-logger_custom-log-buffer)
 * [Log Filtering](#log-filtering)
 * [File Logging](#file-logging)
     * [Automatic Log File Flushing](#file-logging_automatic-log-buffer-flushing)
@@ -235,7 +235,7 @@ the log file until the lock has been released. The lock is only ignored when a
 `Logger` is being dropped and the `OnDropPolicy` is set to `IgnoreLogFileLock`
 (off by default).
 
-**Note**: Log file lock is not persistent (it's not saved when calling
+Log file lock is not persistent (it's not saved when calling
 `logger.save_template("path")`).
 
 Toggling log file lock:
