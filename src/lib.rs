@@ -8,6 +8,8 @@
 
 /// A highly customizable logger library.
 
+#[cfg(test)]
+mod tests;
 #[doc = include_str!("../README.md")]
 mod fileio;
 mod setters;
@@ -62,7 +64,7 @@ pub struct Logger {
 
     pub(crate) file_logging_enabled: bool,
     pub(crate) log_file_path: String,
-    pub(crate) file_log_buffer_max_size: usize,
+    pub(crate) file_log_buffer_max_size: u32,
     pub(crate) on_drop_policy: OnDropPolicy,
 
     // Dynamic variables that shouldn't be included in the template file:
@@ -81,12 +83,12 @@ pub struct Logger {
 impl Logger {
     pub(crate) fn get_log_headers(&self, log: &LogStruct)
     -> (String, String, String) {
-        let header = self.get_main_header(log.log_type);
+        let header = self.get_log_type_header(log.log_type);
         let datetime = self.get_datetime_formatted(&log.datetime);
         return (header, datetime, log.message.clone());
     }
 
-    pub(crate) fn get_main_header(&self, log_type: LogType) -> String {
+    pub(crate) fn get_log_type_header(&self, log_type: LogType) -> String {
         match log_type {
             LogType::Debug => {
                 self.colorify(&self.debug_header,
@@ -124,16 +126,9 @@ impl Logger {
 
     pub(crate) fn colorify(&self, text: &str, color: Color) -> String {
         if self.log_header_color_enabled {
-            if color != Color::None {
-                return get_color_code(color) + text + &RESET;
-            }
-            else {
-                return text.to_string();
-            }
+            return color_text(text, color);
         }
-        else {
-            return text.to_string();
-        }
+        return text.to_string();
     }
 
     pub(crate) fn filter_log(&self, log_type: LogType) -> bool {
@@ -261,7 +256,8 @@ impl Logger {
             self.file_log_buffer.push(log.clone());
 
             if self.file_log_buffer_max_size != 0
-            && self.file_log_buffer.len() >= self.file_log_buffer_max_size {
+            && self.file_log_buffer.len() >=
+            self.file_log_buffer_max_size.try_into().unwrap() {
                 let _ = self.flush_file_log_buffer(false);
             }
         }
@@ -396,288 +392,5 @@ impl Logger {
 impl Drop for Logger {
     fn drop(&mut self) {
         let _ = self.drop_flush();
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::{
-        env, io, path::PathBuf
-    };
-
-    fn get_current_dir() -> io::Result<PathBuf> {
-        let current_dir = env::current_dir()?;
-        Ok(current_dir)
-    }
-
-    #[test]
-    fn test_log_filtering() {
-        let mut l = Logger::default();
-        l.toggle_log_filtering(true);
-
-        l.set_verbosity(Verbosity::ErrorsOnly);
-        if !l.filter_log(LogType::Debug) {
-            panic!("A debug log should get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
-        }
-        if !l.filter_log(LogType::Info) {
-            panic!("An informative log should get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
-        }
-        if !l.filter_log(LogType::Warning) {
-            panic!("A warning log should get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
-        }
-
-        l.set_verbosity(Verbosity::Quiet);
-        if !l.filter_log(LogType::Debug) {
-            panic!("A debug log should get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
-        }
-        if !l.filter_log(LogType::Info) {
-            panic!("An informative log should get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
-        }
-        if l.filter_log(LogType::Warning) {
-            panic!("A warning log not should get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
-        }
-
-        l.set_verbosity(Verbosity::Standard);
-        if !l.filter_log(LogType::Debug) {
-            panic!("A debug log should get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
-        }
-        if l.filter_log(LogType::Info) {
-            panic!("An informative log should not get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
-        }
-        if l.filter_log(LogType::Warning) {
-            panic!("A warning log not should get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
-        }
-
-        l.set_verbosity(Verbosity::All);
-        if l.filter_log(LogType::Debug) {
-            panic!("A debug log should not get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
-        }
-        if l.filter_log(LogType::Info) {
-            panic!("An informative log should not get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
-        }
-        if l.filter_log(LogType::Warning) {
-            panic!("A warning log not should get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
-        }
-
-        l.set_verbosity(Verbosity::All);
-        l.toggle_log_filtering(false);
-        if l.filter_log(LogType::Debug) {
-            panic!("A debug log should not get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
-        }
-        if l.filter_log(LogType::Info) {
-            panic!("An informative log should not get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
-        }
-        if l.filter_log(LogType::Warning) {
-            panic!("A warning log not should get filtered for verbosity set to: {}", Verbosity::ErrorsOnly);
-        }
-    }
-
-    #[test]
-    fn test_log_headers() {
-        // Test if header format setting works
-        let header = "askljdfh";
-
-        let mut l = Logger::default();
-
-        l.set_debug_header(header);
-        if l.get_main_header(LogType::Debug) !=
-        l.colorify(header, l.log_header_color(LogType::Debug)) {
-            panic!("Debug headers do not match!");
-        }
-        l.set_info_header(header);
-        if l.get_main_header(LogType::Info) !=
-        l.colorify(header, l.log_header_color(LogType::Info)) {
-            panic!("Info headers do not match!");
-        }
-        l.set_warning_header(header);
-        if l.get_main_header(LogType::Warning) !=
-        l.colorify(header, l.log_header_color(LogType::Warning)) {
-            panic!("Warning headers do not match!");
-        }
-        l.set_error_header(header);
-        if l.get_main_header(LogType::Err) !=
-        l.colorify(header, l.log_header_color(LogType::Err)) {
-            panic!("Error headers do not match!");
-        }
-        l.set_fatal_header(header);
-        if l.get_main_header(LogType::FatalError) !=
-        l.colorify(header, l.log_header_color(LogType::FatalError)) {
-            panic!("Fatal error headers do not match!");
-        }
-    }
-
-    #[test]
-    fn test_log_colors() {
-        // Test if colorify works
-        let l = Logger::default();
-        if l.colorify("a", Color::Red) != "\x1b[31ma\x1b[0m"
-        {
-            panic!("Failed to colorify a string!");
-        }
-    }
-
-    #[test]
-    fn test_templates() {
-        let file_name = "/templates/test.json";
-        match get_current_dir() {
-            Ok(current_dir) => {
-                let path = current_dir
-                    .to_str()
-                    .map(|s| s.to_string() + file_name)
-                    .unwrap_or_else(|| String::from(file_name));
-
-                Logger::default().save_template(&path);
-                let l = Logger::from_template(&path);
-
-                if l != Logger::default() {
-                    panic!("Templates don't match!\n
-                        first: {:?}\n
-                        second: {:?}",
-                        l,
-                        Logger::default());
-                }
-            }
-            Err(e) => {
-                eprintln!("Error getting current directory: {}", e);
-            }
-        }
-    }
-
-    #[test]
-    fn test_formats() {
-        let mut l = Logger::default();
-
-        l.set_datetime_format("aaa");
-        l.set_debug_header("d");
-        l.set_info_header("i");
-        l.set_warning_header("W");
-        l.set_error_header("E");
-        l.set_fatal_header("!");
-        let _ = l.set_log_format("<l> <h>%h</h> <d>%d</d> <m>%m</m> </l>");
-
-        let mut logstruct = LogStruct::debug("aaa");
-        let mut comp = format!("<l> <h>{}</h> <d>aaa</d> <m>aaa</m> </l>\n",
-            l.colorify("d", l.log_header_color(LogType::Debug))
-        );
-
-        if l.format_log(&logstruct) != comp {
-            panic!("Bad log formatting, expected \n'{}', got \n'{}'",
-                comp,
-                l.format_log(&logstruct));
-        }
-
-        logstruct.log_type = LogType::Info;
-        comp = format!("<l> <h>{}</h> <d>aaa</d> <m>aaa</m> </l>\n",
-            l.colorify("i", l.log_header_color(LogType::Info))
-        );
-        if l.format_log(&logstruct) != comp {
-            panic!("Bad log formatting, expected \n'{}', got \n'{}'",
-                comp,
-                l.format_log(&logstruct));
-        }
-
-        logstruct.log_type = LogType::Warning;
-        comp = format!("<l> <h>{}</h> <d>aaa</d> <m>aaa</m> </l>\n",
-            l.colorify("W", l.log_header_color(LogType::Warning))
-        );
-        if l.format_log(&logstruct) != comp {
-            panic!("Bad log formatting, expected \n'{}', got \n'{}'",
-                comp,
-                l.format_log(&logstruct));
-        }
-
-        logstruct.log_type = LogType::Err;
-        comp = format!("<l> <h>{}</h> <d>aaa</d> <m>aaa</m> </l>\n",
-            l.colorify("E", l.log_header_color(LogType::Err))
-        );
-        if l.format_log(&logstruct) != comp {
-            panic!("Bad log formatting, expected \n'{}', got \n'{}'",
-                comp,
-                l.format_log(&logstruct));
-        }
-
-        logstruct.log_type = LogType::FatalError;
-        comp = format!("<l> <h>{}</h> <d>aaa</d> <m>aaa</m> </l>\n",
-            l.colorify("!", l.log_header_color(LogType::FatalError))
-        );
-        if l.format_log(&logstruct) != comp {
-            panic!("Bad log formatting, expected \n'{}', got \n'{}'",
-                comp,
-                l.format_log(&logstruct));
-        }
-    }
-
-    #[test]
-    fn test_file_logging() {
-        let file_name = "/output.log";
-        let max_size: usize = 16;
-        let mut l = Logger::default();
-        l.set_max_log_buffer_size(max_size);
-
-        let current_dir = get_current_dir();
-
-        match current_dir {
-            Ok(current_dir) => {
-                let path = current_dir
-                    .to_str()
-                    .map(|s| s.to_string() + file_name)
-                    .unwrap_or_else(|| String::from(file_name));
-
-                let result = l.set_log_file_path(&path);
-
-                match result {
-                    Ok(()) => {
-                        let _ = l.toggle_file_logging(true);
-                        let mut i = 0;
-                        loop {
-                            l.fatal(&format!("i: {}", i));
-
-                            if i >= max_size {
-                                break;
-                            }
-                            i += 1;
-                        }
-                    },
-                    Err(_) => { panic!("Failed to set the log file path to
-                        '{}'!", path) },
-                }
-            },
-            Err(_) => { panic!("Failed to get current directory!") },
-        }
-    }
-
-    #[test]
-    fn test_custom_log_buffer() {
-        let iter = 100;
-        let mut logger = Logger::default();
-        logger.toggle_log_filtering(false);
-        logger.toggle_custom_log_buffer(true);
-
-        let mut i = 0;
-        loop {
-            logger.debug("debug");
-            i += 1;
-            if i > iter - 1 {
-                break;
-            }
-        }
-
-        let log_buffer = logger.clone_log_buffer();
-
-        for log in &log_buffer {
-            if log.message != "debug" {
-                panic!("Unexpected log message!");
-            }
-            if log.log_type != LogType::Debug {
-                panic!("Unexpected log type!");
-            }
-        }
-
-        if log_buffer.len() != iter {
-            panic!("Expected a buffer size of {}, got {}.",
-                iter,
-                log_buffer.len());
-        }
     }
 }

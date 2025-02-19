@@ -62,17 +62,10 @@ lazy_static! {
 /// assert_eq!(colored_text, "\x1b[31ma piece of text\x1b[0m");
 /// ```
 pub fn color_text(text: &str, color: Color) -> String {
-    return get_color_code(color) + text + RESET;
-}
-
-pub(crate) fn get_color_code(color: Color) -> String {
-    let key = color as i32;
-    if COLOR_MAP.contains_key(&key) {
-        return COLOR_MAP[&key].to_string();
+    if color != Color::None {
+        return COLOR_MAP[&(color as i32)].to_string() + text + RESET;
     }
-    else {
-        return RESET.to_string();
-    }
+    return String::from(text);
 }
 
 impl Display for Color {

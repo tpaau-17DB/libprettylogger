@@ -16,6 +16,11 @@ instances.
 inside `Logger` for later use.
 * Added 5 new constructors to the `LogStruct`, each one representing a different
 log type.
+* `Logger`'s `from_template()` constructor now automatically expands environment
+variables.
+* `Logger`'s `save_template(...)` and `set_log_file_path(...)` methods now
+automatically expands environment variables.
+
 
 ## Patches
 * Changed `prettylogger::setters` module accessibility to private.

@@ -123,15 +123,16 @@ impl Logger {
     /// [File logging documentation](https://github.com/tpaau-17DB/libprettylogger?tab=readme-ov-file#file-logging)
     ///
     /// # Example
-    /// ```ignore
-    /// # use prettylogger::logging::Logger;
+    /// ```
+    /// # use prettylogger::Logger;
     /// # let mut logger = Logger::default();
     /// // Set the log file path first:
-    /// logger.set_log_file_path("/path/to/file.log");
+    /// logger.set_log_file_path("/tmp/libprettylogger-tests/set_log_file_path.log");
     /// // Then enable file logging:
     /// logger.toggle_file_logging(true);
     /// ```
     pub fn set_log_file_path(&mut self, path: &str) -> Result<(), Error> {
+        let path: &str = &expand_env_vars(&expand_tilde(path));
         if is_file_writable(path) {
             self.log_file_path = path.to_string();
             overwrite_file(path, "")
@@ -159,11 +160,12 @@ impl Logger {
     /// logging will result in an error.
     ///
     /// # Example
-    /// ```ignore
-    /// # use prettylogger::logging::Logger;
+    /// ```
+    /// # use prettylogger::Logger;
     /// # let mut logger = Logger::default();
+    /// # logger.set_log_file_path("/tmp/libprettylogger-tests/toggle_file_logging.log");
     /// // Set the log file path first:
-    /// logger.set_log_file_path("/path/to/file.log");
+    /// logger.set_log_file_path("/tmp/libprettylogger-tests/toggle_file_logging.log");
     /// // Then enable file logging:
     /// logger.toggle_file_logging(true);
     /// ```
@@ -198,13 +200,14 @@ impl Logger {
     /// automatically, regardless of the size limit.
     ///
     /// # Example
-    /// ```ignore
+    /// ```
+    /// # use prettylogger::Logger;
     /// let mut logger = Logger::default();
-    /// logger.set_log_file_path("/path/to/file.log");
+    /// logger.set_log_file_path("/tmp/libprettylogger-tests/set_max_log_buffer_size.log");
     /// logger.toggle_file_logging(true);
     ///
     /// // This will make `Logger` to flush the log buffer every 16 logs:
-    /// logger.set_max_log_buffer_size(16);
+    /// logger.set_max_log_buffer_size(16 as u32);
     ///
     /// let mut i = 0;
     /// loop {
@@ -215,7 +218,7 @@ impl Logger {
     ///     }
     /// }
     /// ```
-    pub fn set_max_log_buffer_size<I: Into<usize>>(&mut self, size: I) {
+    pub fn set_max_log_buffer_size<I: Into<u32>>(&mut self, size: I) {
         self.file_log_buffer_max_size = size.into();
     }
 

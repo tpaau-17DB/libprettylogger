@@ -210,11 +210,11 @@ File logging is a feature that allows you to automatically save log output to a
 file.
 
 **Enabling file logging**:
-```rust ignore
+```rust
 # use prettylogger::Logger;
 # let mut logger = Logger::default();
 // Set the log file path first:
-logger.set_log_file_path("/path/to/file.log");
+logger.set_log_file_path("/tmp/libprettylogger-tests/readme-doc1.log");
 // Then enable file logging:
 logger.toggle_file_logging(true);
 
@@ -259,14 +259,14 @@ logger.set_on_drop_file_policy(OnDropPolicy::IgnoreLogFileLock);
 ### Automatic Log Buffer Flushing
 You can either flush the log buffer automatically or set up automatic flushing
 based on the log buffer size:
-```rust ignore
+```rust
 # use prettylogger::Logger;
 # let mut logger = Logger::default();
-logger.set_log_file_path("/path/to/file.log");
+logger.set_log_file_path("/tmp/libprettylogger-tests/readme-doc2.log");
 logger.toggle_file_logging(true);
 
 // This will make `Logger` to flush the log buffer every 16 logs:
-logger.set_max_log_buffer_size(16);
+logger.set_max_log_buffer_size(16 as u32);
 
 let mut i = 0;
 loop {
@@ -313,14 +313,15 @@ Here’s an example of what a `Logger` struct looks like in JSON format:
 ```
 
 Loading `Logger` from a template file:
-```rust ignore
+```rust
 # use prettylogger::Logger;
-let mut logger = Logger::from_template("/path/to/template.json");
+# Logger::default().save_template("/tmp/libprettylogger-tests/readme-doc3.json");
+let mut logger = Logger::from_template("/tmp/libprettylogger-tests/readme-doc3.json");
 ```
 
 Saving `Logger` to a template file:
-```rust ignore
+```rust
 # use prettylogger::Logger;
 let mut logger = Logger::default(); // Create a default `Logger`
-logger.save_template("/path/to/template.json");
+logger.save_template("/tmp/libprettylogger-tests/readme-doc4.json");
 ```
