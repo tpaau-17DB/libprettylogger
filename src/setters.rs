@@ -229,7 +229,7 @@ impl Logger {
     /// # WARNING: leaving this option on for a long period of time will cause
     /// high memory usage!
     ///
-    /// * `true` : When log file lock is enabled, logger won't flush into the
+    /// * `true`: When log file lock is enabled, logger won't flush into the
     /// log file. Instead, it will wait until the lock is disabled. You will
     /// not loose any logs, they will be stored in the log buffer even when it
     /// exceeds its size limit.
