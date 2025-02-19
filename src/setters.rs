@@ -18,15 +18,15 @@ impl Logger {
     }
 
     /// Toggles log filtering.
-    /// * **true**  -> logs will get filtered based on verbosity
-    /// * **false** -> log filtering will be disabled globally
+    /// * **true**: logs will get filtered based on verbosity
+    /// * **false**: log filtering will be disabled globally
     pub fn toggle_log_filtering<I: Into<bool>>(&mut self, enabled: I) {
         self.filtering_enabled = enabled.into();
     }
 
     /// Toggles colored log headers.
-    /// * `true`  -> Log headers will have colors
-    /// * `false` -> No colors :(
+    /// * `true`: Log headers will have colors
+    /// * `false`: No colors :(
     pub fn toggle_log_header_color<I: Into<bool>>(&mut self, enabled: I) {
         self.log_header_color_enabled = enabled.into();
     }
@@ -90,10 +90,10 @@ impl Logger {
     ///
     /// There are three placeholders in a log format string (you can place
     /// multiple placeholders of the same type in a format string):
-    /// * `%c` -> Ascending log count starting at 1.
-    /// * `%d` -> The timestamp.
-    /// * `%h` -> The header indicating the log type (e.g., debug, error, etc.)
-    /// * `%m` -> The log message (this placeholder is mandatory, you will get
+    /// * `%c`: Ascending log count starting at 1.
+    /// * `%d`: The timestamp.
+    /// * `%h`: The header indicating the log type (e.g., debug, error, etc.)
+    /// * `%m`: The log message (this placeholder is mandatory, you will get
     /// an error if you don't include this in your log format).
     ///
     /// # Example
@@ -170,7 +170,7 @@ impl Logger {
     /// logger.toggle_file_logging(true);
     /// ```
     pub fn toggle_file_logging<I: Into<bool>>(&mut self, enabled: I)
-    -> Result<(), Error> {
+   -> Result<(), Error> {
         if !enabled.into() {
             self.file_logging_enabled = false;
             Ok(())
@@ -229,11 +229,11 @@ impl Logger {
     /// # WARNING: leaving this option on for a long period of time will cause
     /// high memory usage!
     ///
-    /// * `true`  -> When log file lock is enabled, logger won't flush into the
+    /// * `true` : When log file lock is enabled, logger won't flush into the
     /// log file. Instead, it will wait until the lock is disabled. You will
     /// not loose any logs, they will be stored in the log buffer even when it
     /// exceeds its size limit.
-    /// * `false` -> Logger will write to the log file normally.
+    /// * `false`: Logger will write to the log file normally.
     pub fn toggle_log_file_lock<I: Into<bool>>(&mut self, enabled: I) {
         self.log_file_lock = enabled.into();
     }
@@ -251,17 +251,17 @@ impl Logger {
     }
 
     /// Toggles printing logs to `stdout`.
-    /// * `true` -> Logs will be printed in your terminal's `stdout`.
-    /// * `false` -> No log output in your terminal.
+    /// * `true`: Logs will be printed in your terminal's `stdout`.
+    /// * `false`: No log output in your terminal.
     pub fn toggle_stdout<I: Into<bool>>(&mut self, enabled: I) {
         self.stdout_enabled = enabled.into();
     }
 
     /// Toggles the usage of a custom log buffer.
-    /// * `true` -> Logs will be stored in a buffer inside `Logger` and can be
+    /// * `true`: Logs will be stored in a buffer inside `Logger` and can be
     /// cloned using the `clone_log_buffer()` method. Be aware that this will
     /// lead to high memory usage if turned on for a log period of time.
-    /// * `false` -> Logs will not be stored in a log buffer.
+    /// * `false`: Logs will not be stored in a log buffer.
     pub fn toggle_custom_log_buffer<I: Into<bool>>(&mut self, enabled: I) {
         self.use_custom_log_buffer = enabled.into();
     }

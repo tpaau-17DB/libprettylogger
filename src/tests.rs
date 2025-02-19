@@ -1,4 +1,3 @@
-#[doc = include_str!("../README.md")]
 use std::fs::{create_dir_all, read_to_string};
 use crate::*;
 
@@ -213,7 +212,7 @@ fn test_auto_file_logging() {
     }
     let contents = read_to_string(path)
         .expect("Failed to read the log file!");
-    assert_eq!(contents, 
+    assert_eq!(contents,
                         "[[35mFATAL[0m] i: 0\n[[35mFATAL[0m] i: 1\n[[35mFATAL[0m] i: 2\n[[35mFATAL[0m] i: 3\n[[35mFATAL[0m] i: 4\n[[35mFATAL[0m] i: 5\n[[35mFATAL[0m] i: 6\n[[35mFATAL[0m] i: 7\n[[35mFATAL[0m] i: 8\n[[35mFATAL[0m] i: 9\n[[35mFATAL[0m] i: 10\n[[35mFATAL[0m] i: 11\n[[35mFATAL[0m] i: 12\n[[35mFATAL[0m] i: 13\n[[35mFATAL[0m] i: 14\n[[35mFATAL[0m] i: 15\n");
 }
 
@@ -242,7 +241,7 @@ fn test_manual_file_log_flushing() {
 
     let contents = read_to_string(path)
         .expect("Failed to read the log file!");
-    assert_eq!(contents, 
+    assert_eq!(contents,
         "<l><d>aaa</d><h>[31mERR[0m</h><m>eror</m></l>\n");
 }
 
