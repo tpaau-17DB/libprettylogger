@@ -55,7 +55,7 @@ cargo add libprettylogger
 Or add this to your `Cargo.toml`:
 ```toml
 [dependencies]
-libprettylogger = "1.0.0"
+libprettylogger = "2.0.0"
 ```
 
 
