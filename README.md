@@ -73,7 +73,7 @@ let mut logger = Logger::default();
 ```
 
 <a name="the-logger_controlling-terminal-output"></a>
-### Controlling Terminal Output 
+### Controlling Terminal Output
 By default, `Logger` streams all logs to `stdout` and `stderr`. If you only want
 to write logs to a file or store them in a custom buffer, use:
 ```rust

@@ -16,8 +16,11 @@ impl Logger {
     /// # Example
     /// ```
     /// # use prettylogger::Logger;
-    /// # Logger::default().save_template("/tmp/libprettylogger-tests/from_template.json");
-    /// let mut logger = Logger::from_template("/tmp/libprettylogger-tests/from_template.json");
+    /// # let mut path = std::env::temp_dir();
+    /// # path.push("libprettylogger-tests/from-template.json");
+    /// # let path = &path.to_str().unwrap().to_string();
+    /// # Logger::default().save_template(path);
+    /// let mut logger = Logger::from_template(path);
     /// ```
     pub fn from_template(path: &str) -> Logger {
         let path = expand_env_vars(&expand_tilde(path));
@@ -42,8 +45,11 @@ impl Logger {
     /// # Example
     /// ```
     /// # use prettylogger::Logger;
+    /// # let mut path = std::env::temp_dir();
+    /// # path.push("libprettylogger-tests/from-template.json");
+    /// # let path = &path.to_str().unwrap().to_string();
     /// let mut logger = Logger::default();
-    /// logger.save_template("/tmp/libprettylogger-tests/template_save_template.json");
+    /// logger.save_template(path);
     /// ```
     pub fn save_template(&self, path: &str) {
         let path = expand_env_vars(&expand_tilde(path));
