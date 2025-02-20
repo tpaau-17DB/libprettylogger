@@ -7,7 +7,7 @@
 ## Minor changes
 * Added a new function in `colors` module that colors text using ANSII escape
 codes.
-* Added a new option in `Logger` to toggle logging to `stdout`.
+* Added a new option in `Logger` to toggle logging to terminal.
 * Added a `print_log(...)` method in `Logger` that prints logs from `LogStruct`
 instances.
 * Added a `format_log(...)` method in `Logger` that formats logs from `LogStruct`
