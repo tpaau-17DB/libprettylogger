@@ -8,7 +8,7 @@
 * [Installation](#installation)
 * [Log Format](#log-format)
 * [The Logger](#the-logger)
-    * [Controlling `stdout`](#the-logger_controlling-stdout)
+    * [Controlling Terminal Output](#the-logger_controlling-terminal-output)
     * [Custom Log Buffer](#the-logger_custom-log-buffer)
 * [Log Filtering](#log-filtering)
 * [File Logging](#file-logging)
@@ -72,20 +72,20 @@ Creating a `Logger` struct with default configuration:
 let mut logger = Logger::default();
 ```
 
-<a name="the-logger_controlling-stdout"></a>
-### Controlling `stdout`
-By default, `Logger` will put all logs in `stdout`. If you only want to write logs
-to a file or store them in a custom buffer, use:
+<a name="the-logger_controlling-terminal-output"></a>
+### Controlling Terminal Output 
+By default, `Logger` streams all logs to `stdout` and `stderr`. If you only want
+to write logs to a file or store them in a custom buffer, use:
 ```rust
 # use prettylogger::Logger;
 # let mut logger = Logger::default();
-logger.toggle_stdout(false);
+logger.toggle_console_output(false);
 ```
 
 <a name="the-logger_custom-log-buffer"></a>
 ### Custom Log Buffer
 `Logger` can store logs in a buffer instead of printing them or writing them
-to a file. Later, you can clone that buffer and do whatever you want with it.
+to a file. Later, you can reference that buffer and do whatever you want with it.
 
 Enabling custom log buffer:
 ```rust
@@ -94,11 +94,11 @@ Enabling custom log buffer:
 logger.toggle_custom_log_buffer(true);
 ```
 
-And when you need a copy of that buffer, call:
+And when you need a reference to that buffer, call:
 ```rust
 # use prettylogger::Logger;
 # let mut logger = Logger::default();
-let buffer = logger.clone_log_buffer();
+let buffer = logger.log_buffer();
 ```
 
 
@@ -113,7 +113,7 @@ Those headers can then be formatted using a log format string, similarly to how
 you would format a datetime string.
 
 Here is a log message with all it's headers marked:
-```ignore
+```markup
 [ DEBUG 21:52:37 An example debug message ]
   ^^^^^ ^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^
   |     |        |
@@ -213,8 +213,12 @@ file.
 ```rust
 # use prettylogger::Logger;
 # let mut logger = Logger::default();
+# let mut path = std::env::temp_dir();
+# path.push("libprettylogger-tests/readme-doc1.log");
+# let path = &path.to_str().unwrap().to_string();
+
 // Set the log file path first:
-logger.set_log_file_path("/tmp/libprettylogger-tests/readme-doc1.log");
+logger.set_log_file_path(path);
 // Then enable file logging:
 logger.toggle_file_logging(true);
 
@@ -262,7 +266,10 @@ based on the log buffer size:
 ```rust
 # use prettylogger::Logger;
 # let mut logger = Logger::default();
-logger.set_log_file_path("/tmp/libprettylogger-tests/readme-doc2.log");
+# let mut path = std::env::temp_dir();
+# path.push("libprettylogger-tests/readme-doc2.log");
+# let path = &path.to_str().unwrap().to_string();
+logger.set_log_file_path(path);
 logger.toggle_file_logging(true);
 
 // This will make `Logger` to flush the log buffer every 16 logs:
@@ -315,13 +322,19 @@ Here’s an example of what a `Logger` struct looks like in JSON format:
 Loading `Logger` from a template file:
 ```rust
 # use prettylogger::Logger;
-# Logger::default().save_template("/tmp/libprettylogger-tests/readme-doc3.json");
-let mut logger = Logger::from_template("/tmp/libprettylogger-tests/readme-doc3.json");
+# let mut path = std::env::temp_dir();
+# path.push("libprettylogger-tests/readme-doc3.log");
+# let path = &path.to_str().unwrap().to_string();
+# Logger::default().save_template(path);
+let mut logger = Logger::from_template(path);
 ```
 
 Saving `Logger` to a template file:
 ```rust
 # use prettylogger::Logger;
 let mut logger = Logger::default(); // Create a default `Logger`
-logger.save_template("/tmp/libprettylogger-tests/readme-doc4.json");
+# let mut path = std::env::temp_dir();
+# path.push("libprettylogger-tests/readme-doc4.log");
+# let path = &path.to_str().unwrap().to_string();
+logger.save_template(path);
 ```

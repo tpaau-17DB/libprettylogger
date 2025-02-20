@@ -20,6 +20,8 @@ log type.
 variables.
 * `Logger`'s `save_template(...)` and `set_log_file_path(...)` methods now
 automatically expands environment variables.
+* `Logger` now prints debug, info and warning messages to `stdout` and error
+messages to `stderr`.
 
 
 ## Patches

@@ -126,8 +126,12 @@ impl Logger {
     /// ```
     /// # use prettylogger::Logger;
     /// # let mut logger = Logger::default();
+    /// # let mut path = std::env::temp_dir();
+    /// # path.push("libprettylogger-tests/set_log_file_path.log");
+    /// # let path = &path.to_str().unwrap().to_string();
+    /// # logger.set_log_file_path(path);
     /// // Set the log file path first:
-    /// logger.set_log_file_path("/tmp/libprettylogger-tests/set_log_file_path.log");
+    /// logger.set_log_file_path(path);
     /// // Then enable file logging:
     /// logger.toggle_file_logging(true);
     /// ```
@@ -163,9 +167,12 @@ impl Logger {
     /// ```
     /// # use prettylogger::Logger;
     /// # let mut logger = Logger::default();
-    /// # logger.set_log_file_path("/tmp/libprettylogger-tests/toggle_file_logging.log");
+    /// # let mut path = std::env::temp_dir();
+    /// # path.push("libprettylogger-tests/toggle_file_logging.log");
+    /// # let path = &path.to_str().unwrap().to_string();
+    /// # logger.set_log_file_path(path);
     /// // Set the log file path first:
-    /// logger.set_log_file_path("/tmp/libprettylogger-tests/toggle_file_logging.log");
+    /// logger.set_log_file_path(path);
     /// // Then enable file logging:
     /// logger.toggle_file_logging(true);
     /// ```
@@ -202,8 +209,11 @@ impl Logger {
     /// # Example
     /// ```
     /// # use prettylogger::Logger;
+    /// # let mut path = std::env::temp_dir();
+    /// # path.push("libprettylogger-tests/set_max_log_buffer_size.log");
+    /// # let path = &path.to_str().unwrap().to_string();
     /// let mut logger = Logger::default();
-    /// logger.set_log_file_path("/tmp/libprettylogger-tests/set_max_log_buffer_size.log");
+    /// logger.set_log_file_path(path);
     /// logger.toggle_file_logging(true);
     ///
     /// // This will make `Logger` to flush the log buffer every 16 logs:
@@ -253,8 +263,8 @@ impl Logger {
     /// Toggles printing logs to `stdout`.
     /// * `true`: Logs will be printed in your terminal's `stdout`.
     /// * `false`: No log output in your terminal.
-    pub fn toggle_stdout<I: Into<bool>>(&mut self, enabled: I) {
-        self.stdout_enabled = enabled.into();
+    pub fn toggle_console_output<I: Into<bool>>(&mut self, enabled: I) {
+        self.console_out_enabled = enabled.into();
     }
 
     /// Toggles the usage of a custom log buffer.

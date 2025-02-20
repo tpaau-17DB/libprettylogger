@@ -1,7 +1,13 @@
 use std::fs::{create_dir_all, read_to_string};
 use crate::*;
 
-static TEST_PATH : &str = "/tmp/libprettylogger-tests";
+lazy_static::lazy_static! {
+    static ref TEST_PATH: String = {
+        let mut path = std::env::temp_dir();
+        path.push("libprettylogger-tests");
+        path.to_str().unwrap().to_string()
+    };
+}
 
 #[test]
 fn test_log_filtering() {
@@ -101,7 +107,6 @@ fn test_log_headers() {
 
 #[test]
 fn test_log_colors() {
-    // Test if colorify works
     let l = Logger::default();
     if l.colorify("a", Color::Red) != "\x1b[31ma\x1b[0m"
     {
@@ -111,7 +116,7 @@ fn test_log_colors() {
 
 #[test]
 fn test_templates() {
-    let _ = create_dir_all(TEST_PATH);
+    let _ = create_dir_all(TEST_PATH.clone());
     let path = TEST_PATH.to_owned() + "/test_templates.json";
     Logger::default().save_template(&path);
     let l = Logger::from_template(&path);
@@ -191,7 +196,7 @@ fn test_formats() {
 
 #[test]
 fn test_auto_file_logging() {
-    let _ = create_dir_all(TEST_PATH);
+    let _ = create_dir_all(TEST_PATH.clone());
     let path = TEST_PATH.to_owned() + "/auto_file_logging.log";
     let max_size = 16;
     let mut l = Logger::default();
@@ -218,7 +223,7 @@ fn test_auto_file_logging() {
 
 #[test]
 fn test_manual_file_log_flushing() {
-    let _ = create_dir_all(TEST_PATH);
+    let _ = create_dir_all(TEST_PATH.clone());
     let path = TEST_PATH.to_owned() + "/manual_file_log_flushing.log";
     let max_size = 16;
     let mut l = Logger::default();
@@ -261,9 +266,9 @@ fn test_custom_log_buffer() {
         }
     }
 
-    let log_buffer = logger.clone_log_buffer();
+    let log_buffer = logger.log_buffer();
 
-    for log in &log_buffer {
+    for log in log_buffer {
         if log.message != "debug" {
             panic!("Unexpected log message!");
         }
@@ -291,4 +296,14 @@ fn test_color_text() {
     assert_eq!(color_text("aaa", Color::Red), "\x1b[31maaa\x1b[0m");
     assert_eq!(color_text("aaa", Color::White), "\x1b[37maaa\x1b[0m");
     assert_eq!(color_text("aaa", Color::Yellow), "\x1b[33maaa\x1b[0m");
+}
+
+#[test]
+fn test_logger_errs() {
+    let mut l = Logger::default();
+    assert!(!l.flush().is_err());
+    assert!(l.set_log_format("%h %c %d").is_err());
+    assert!(l.set_log_file_path("/asjkhdfahjksdfk").is_err());
+    assert!(l.toggle_file_logging(true).is_err());
+    assert!(!l.toggle_file_logging(false).is_err());
 }

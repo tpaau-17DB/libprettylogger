@@ -10,6 +10,7 @@
 
 #[cfg(test)]
 mod tests;
+
 #[doc = include_str!("../README.md")]
 mod fileio;
 mod setters;
@@ -39,7 +40,7 @@ use config::*;
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default,
     Serialize, Deserialize)]
 pub struct Logger {
-    pub(crate) stdout_enabled: bool,
+    pub(crate) console_out_enabled: bool,
 
     pub(crate) use_custom_log_buffer: bool,
 
@@ -195,7 +196,7 @@ impl Logger {
     pub fn default() -> Self {
         let log_format = String::from("[%h] %m");
         Logger {
-            stdout_enabled: true,
+            console_out_enabled: true,
 
             use_custom_log_buffer: false,
 
@@ -244,8 +245,14 @@ impl Logger {
         self.log_count += 1;
         let log_str = self.format_log(log);
 
-        if self.stdout_enabled {
-            print!("{}", log_str);
+        if self.console_out_enabled {
+            if log.log_type == LogType::Err
+            || log.log_type == LogType::FatalError {
+                eprint!("{}", log_str);
+            }
+            else {
+                print!("{}", log_str);
+            }
         }
 
         if self.use_custom_log_buffer {
@@ -323,7 +330,7 @@ impl Logger {
         return Ok(());
     }
 
-    /// Prints a **debug message**.
+    /// Prints a **debug message** to `stdout`.
     pub fn debug(&mut self, message: &str) {
         if self.filter_log(LogType::Debug)
         {
@@ -333,13 +340,13 @@ impl Logger {
         self.print_log(&log);
     }
 
-    /// Prints a **debug message**, bypasses filtering.
+    /// Prints a **debug message** to `stdout`, bypasses filtering.
     pub fn debug_no_filtering(&mut self, message: &str) {
         let log = LogStruct::debug(message);
         self.print_log(&log);
     }
 
-    /// Prints **info message**.
+    /// Prints an **informational message** to `stdout`.
     pub fn info(&mut self, message: &str) {
         if self.filter_log(LogType::Info)
         {
@@ -349,13 +356,13 @@ impl Logger {
         self.print_log(&log);
     }
 
-    /// Prints **info message**, bypasses filtering.
+    /// Prints an **informational message** to `stdout`, bypasses filtering.
     pub fn info_no_filtering(&mut self, message: &str) {
         let log = LogStruct::info(message);
         self.print_log(&log);
     }
 
-    /// Prints a **warning**.
+    /// Prints a **warning** to `stdout`.
     pub fn warning(&mut self, message: &str) {
         if self.filter_log(LogType::Warning)
         {
@@ -365,27 +372,27 @@ impl Logger {
         self.print_log(&log);
     }
 
-    /// Prints a **warning**, bypasses filtering.
+    /// Prints a **warning** to `stdout`, bypasses filtering.
     pub fn warning_no_filtering(&mut self, message: &str) {
         let log = LogStruct::warning(message);
         self.print_log(&log);
     }
 
-    /// Prints an **error**.
+    /// Prints an **error** to  `stderr`.
     pub fn error(&mut self, message: &str) {
         let log = LogStruct::error(message);
         self.print_log(&log);
     }
 
-    /// Prints a **fatal error**.
+    /// Prints a **fatal error** to `stderr`.
     pub fn fatal(&mut self, message: &str) {
         let log = LogStruct::fatal_error(message);
         self.print_log(&log);
     }
 
-    /// Returns a clone of the custom log buffer.
-    pub fn clone_log_buffer(&self) -> Vec<LogStruct> {
-        return self.custom_log_buffer.clone();
+    /// Returns a reference to the custom log buffer.
+    pub fn log_buffer<'a>(&'a self) -> &'a Vec<LogStruct> {
+        return &self.custom_log_buffer;
     }
 }
 
