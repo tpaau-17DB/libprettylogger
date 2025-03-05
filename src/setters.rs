@@ -88,13 +88,13 @@ impl Logger {
 
     /// Sets the log format.
     ///
-    /// There are three placeholders in a log format string (you can place
-    /// multiple placeholders of the same type in a format string):
+    /// There are several placeholders in a log format string:
     /// * `%c`: Ascending log count starting at 1.
     /// * `%d`: The timestamp.
     /// * `%h`: The header indicating the log type (e.g., debug, error, etc.)
     /// * `%m`: The log message (this placeholder is mandatory, you will get
     /// an error if you don't include this in your log format).
+    /// You can have multiple placeholders of the same type in a format string.
     ///
     /// # Example
     /// ```

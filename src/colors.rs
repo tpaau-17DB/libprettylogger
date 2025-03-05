@@ -1,4 +1,4 @@
-//! Contains cosmetic color-related utilities.
+//! Contains cosmetic, color-related utilities.
 
 /// Contains various color-related utilities for cosmetic customization.
 
@@ -53,7 +53,7 @@ lazy_static! {
     };
 }
 
-/// Colors the given text based on `color` value using ANSII escape codes.
+/// Colors given text based on `color` value using ANSII escape codes.
 ///
 /// # Example
 /// ```
