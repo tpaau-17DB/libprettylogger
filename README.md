@@ -295,7 +295,7 @@ file.
 Here’s an example of what a `Logger` struct looks like in JSON format:
 ```json
 {
-  "stdout_enabled": true,
+  "console_out_enabled": true,
   "use_custom_log_buffer": false,
   "verbosity": "Standard",
   "filtering_enabled": true,
