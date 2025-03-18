@@ -1,5 +1,4 @@
 use crate::*;
-use serde_json;
 use std::{
     fs::*,
     io::Write,
@@ -11,7 +10,7 @@ impl Logger {
     ///
     /// Automatically expands env variables.
     ///
-    /// [Logger templates documentation.](https://github.com/tpaau-17DB/libprettylogger?tab=readme-ov-file#logger-templates)
+    /// Check out the [Logger templates documentation](https://github.com/tpaau-17DB/libprettylogger?tab=readme-ov-file#logger-templates).
     ///
     /// # Example
     /// ```
@@ -33,14 +32,14 @@ impl Logger {
         logger.log_count += 1;
         logger.show_datetime = logger.log_format.contains("%d");
 
-        return logger;
+        logger
     }
 
     /// Saves a `Logger` to template file.
     ///
     /// Automatically expands env variables.
     ///
-    /// [Logger templates documentation](https://github.com/tpaau-17DB/libprettylogger?tab=readme-ov-file#logger-templates)
+    /// Check out the [Logger templates documentation](https://github.com/tpaau-17DB/libprettylogger?tab=readme-ov-file#logger-templates).
     ///
     /// # Example
     /// ```

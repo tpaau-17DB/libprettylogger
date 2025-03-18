@@ -92,9 +92,11 @@ impl Logger {
     /// * `%c`: Ascending log count starting at 1.
     /// * `%d`: The timestamp.
     /// * `%h`: The header indicating the log type (e.g., debug, error, etc.)
-    /// * `%m`: The log message (this placeholder is mandatory, you will get
-    /// an error if you don't include this in your log format).
-    /// You can have multiple placeholders of the same type in a format string.
+    /// * `%m`: The log message (this placeholder is mandatory, you will
+    ///     get an error if you don't include this in your log format).
+    ///
+    /// You can have multiple placeholders of the same type in a format 
+    /// string.
     ///
     /// # Example
     /// ```
@@ -120,7 +122,7 @@ impl Logger {
     ///
     /// Returns an error if the path is inaccessible.
     ///
-    /// [File logging documentation](https://github.com/tpaau-17DB/libprettylogger?tab=readme-ov-file#file-logging)
+    /// Check out the [File logging documentation](https://github.com/tpaau-17DB/libprettylogger?tab=readme-ov-file#file-logging).
     ///
     /// # Example
     /// ```
@@ -159,9 +161,9 @@ impl Logger {
     /// Toggles file logging.
     ///
     /// Before enabling file logging, ensure that the log file path is set.
-    /// This is because this method checks if the log file is writable. If the
-    /// log file path is not set, or the file is not writable, enabling file
-    /// logging will result in an error.
+    /// This is because this method checks if the log file is writable. If
+    /// the log file path is not set, or the file is not writable, enabling
+    /// file logging will result in an error.
     ///
     /// # Example
     /// ```
@@ -182,26 +184,24 @@ impl Logger {
             self.file_logging_enabled = false;
             Ok(())
         }
+        else if is_file_writable(&self.log_file_path) {
+            self.file_logging_enabled = true;
+            Ok(())
+        }
         else {
-            if is_file_writable(&self.log_file_path) {
-                self.file_logging_enabled = true;
-                Ok(())
-            }
-            else {
-                self.error(&format!("Failed to open file '{}' for writing!",
-                    self.log_file_path));
-                Err(Error::new(ErrorKind::PermissionDenied,
-                    "File is not writable!"))
-            }
+            self.error(&format!("Failed to open file '{}' for writing!",
+                self.log_file_path));
+            Err(Error::new(ErrorKind::PermissionDenied,
+                "File is not writable!"))
         }
     }
 
-    /// Sets the maximum size of the log buffer.
+    /// Sets the maximum allowed size for the log buffer.
     ///
-    /// This method sets the maximum allowed size for the log buffer. When the
-    /// buffer exceeds this size, it will be automatically flushed to the log
-    /// file. If the buffer size is set to `0`, automatic flushing is disabled,
-    /// and the buffer can only be flushed manually.
+    /// When the buffer exceeds its max size, it will be automatically
+    /// flushed to the log file. If the buffer size is set to `0`, 
+    /// automatic flushing is disabled, and the buffer can only be flushed
+    /// manually.
     ///
     /// If a log file lock is active, the log buffer will not be flushed
     /// automatically, regardless of the size limit.
@@ -232,17 +232,16 @@ impl Logger {
         self.file_log_buffer_max_size = size.into();
     }
 
-    /// Log file lock can be used to prevent race conditions when there is one
-    /// thread reading from the log file and another thread writing to the log
-    /// file.
+    /// Log file lock can be used to prevent race conditions when there are
+    /// multiple threads accessing the log file at the same time.
     ///
-    /// # WARNING: leaving this option on for a long period of time will cause
-    /// high memory usage!
+    /// # WARNING: leaving this option on for a long period of time will
+    /// cause high memory usage!
     ///
     /// * `true`: When log file lock is enabled, logger won't flush into the
-    /// log file. Instead, it will wait until the lock is disabled. You will
-    /// not loose any logs, they will be stored in the log buffer even when it
-    /// exceeds its size limit.
+    ///     log file. Instead, it will wait until the lock is disabled. You
+    ///     will not loose any logs, they will be stored in the log buffer
+    ///     even when it exceeds its size limit.
     /// * `false`: Logger will write to the log file normally.
     pub fn toggle_log_file_lock<I: Into<bool>>(&mut self, enabled: I) {
         self.log_file_lock = enabled.into();
@@ -268,9 +267,10 @@ impl Logger {
     }
 
     /// Toggles the usage of a custom log buffer.
-    /// * `true`: Logs will be stored in a buffer inside `Logger` and can be
-    /// cloned using the `clone_log_buffer()` method. Be aware that this will
-    /// lead to high memory usage if turned on for a log period of time.
+    /// * `true`: Logs will be stored in a buffer inside `Logger` and can
+    ///     be cloned using the `clone_log_buffer()` method. Be aware that
+    ///     this will lead to high memory usage if turned on for a log
+    ///     period of time.
     /// * `false`: Logs will not be stored in a log buffer.
     pub fn toggle_custom_log_buffer<I: Into<bool>>(&mut self, enabled: I) {
         self.use_custom_log_buffer = enabled.into();

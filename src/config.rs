@@ -1,8 +1,6 @@
 //! Contains various types used to customize `Logger` behavior.
 
 /// Contains various types used to customize `Logger` behavior.
-/// If you are good with the default `Logger` preset, you probably don't need
-/// to use this module.
 
 use serde::{Serialize, Deserialize};
 use std::fmt;

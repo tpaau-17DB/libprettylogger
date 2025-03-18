@@ -301,9 +301,9 @@ fn test_color_text() {
 #[test]
 fn test_logger_errs() {
     let mut l = Logger::default();
-    assert!(!l.flush().is_err());
+    assert!(l.flush().is_ok());
     assert!(l.set_log_format("%h %c %d").is_err());
     assert!(l.set_log_file_path("/asjkhdfahjksdfk").is_err());
     assert!(l.toggle_file_logging(true).is_err());
-    assert!(!l.toggle_file_logging(false).is_err());
+    assert!(l.toggle_file_logging(false).is_ok());
 }

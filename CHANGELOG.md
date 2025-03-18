@@ -1,3 +1,9 @@
+# v2.0.1
+
+## Patches
+* Fixed some minor issues with the docstrings.
+
+
 # v2.0.0
 
 ## Major changes
@@ -22,7 +28,6 @@ variables.
 automatically expands environment variables.
 * `Logger` now prints debug, info and warning messages to `stdout` and error
 messages to `stderr`.
-
 
 ## Patches
 * Changed `prettylogger::setters` module accessibility to private.

@@ -1,10 +1,7 @@
 use std::{env::{var, vars}, fs::{File, OpenOptions,}, io::{Write, Result}};
 
 pub(crate) fn is_file_writable(path: &str) -> bool {
-    match File::create(path) {
-        Ok(_) => true,
-        Err(_) => false,
-    }
+    File::create(path).is_ok()
 }
 
 pub(crate) fn overwrite_file(path: &str, content: &str) -> Result<()> {
@@ -19,7 +16,6 @@ pub(crate) fn overwrite_file(path: &str, content: &str) -> Result<()> {
 
 pub(crate) fn append_to_file(path: &str, content: &str) -> Result<()> {
     let mut file = OpenOptions::new()
-        .write(true)
         .append(true)
         .open(path)?;
 
@@ -27,7 +23,7 @@ pub(crate) fn append_to_file(path: &str, content: &str) -> Result<()> {
     Ok(())
 }
 
-pub fn expand_tilde(path: &str) -> String {
+pub(crate) fn expand_tilde(path: &str) -> String {
     if path.starts_with("~") {
         let home_dir = var("HOME")
             .or_else(|_| var("USERPROFILE"))
@@ -38,7 +34,7 @@ pub fn expand_tilde(path: &str) -> String {
     }
 }
 
-pub fn expand_env_vars(path: &str) -> String {
+pub(crate) fn expand_env_vars(path: &str) -> String {
     let mut expanded_path = path.to_string();
 
     for (key, value) in vars() {
@@ -48,5 +44,5 @@ pub fn expand_env_vars(path: &str) -> String {
         }
     }
 
-    return expanded_path
+    expanded_path
 }

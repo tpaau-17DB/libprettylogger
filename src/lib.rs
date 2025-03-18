@@ -7,7 +7,6 @@
 //! logging settings across different environments and use cases.
 
 /// A highly customizable logger library.
-
 #[cfg(test)]
 mod tests;
 
@@ -86,7 +85,7 @@ impl Logger {
     -> (String, String, String) {
         let header = self.get_log_type_header(log.log_type);
         let datetime = self.get_datetime_formatted(&log.datetime);
-        return (header, datetime, log.message.clone());
+        (header, datetime, log.message.clone())
     }
 
     pub(crate) fn get_log_type_header(&self, log_type: LogType) -> String {
@@ -118,10 +117,10 @@ impl Logger {
     datetime: &DateTime<Local>) -> String {
         if self.show_datetime {
             let datetime_formatted = datetime.format(&self.datetime_format);
-            return datetime_formatted.to_string();
+            datetime_formatted.to_string()
         }
         else {
-            return String::from("");
+            String::from("")
         }
     }
 
@@ -129,23 +128,23 @@ impl Logger {
         if self.log_header_color_enabled {
             return color_text(text, color);
         }
-        return text.to_string();
+        text.to_string()
     }
 
     pub(crate) fn filter_log(&self, log_type: LogType) -> bool {
         if self.filtering_enabled {
             return (log_type as i32) < self.verbosity as i32;
         }
-        return false;
+        false
     }
 
     pub(crate) fn log_header_color(&self, log_type: LogType) -> Color {
         match log_type {
-            LogType::Debug => { self.debug_color.clone() }
-            LogType::Info => { self.info_color.clone() }
-            LogType::Warning => { self.warning_color.clone() }
-            LogType::Err => { self.error_color.clone() }
-            LogType::FatalError => { self.fatal_color.clone() }
+            LogType::Debug => { self.debug_color }
+            LogType::Info => { self.info_color }
+            LogType::Warning => { self.warning_color }
+            LogType::Err => { self.error_color }
+            LogType::FatalError => { self.fatal_color }
         }
     }
 
@@ -176,7 +175,7 @@ impl Logger {
         let mut buf = String::from("");
 
         for log in &self.file_log_buffer {
-            buf += &self.format_log(&log);
+            buf += &self.format_log(log);
         }
 
         self.file_log_buffer = Vec::new();
@@ -280,7 +279,7 @@ impl Logger {
     /// let log_string = logger.format_log(&LogStruct::error("eror"));
     /// ```
     pub fn format_log(&self, log: &LogStruct) -> String {
-        let headers = self.get_log_headers(&log);
+        let headers = self.get_log_headers(log);
         let mut result = String::new();
         let mut char_iter = self.log_format.char_indices().peekable();
 
@@ -314,20 +313,20 @@ impl Logger {
             }
         }
 
-        result += &"\n";
-        return result;
+        result += "\n";
+        result
     }
 
     /// Flushes log buffer (if file logging is enabled and log file lock
     /// disabled, it writes the log buffer to a file).
     ///
-    /// Returns an error when there is an issue writing to a file or log file
-    /// lock is enabled.
+    /// Returns an error when there is an issue writing to a file or log
+    /// file lock is enabled.
     pub fn flush(&mut self) -> Result<(), String> {
         if self.file_logging_enabled {
             self.flush_file_log_buffer(false)?;
         }
-        return Ok(());
+        Ok(())
     }
 
     /// Prints a **debug message** to `stdout`.
@@ -391,13 +390,13 @@ impl Logger {
     }
 
     /// Returns a reference to the custom log buffer.
-    pub fn log_buffer<'a>(&'a self) -> &'a Vec<LogStruct> {
-        return &self.custom_log_buffer;
+    pub fn log_buffer(& self) -> &Vec<LogStruct> {
+        &self.custom_log_buffer
     }
 }
 
 impl Drop for Logger {
     fn drop(&mut self) {
-        let _ = self.drop_flush();
+        self.drop_flush();
     }
 }

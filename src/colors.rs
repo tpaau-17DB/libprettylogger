@@ -65,7 +65,7 @@ pub fn color_text(text: &str, color: Color) -> String {
     if color != Color::None {
         return COLOR_MAP[&(color as i32)].to_string() + text + RESET;
     }
-    return String::from(text);
+    String::from(text)
 }
 
 impl Display for Color {
