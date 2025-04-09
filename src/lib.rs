@@ -1,10 +1,10 @@
 //! The `libprettylogger` crate offers a flexible logging utility through the
-//! `Logger` struct. It handles automatic log filtering and formatting, allowing
-//! you to easily control log output. The crate supports customizable log formats
-//! and provides different log levels (debug, info, warning, error, fatal),
-//! enabling precise control over logging behavior. Additionally, `Logger`
-//! configuration can be saved as a JSON file, allowing you to easily manage
-//! logging settings across different environments and use cases.
+//! `Logger` struct. It handles automatic log filtering and formatting,
+//! allowing you to easily control log output. The crate supports customizable
+//! log formats and provides different log levels (debug, info, warning, error,
+//! fatal), enabling precise control over logging behavior. Additionally,
+//! `Logger` configuration can be saved as a JSON file, allowing you to easily
+//! manage logging settings across different environments and use cases.
 
 /// A highly customizable logger library.
 #[cfg(test)]

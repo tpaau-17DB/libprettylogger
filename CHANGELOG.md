@@ -2,6 +2,8 @@
 
 ## Patches
 * Fixed some minor issues with the docstrings.
+* `Logger::from_template()` and `logger.save_template(...)` now return
+`Result<...>` enums instead of panicking with `expect()`.
 
 
 # v2.0.0

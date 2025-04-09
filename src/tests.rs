@@ -118,10 +118,11 @@ fn test_log_colors() {
 fn test_templates() {
     let _ = create_dir_all(TEST_PATH.clone());
     let path = TEST_PATH.to_owned() + "/test_templates.json";
-    Logger::default().save_template(&path);
+    Logger::default().save_template(&path)
+        .expect("Failed to save logger template!");
     let l = Logger::from_template(&path);
 
-    if l != Logger::default() {
+    if l != Ok(Logger::default()) {
         panic!("Templates don't match!\n
             first: {:?}\n
             second: {:?}",

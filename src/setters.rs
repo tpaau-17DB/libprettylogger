@@ -198,10 +198,9 @@ impl Logger {
 
     /// Sets the maximum allowed size for the log buffer.
     ///
-    /// When the buffer exceeds its max size, it will be automatically
-    /// flushed to the log file. If the buffer size is set to `0`, 
-    /// automatic flushing is disabled, and the buffer can only be flushed
-    /// manually.
+    /// When the buffer exceeds its max size, it gets flushed
+    /// automatically to the log file. When set to `0`,  automatic flushing is
+    /// disabled and the buffer can only be flushed manually.
     ///
     /// If a log file lock is active, the log buffer will not be flushed
     /// automatically, regardless of the size limit.
@@ -216,7 +215,7 @@ impl Logger {
     /// logger.set_log_file_path(path);
     /// logger.toggle_file_logging(true);
     ///
-    /// // This will make `Logger` to flush the log buffer every 16 logs:
+    /// // Make `Logger` flush the log buffer every 16 logs:
     /// logger.set_max_log_buffer_size(16 as u32);
     ///
     /// let mut i = 0;
@@ -227,6 +226,7 @@ impl Logger {
     ///         break;
     ///     }
     /// }
+    /// // Here the buffer gets flushed, after sixteenth iteration.
     /// ```
     pub fn set_max_log_buffer_size<I: Into<u32>>(&mut self, size: I) {
         self.file_log_buffer_max_size = size.into();

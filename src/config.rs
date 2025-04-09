@@ -166,7 +166,7 @@ impl TryFrom<i32> for Verbosity {
             1 => Ok(Verbosity::Standard),
             2 => Ok(Verbosity::Quiet),
             3 => Ok(Verbosity::ErrorsOnly),
-            _ => Err("Invalid value! Please provide a value in range 0-9."),
+            _ => Err("Invalid value, please provide a value in range from 0 to 3."),
         }
     }
 }

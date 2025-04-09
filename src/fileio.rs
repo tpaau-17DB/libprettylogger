@@ -1,4 +1,4 @@
-use std::{env::{var, vars}, fs::{File, OpenOptions,}, io::{Write, Result}};
+use std::{env::{var, vars}, fs::{File, OpenOptions,}, io::{Result, Write}};
 
 pub(crate) fn is_file_writable(path: &str) -> bool {
     File::create(path).is_ok()
@@ -30,7 +30,7 @@ pub(crate) fn expand_tilde(path: &str) -> String {
             .unwrap_or_else(|_| "/".to_string());
         path.replace("~", &home_dir)
     } else {
-        path.to_string()
+        String::from(path)
     }
 }
 
@@ -43,6 +43,5 @@ pub(crate) fn expand_env_vars(path: &str) -> String {
             expanded_path = expanded_path.replace(&var_name, &value);
         }
     }
-
     expanded_path
 }
