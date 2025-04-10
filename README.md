@@ -329,6 +329,15 @@ Loading `Logger` from a template file:
 let mut logger = Logger::from_template(path);
 ```
 
+Deserializing `Logger` from a JSON string:
+```rust
+# use prettylogger::Logger;
+let raw_json = serde_json::to_string(&Logger::default())
+    .expect("Failed to serialize logger!");
+# assert_eq!(Logger::default(), Logger::from_template_str(&raw_json)
+    .expect("Failed to deserialize logger!"));
+```
+
 Saving `Logger` to a template file:
 ```rust
 # use prettylogger::Logger;

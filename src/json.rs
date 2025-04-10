@@ -6,6 +6,38 @@ use std::{
 use crate::fileio::{expand_env_vars, expand_tilde};
 
 impl Logger {
+    /// Creates a `Logger` instance from a JSON template as string.
+    ///
+    /// https://github.com/tpaau-17DB/libprettylogger?tab=readme-ov-file#logger-templates
+    ///
+    /// # Example
+    /// ```
+    /// # use prettylogger::Logger;
+    /// let pretty_json = serde_json::to_string_pretty(&Logger::default())
+    ///     .expect("Failed to serialize logger!");
+    /// let raw_json = serde_json::to_string(&Logger::default())
+    ///     .expect("Failed to serialize logger!");
+    /// assert_eq!(Logger::default(), Logger::from_template_str(&pretty_json)
+    ///     .expect("Failed to deserialize logger!"));
+    /// assert_eq!(Logger::default(), Logger::from_template_str(&raw_json)
+    ///     .expect("Failed to deserialize logger!"));
+    /// ```
+    pub fn from_template_str(template: &str) -> Result<Logger, String> {
+        let result: Result<Logger, serde_json::Error>
+            = serde_json::from_str(&template);
+        match result {
+            Ok(mut logger) => {
+                logger.log_count += 1;
+                logger.show_datetime = logger.log_format.contains("%d");
+
+                return Ok(logger);
+            },
+            Err(e) => {
+                return Err(e.to_string());
+            }
+        }
+    }
+
     /// Creates a `Logger` instance from a template file.
     ///
     /// Automatically expands environment variables.
@@ -26,20 +58,7 @@ impl Logger {
 
         match read_to_string(path) {
             Ok(contents) => {
-                let result: Result<Logger, serde_json::Error>
-                    = serde_json::from_str(&contents);
-                match result {
-                    Ok(mut logger) => {
-                        logger.log_count += 1;
-                        logger.show_datetime = logger.log_format.contains("%d");
-
-                        return Ok(logger);
-                    },
-                    Err(e) => {
-                        return Err(e.to_string());
-                    }
-                }
-
+                return Logger::from_template_str(&contents);
             },
             Err(e) => {
                 return Err(e.to_string());

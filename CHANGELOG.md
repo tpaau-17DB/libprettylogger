@@ -1,12 +1,19 @@
-# v2.0.1
+<h1 align="center">
+v2.0.1
+</h1>
 
 ## Patches
 * Fixed some minor issues with the docstrings.
 * `Logger::from_template()` and `logger.save_template(...)` now return
+* Added a new constructor that allows for creating a logger instance from
+stringified JSON.
 `Result<...>` enums instead of panicking with `expect()`.
+* Warnings now go to `stderr` instead of `stdout`.
 
 
-# v2.0.0
+<h1 align="center">
+v2.0.0
+</h1>
 
 ## Major changes
 * Merged `filtering` with some types from `logging` as `config`.
@@ -18,26 +25,29 @@ codes.
 * Added a new option in `Logger` to toggle logging to terminal.
 * Added a `print_log(...)` method in `Logger` that prints logs from `LogStruct`
 instances.
-* Added a `format_log(...)` method in `Logger` that formats logs from `LogStruct`
-instances.
+* Added a `format_log(...)` method in `Logger` that formats logs from
+`LogStruct` instances.
 * Added a new `Logger` feature that allows you to store logs in a log buffer
 inside `Logger` for later use.
-* Added 5 new constructors to the `LogStruct`, each one representing a different
+* Added 5 new constructors to the `LogStruct`, each one returning a different
 log type.
 * `Logger`'s `from_template()` constructor now automatically expands environment
 variables.
 * `Logger`'s `save_template(...)` and `set_log_file_path(...)` methods now
-automatically expands environment variables.
+automatically expand environment variables.
 * `Logger` now prints debug, info and warning messages to `stdout` and error
 messages to `stderr`.
 
 ## Patches
 * Changed `prettylogger::setters` module accessibility to private.
 * Fixed a bug where log filtering toggle would not work as expected.
-* Fixed a bug where `Logger` would not add a timestamp when loaded from a template.
+* Fixed a bug where `Logger` would not add a timestamp when loaded from a
+template.
 
 
-# v1.0.0
+<h1 align="center">
+v1.0.0
+</h1>
 
 ## Major changes:
 * Changed some of the arguments accepted by `Logger`'s setter methods from

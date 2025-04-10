@@ -245,7 +245,8 @@ impl Logger {
         let log_str = self.format_log(log);
 
         if self.console_out_enabled {
-            if log.log_type == LogType::Err
+            if log.log_type == LogType::Warning
+            || log.log_type == LogType::Err
             || log.log_type == LogType::FatalError {
                 eprint!("{}", log_str);
             }
