@@ -1,12 +1,14 @@
 <h1 align="center">
-v2.0.1
+v2.1.0
 </h1>
+
+## Minor changes
+* Added a new constructor that allows for creating a logger instance from
+stringified JSON.
 
 ## Patches
 * Fixed some minor issues with the docstrings.
 * `Logger::from_template()` and `logger.save_template(...)` now return
-* Added a new constructor that allows for creating a logger instance from
-stringified JSON.
 `Result<...>` enums instead of panicking with `expect()`.
 * Warnings now go to `stderr` instead of `stdout`.
 
