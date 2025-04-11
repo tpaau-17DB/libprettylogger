@@ -3,11 +3,12 @@ v2.1.0
 </h1>
 
 ## Minor changes
-* Added a new constructor that allows for creating a logger instance from
+* Added a new constructor that allows for creating a `Logger` instance from
 stringified JSON.
 
 ## Patches
-* Fixed some minor issues with the docstrings.
+* Fixed various errors and typos in error messages.
+* Fixed various errors and typos in docstrings.
 * `Logger::from_template()` and `logger.save_template(...)` now return
 `Result<...>` enums instead of panicking with `expect()`.
 * Warnings now go to `stderr` instead of `stdout`.

@@ -1,8 +1,10 @@
-use crate::*;
 use crate::{
-    colors::*, fileio::*, config::*,
+    Logger,
+    Error,
+    colors::*,
+    fileio::*,
+    config::*,
 };
-use std::io::{Error, ErrorKind};
 
 impl Logger {
     /// Sets logger `verbosity`.
@@ -95,8 +97,7 @@ impl Logger {
     /// * `%m`: The log message (this placeholder is mandatory, you will
     ///     get an error if you don't include this in your log format).
     ///
-    /// You can have multiple placeholders of the same type in a format 
-    /// string.
+    /// You can have multiple placeholders of the same type in a format string.
     ///
     /// # Example
     /// ```
@@ -107,14 +108,14 @@ impl Logger {
     /// ```
     ///
     /// Returns an error when the `%m` placeholder is missing.
-    pub fn set_log_format(&mut self, format: &str) -> Result<(), String> {
+    pub fn set_log_format(&mut self, format: &str) -> Result<(), Error> {
         if format.contains("%m") {
             self.log_format = String::from(format);
             self.show_datetime = format.contains("%d");
             Ok(())
         }
         else {
-            Err(String::from("Expected a message placeholder!"))
+            Err(Error::new(&"Expected a message placeholder!"))
         }
     }
 
@@ -141,20 +142,18 @@ impl Logger {
         let path: &str = &expand_env_vars(&expand_tilde(path));
         if is_file_writable(path) {
             self.log_file_path = path.to_string();
-            overwrite_file(path, "")
-            .map_err(|e| {
-                    self.error(&format!("Failed to open file '{}' for writing!",
-                        self.log_file_path));
-                    Error::new(ErrorKind::Other,
-                        format!("Failed to overwrite file: {}", e))
-                })?;
-            Ok(())
+            match overwrite_file(path, "") {
+                Ok(_) => { Ok(()) },
+                Err(e) => {
+                    self.error(&format!("Failed to open file '{}' for writing. {}",
+                        path, e.to_string()));
+                    return Err(Error::new(&e.to_string()))
+                }
+            }
         }
         else {
-            self.error(&format!("Failed to open file '{}' for writing!",
-                self.log_file_path));
-            Err(Error::new(ErrorKind::PermissionDenied,
-                "File is not writable!"))
+            self.error(&format!("Failed to open file '{}' for writing. File not writeable", path));
+            return Err(Error::new(&"File is not writable!"))
         }
     }
 
@@ -179,7 +178,7 @@ impl Logger {
     /// logger.toggle_file_logging(true);
     /// ```
     pub fn toggle_file_logging<I: Into<bool>>(&mut self, enabled: I)
-   -> Result<(), Error> {
+   -> Result<(), std::io::Error> {
         if !enabled.into() {
             self.file_logging_enabled = false;
             Ok(())
@@ -191,7 +190,7 @@ impl Logger {
         else {
             self.error(&format!("Failed to open file '{}' for writing!",
                 self.log_file_path));
-            Err(Error::new(ErrorKind::PermissionDenied,
+            Err(std::io::Error::new(std::io::ErrorKind::PermissionDenied,
                 "File is not writable!"))
         }
     }

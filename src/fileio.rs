@@ -1,26 +1,54 @@
-use std::{env::{var, vars}, fs::{File, OpenOptions,}, io::{Result, Write}};
+use std::{
+    env::{var, vars},
+    fs::{File, OpenOptions},
+    io::Write,
+    path::Path
+};
 
+use crate::Error;
+
+/// Returns `true` if a file exists and is writable and `false` otherwise.
 pub(crate) fn is_file_writable(path: &str) -> bool {
-    File::create(path).is_ok()
+    let file = Path::new(path);
+    if OpenOptions::new().write(true).open(file).is_ok() {
+        return true;
+    }
+    else {
+        return File::create(path).is_ok();
+    }
 }
 
-pub(crate) fn overwrite_file(path: &str, content: &str) -> Result<()> {
-    let mut file = OpenOptions::new()
-        .write(true)
+/// Writes contents to a file overwriting it.
+pub(crate) fn overwrite_file(path: &str, content: &str) -> Result<(), Error> {
+    match OpenOptions::new()
+         .write(true)
         .truncate(true)
-        .open(path)?;
+        .open(path) {
+        Ok(mut open_file) => {
+            match open_file.write_all(content.as_bytes()) {
+                Ok(_) => { Ok(()) },
+                Err(e) => { Err(Error::new(&e.to_string())) }
+            }
+        },
+        Err(e) => { Err(Error::new(&e.to_string())) }
+    }
 
-    file.write_all(content.as_bytes())?;
-    Ok(())
 }
 
-pub(crate) fn append_to_file(path: &str, content: &str) -> Result<()> {
-    let mut file = OpenOptions::new()
+pub(crate) fn append_to_file(path: &str, content: &str) -> Result<(), Error> {
+    match OpenOptions::new()
         .append(true)
-        .open(path)?;
-
-    file.write_all(content.as_bytes())?;
-    Ok(())
+        .open(path) {
+            Ok(mut file) => {
+                match file.write_all(content.as_bytes()) {
+                    Ok(_) => { Ok(()) },
+                    Err(e) => { Err(Error::new(&e.to_string())) }
+                }
+            },
+            Err(e) => {
+                Err(Error::new(&e.to_string()))
+            }
+        }
 }
 
 pub(crate) fn expand_tilde(path: &str) -> String {

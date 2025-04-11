@@ -116,7 +116,10 @@ fn test_log_colors() {
 
 #[test]
 fn test_templates() {
-    let _ = create_dir_all(TEST_PATH.clone());
+    match create_dir_all(TEST_PATH.clone()) {
+        Ok(_) => {},
+        Err(e) => { panic!("{}", e.to_string()) }
+    }
     let path = TEST_PATH.to_owned() + "/test_templates.json";
     Logger::default().save_template(&path)
         .expect("Failed to save logger template!");
@@ -197,14 +200,17 @@ fn test_formats() {
 
 #[test]
 fn test_auto_file_logging() {
-    let _ = create_dir_all(TEST_PATH.clone());
+    match create_dir_all(TEST_PATH.clone()) {
+        Ok(_) => {},
+        Err(e) => { panic!("{}", e.to_string()) }
+    }
     let path = TEST_PATH.to_owned() + "/auto_file_logging.log";
     let max_size = 16;
     let mut l = Logger::default();
     l.set_max_log_buffer_size(max_size as u32);
 
     l.set_log_file_path(&path)
-        .expect("Failed to seth the log file path!");
+        .expect("Failed to set the log file path!");
 
     l.toggle_file_logging(true).expect("Failed to enable file logging!");
     let mut i = 0;
@@ -224,14 +230,17 @@ fn test_auto_file_logging() {
 
 #[test]
 fn test_manual_file_log_flushing() {
-    let _ = create_dir_all(TEST_PATH.clone());
+    match create_dir_all(TEST_PATH.clone()) {
+        Ok(_) => {},
+        Err(e) => { panic!("{}", e.to_string()) }
+    }
     let path = TEST_PATH.to_owned() + "/manual_file_log_flushing.log";
     let max_size = 16;
     let mut l = Logger::default();
     l.set_max_log_buffer_size(max_size as u32);
 
     l.set_log_file_path(&path)
-        .expect("Failed to seth the log file path!");
+        .expect("Failed to set the log file path!");
 
     l.toggle_file_logging(true)
         .expect("Failed to enable file logging!");

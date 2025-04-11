@@ -3,12 +3,9 @@
 /// Contains various types used to customize `Logger` behavior.
 
 use serde::{Serialize, Deserialize};
-use std::fmt;
 use std::fmt::{Display, Formatter};
 use chrono::{Local, DateTime};
 
-#[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, Debug, Default,
-    Serialize, Deserialize)]
 /// Used to set the verbosity of a logger.
 ///
 /// # Example
@@ -17,50 +14,49 @@ use chrono::{Local, DateTime};
 /// # let mut logger = Logger::default();
 /// logger.set_verbosity(Verbosity::Quiet);
 /// ```
+#[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, Debug, Default,
+    Serialize, Deserialize)]
 pub enum Verbosity {
-    /// Don't filter any logs.
+    /// Display all logs
     All = 0,
     #[default]
-    /// Just filter debug logs.
+    /// Just filter the debug logs
     Standard = 1,
-    /// Only let warnings and errors to be displayed.
+    /// Only display errors and warnings
     Quiet = 2,
-    /// I'm not gonna explain this one
+    /// Only display errors
     ErrorsOnly = 3,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default,
-    Serialize, Deserialize)]
 /// Defines the policy for handling log file flushing when a `Logger` is
 /// dropped.
 ///
 /// The default policy is `DiscardLogBuffer`.
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default,
+    Serialize, Deserialize)]
 pub enum OnDropPolicy {
-    /// Completely ignore log file lock and write to file anyway.
+    /// Completely ignore log file lock and write to file anyway
     IgnoreLogFileLock,
     #[default]
-    /// Don't write to the log file when lock is enabled.
+    /// Don't write to the log file when lock is enabled
     DiscardLogBuffer,
 }
 
 
+/// Represents different types of log messages.
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default,
     Serialize, Deserialize)]
-/// Represents different types of log messages.
-///
-/// This enum is used to categorize the severity or type of a log message.
-/// The variants correspond to different levels of logging, from debugging
-/// information to fatal errors.
-///
-/// The default variant is `Info`.
 pub enum LogType {
-    /// A debug log, used for detailed information during development.
+    /// A debug log
     Debug = 0,
     #[default]
+    /// A standard, informative message
     Info = 1,
+    /// A warning
     Warning = 2,
+    /// An error
     Err = 3,
-    /// A critical error that leads to an unrecoverable state.
+    /// A critical error
     FatalError = 4,
 }
 
@@ -78,16 +74,22 @@ pub enum LogType {
 /// let log_string = logger.format_log(&LogStruct::error("Much bad!"));
 /// ```
 pub struct LogStruct {
-    /// The log message.
+    /// The log message
     pub message: String,
-    /// The type of the log (e.g., `Debug`, `Error`, `Info`, etc.).
+    /// The type of the log (e.g., `Debug`, `Info`, `Warning`, etc.)
     pub log_type: LogType,
-    /// The date and time at which the log was created.
+    /// The date and time at which the log struct was instantiated
     pub datetime: DateTime<Local>,
 }
 
 impl LogStruct {
     /// Returns a `LogStruct` with **debug** preset applied.
+    ///
+    /// # Example
+    /// ```
+    /// # use prettylogger::config::LogStruct;
+    /// let debug_log = LogStruct::debug("This is a debug log!");
+    /// ```
     pub fn debug(message: &str) -> LogStruct {
         LogStruct {
             message: message.to_string(),
@@ -97,6 +99,12 @@ impl LogStruct {
     }
 
     /// Returns a `LogStruct` with **info** preset applied.
+    ///
+    /// # Example
+    /// ```
+    /// # use prettylogger::config::LogStruct;
+    /// let debug_log = LogStruct::info("This is an info log!");
+    /// ```
     pub fn info(message: &str) -> LogStruct {
         LogStruct {
             message: message.to_string(),
@@ -106,6 +114,12 @@ impl LogStruct {
     }
 
     /// Returns a `LogStruct` with **warning** preset applied.
+    ///
+    /// # Example
+    /// ```
+    /// # use prettylogger::config::LogStruct;
+    /// let debug_log = LogStruct::warning("This is a warning!");
+    /// ```
     pub fn warning(message: &str) -> LogStruct {
         LogStruct {
             message: message.to_string(),
@@ -115,6 +129,12 @@ impl LogStruct {
     }
 
     /// Returns a `LogStruct` with **error** preset applied.
+    ///
+    /// # Example
+    /// ```
+    /// # use prettylogger::config::LogStruct;
+    /// let debug_log = LogStruct::error("This is an error!");
+    /// ```
     pub fn error(message: &str) -> LogStruct {
         LogStruct {
             message: message.to_string(),
@@ -124,6 +144,12 @@ impl LogStruct {
     }
 
     /// Returns a `LogStruct` with **fatal error** preset applied.
+    ///
+    /// # Example
+    /// ```
+    /// # use prettylogger::config::LogStruct;
+    /// let debug_log = LogStruct::fatal_error("This is a fatal error!");
+    /// ```
     pub fn fatal_error(message: &str) -> LogStruct {
         LogStruct {
             message: message.to_string(),
@@ -146,8 +172,8 @@ impl Display for LogStruct {
 }
 
 
-impl fmt::Display for Verbosity {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl std::fmt::Display for Verbosity {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let level_str = match *self {
             Verbosity::All => "All",
             Verbosity::Standard => "Standard",
@@ -159,14 +185,14 @@ impl fmt::Display for Verbosity {
 }
 
 impl TryFrom<i32> for Verbosity {
-    type Error = &'static str;
+    type Error = String;
     fn try_from(value: i32) -> Result<Self, Self::Error> {
         match value {
             0 => Ok(Verbosity::All),
             1 => Ok(Verbosity::Standard),
             2 => Ok(Verbosity::Quiet),
             3 => Ok(Verbosity::ErrorsOnly),
-            _ => Err("Invalid value, please provide a value in range from 0 to 3."),
+            _ => Err(String::from("Invalid value, please provide a value in range from 0 to 3.")),
         }
     }
 }
@@ -195,7 +221,7 @@ impl Display for OnDropPolicy {
 
 
 impl TryFrom<i32> for LogType {
-    type Error = &'static str;
+    type Error = String;
     fn try_from(value: i32) -> Result<Self, Self::Error> {
         match value {
             0 => Ok(LogType::Debug),
@@ -203,7 +229,7 @@ impl TryFrom<i32> for LogType {
             2 => Ok(LogType::Warning),
             3 => Ok(LogType::Err),
             4 => Ok(LogType::FatalError),
-            _ => Err("Invalid value! Please provide a value in range 0-9."),
+            _ => Err(String::from("Invalid value, please provide a value in range from 0 to 4.")),
         }
     }
 }
@@ -228,7 +254,7 @@ impl AsRef<str> for LogType {
             LogType::Info => "Info",
             LogType::Warning => "Warning",
             LogType::Err => "Err",
-            LogType::FatalError => "Fatal Error",
+            LogType::FatalError => "FatalError",
         }
     }
 }

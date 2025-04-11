@@ -1,10 +1,4 @@
-//! The `libprettylogger` crate offers a flexible logging utility through the
-//! `Logger` struct. It handles automatic log filtering and formatting,
-//! allowing you to easily control log output. The crate supports customizable
-//! log formats and provides different log levels (debug, info, warning, error,
-//! fatal), enabling precise control over logging behavior. Additionally,
-//! `Logger` configuration can be saved as a JSON file, allowing you to easily
-//! manage logging settings across different environments and use cases.
+//! A highly customizable logger library.
 
 /// A highly customizable logger library.
 #[cfg(test)]
@@ -29,6 +23,7 @@ use config::*;
 /// # Example
 /// ```
 /// # use prettylogger::Logger;
+/// // Create a `Logger` with default configuration:
 /// let mut logger = Logger::default();
 /// logger.debug("debug message");
 /// logger.info("info message");
@@ -36,8 +31,8 @@ use config::*;
 /// logger.error("error message");
 /// logger.fatal("fatal error message");
 /// ```
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default,
-    Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Serialize,
+    Deserialize)]
 pub struct Logger {
     pub(crate) console_out_enabled: bool,
 
@@ -155,7 +150,7 @@ impl Logger {
     }
 
     pub(crate) fn flush_file_log_buffer(&mut self, is_drop_flush: bool)
-    -> Result<(), String> {
+    -> Result<(), Error> {
         if self.log_file_lock {
             if is_drop_flush {
                 match self.on_drop_policy {
@@ -164,12 +159,12 @@ impl Logger {
                         let message = format!("Log file lock enabled and on
                             drop policy set to {}!",
                             self.on_drop_policy);
-                        return Err(message);
+                        return Err(Error::new(&message));
                     }
                 }
             }
             else {
-               return Err(String::from("Log file lock enabled!"))
+               return Err(Error::new(&"Log file lock enabled!"))
             }
         }
         let mut buf = String::from("");
@@ -185,52 +180,10 @@ impl Logger {
             Ok(_) => Ok(()),
             Err(_) => {
                 self.file_logging_enabled = false;
-                Err(String::from("Failed to write log buffer to a file!"))
+                Err(Error::new(&"Failed to write log buffer to a file!"))
             },
         }
     }
-
-
-    /// Returns a `Logger` instance with default configuration applied.
-    pub fn default() -> Self {
-        let log_format = String::from("[%h] %m");
-        Logger {
-            console_out_enabled: true,
-
-            use_custom_log_buffer: false,
-
-            verbosity: Verbosity::default(),
-            filtering_enabled: true,
-            log_header_color_enabled: true,
-
-            debug_color: Color::Blue,
-            info_color: Color::Green,
-            warning_color: Color::Yellow,
-            error_color: Color::Red,
-            fatal_color: Color::Magenta,
-
-            debug_header: String::from("DBG"),
-            info_header: String::from("INF"),
-            warning_header: String::from("WAR"),
-            error_header: String::from("ERR"),
-            fatal_header: String::from("FATAL"),
-
-            log_format: log_format.clone(),
-            datetime_format: String::from("%Y-%m-%d %H:%M:%S"),
-
-            file_logging_enabled: false,
-            log_file_path: String::new(),
-            file_log_buffer_max_size: 128,
-            on_drop_policy: OnDropPolicy::default(),
-
-            custom_log_buffer: Vec::new(),
-            file_log_buffer: Vec::new(),
-            show_datetime: log_format.contains("%d"),
-            log_file_lock: false,
-            log_count: 1,
-        }
-    }
-
 
     /// Used to print a log from a `LogStruct`.
     ///
@@ -277,7 +230,7 @@ impl Logger {
     /// ```
     /// # use prettylogger::{Logger, config::LogStruct};
     /// # let mut logger = Logger::default();
-    /// let log_string = logger.format_log(&LogStruct::error("eror"));
+    /// let log_string = logger.format_log(&LogStruct::error("ZXJyb3IK"));
     /// ```
     pub fn format_log(&self, log: &LogStruct) -> String {
         let headers = self.get_log_headers(log);
@@ -323,7 +276,7 @@ impl Logger {
     ///
     /// Returns an error when there is an issue writing to a file or log
     /// file lock is enabled.
-    pub fn flush(&mut self) -> Result<(), String> {
+    pub fn flush(&mut self) -> Result<(), Error> {
         if self.file_logging_enabled {
             self.flush_file_log_buffer(false)?;
         }
@@ -332,8 +285,7 @@ impl Logger {
 
     /// Prints a **debug message** to `stdout`.
     pub fn debug(&mut self, message: &str) {
-        if self.filter_log(LogType::Debug)
-        {
+        if self.filter_log(LogType::Debug) {
             return;
         }
         let log = LogStruct::debug(message);
@@ -348,8 +300,7 @@ impl Logger {
 
     /// Prints an **informational message** to `stdout`.
     pub fn info(&mut self, message: &str) {
-        if self.filter_log(LogType::Info)
-        {
+        if self.filter_log(LogType::Info) {
             return;
         }
         let log = LogStruct::info(message);
@@ -364,8 +315,7 @@ impl Logger {
 
     /// Prints a **warning** to `stdout`.
     pub fn warning(&mut self, message: &str) {
-        if self.filter_log(LogType::Warning)
-        {
+        if self.filter_log(LogType::Warning) {
             return;
         }
         let log = LogStruct::warning(message);
@@ -391,8 +341,49 @@ impl Logger {
     }
 
     /// Returns a reference to the custom log buffer.
-    pub fn log_buffer(& self) -> &Vec<LogStruct> {
-        &self.custom_log_buffer
+    pub fn log_buffer(&self) -> &Vec<LogStruct> {
+        return &self.custom_log_buffer;
+    }
+}
+
+impl Default for Logger {
+    fn default() -> Self {
+        let log_format = String::from("[%h] %m");
+        Logger {
+            console_out_enabled: true,
+
+            use_custom_log_buffer: false,
+
+            verbosity: Verbosity::default(),
+            filtering_enabled: true,
+            log_header_color_enabled: true,
+
+            debug_color: Color::Blue,
+            info_color: Color::Green,
+            warning_color: Color::Yellow,
+            error_color: Color::Red,
+            fatal_color: Color::Magenta,
+
+            debug_header: String::from("DBG"),
+            info_header: String::from("INF"),
+            warning_header: String::from("WAR"),
+            error_header: String::from("ERR"),
+            fatal_header: String::from("FATAL"),
+
+            log_format: log_format.clone(),
+            datetime_format: String::from("%Y-%m-%d %H:%M:%S"),
+
+            file_logging_enabled: false,
+            log_file_path: String::new(),
+            file_log_buffer_max_size: 128,
+            on_drop_policy: OnDropPolicy::default(),
+
+            custom_log_buffer: Vec::new(),
+            file_log_buffer: Vec::new(),
+            show_datetime: log_format.contains("%d"),
+            log_file_lock: false,
+            log_count: 1,
+        }
     }
 }
 
@@ -401,3 +392,24 @@ impl Drop for Logger {
         self.drop_flush();
     }
 }
+
+#[derive(Clone, Eq, PartialEq, Debug)]
+pub struct Error {
+    pub message: String,
+}
+
+impl Error {
+    pub fn new(msg: &str) -> Self {
+        Error {
+            message: msg.to_string(),
+        }
+    }
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl std::error::Error for Error { }

@@ -24,7 +24,7 @@
 cargo add libprettylogger
 ```
 
-**Using the library in your project**:
+**Quick start**:
 ```rust
 // Include stuff from the library:
 use prettylogger::Logger;

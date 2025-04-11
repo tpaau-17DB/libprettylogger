@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{Logger, Error};
 use std::{
     fs::*,
     io::Write,
@@ -7,8 +7,6 @@ use crate::fileio::{expand_env_vars, expand_tilde};
 
 impl Logger {
     /// Creates a `Logger` instance from a JSON template as string.
-    ///
-    /// https://github.com/tpaau-17DB/libprettylogger?tab=readme-ov-file#logger-templates
     ///
     /// # Example
     /// ```
@@ -22,7 +20,7 @@ impl Logger {
     /// assert_eq!(Logger::default(), Logger::from_template_str(&raw_json)
     ///     .expect("Failed to deserialize logger!"));
     /// ```
-    pub fn from_template_str(template: &str) -> Result<Logger, String> {
+    pub fn from_template_str(template: &str) -> Result<Logger, Error> {
         let result: Result<Logger, serde_json::Error>
             = serde_json::from_str(&template);
         match result {
@@ -33,7 +31,7 @@ impl Logger {
                 return Ok(logger);
             },
             Err(e) => {
-                return Err(e.to_string());
+                return Err(Error::new(&e.to_string()));
             }
         }
     }
@@ -41,8 +39,6 @@ impl Logger {
     /// Creates a `Logger` instance from a template file.
     ///
     /// Automatically expands environment variables.
-    ///
-    /// https://github.com/tpaau-17DB/libprettylogger?tab=readme-ov-file#logger-templates
     ///
     /// # Example
     /// ```
@@ -53,7 +49,7 @@ impl Logger {
     /// # Logger::default().save_template(path);
     /// let mut logger = Logger::from_template(path);
     /// ```
-    pub fn from_template(path: &str) -> Result<Logger, String> {
+    pub fn from_template(path: &str) -> Result<Logger, Error> {
         let path = expand_env_vars(&expand_tilde(path));
 
         match read_to_string(path) {
@@ -61,7 +57,7 @@ impl Logger {
                 return Logger::from_template_str(&contents);
             },
             Err(e) => {
-                return Err(e.to_string());
+                return Err(Error::new(&e.to_string()));
             }
         }
     }
@@ -69,8 +65,6 @@ impl Logger {
     /// Saves a `Logger` to template file.
     ///
     /// Automatically expands environment variables.
-    ///
-    /// https://github.com/tpaau-17DB/libprettylogger?tab=readme-ov-file#logger-templates
     ///
     /// # Example
     /// ```
@@ -81,7 +75,7 @@ impl Logger {
     /// let mut logger = Logger::default();
     /// logger.save_template(path);
     /// ```
-    pub fn save_template(&self, path: &str) -> Result<(), String> {
+    pub fn save_template(&self, path: &str) -> Result<(), Error> {
         let path = expand_env_vars(&expand_tilde(path));
 
         let json: Result<_, serde_json::Error>
@@ -93,20 +87,20 @@ impl Logger {
                     Ok(mut file) => {
                         match file.write_all(json.as_bytes()) {
                             Ok(_) => {
-                                return Ok(());
+                                Ok(())
                             },
                             Err(e) => {
-                                return Err(e.to_string());
+                                Err(Error::new(&e.to_string()))
                             }
                         }
                     },
                     Err(e) => {
-                        return Err(e.to_string());
+                        Err(Error::new(&e.to_string()))
                     }
                 }
             },
             Err(e) => {
-                return Err(e.to_string())
+                Err(Error::new(&e.to_string()))
             }
         }
     }

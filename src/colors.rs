@@ -2,14 +2,17 @@
 
 /// Contains various color-related utilities for cosmetic customization.
 
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    fmt::{Display, Formatter},
+};
 use serde::{Serialize, Deserialize};
 use lazy_static::lazy_static;
-use std::fmt::{Display, Formatter};
 
+/// Represents different colors. Used to color text or modify the appearance of
+/// log headers.
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default,
     Serialize, Deserialize)]
-/// Represents different colors. Used to color text or set log header colors.
 pub enum Color
 {
     None = 0,
