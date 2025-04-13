@@ -15,8 +15,8 @@ pub mod config;
 use fileio::append_to_file;
 use chrono::{Local, DateTime};
 use serde::{Serialize, Deserialize};
-use colors::*;
-use config::*;
+use colors::{Color, color_text};
+use config::{Verbosity, LogStruct, LogType, OnDropPolicy};
 
 /// The `Logger` struct used to print logs.
 ///
@@ -80,29 +80,29 @@ impl Logger {
     -> (String, String, String) {
         let header = self.get_log_type_header(log.log_type);
         let datetime = self.get_datetime_formatted(&log.datetime);
-        (header, datetime, log.message.clone())
+        return (header, datetime, log.message.clone())
     }
 
     pub(crate) fn get_log_type_header(&self, log_type: LogType) -> String {
         match log_type {
             LogType::Debug => {
-                self.colorify(&self.debug_header,
+                return self.colorify(&self.debug_header,
                     self.log_header_color(log_type))
             }
             LogType::Info => {
-                self.colorify(&self.info_header,
+                return self.colorify(&self.info_header,
                     self.log_header_color(log_type))
             }
             LogType::Warning => {
-                self.colorify(&self.warning_header,
+                return self.colorify(&self.warning_header,
                     self.log_header_color(log_type))
             }
             LogType::Err => {
-                self.colorify(&self.error_header,
+                return self.colorify(&self.error_header,
                     self.log_header_color(log_type))
             }
             LogType::FatalError => {
-                self.colorify(&self.fatal_header,
+                return self.colorify(&self.fatal_header,
                     self.log_header_color(log_type))
             }
         }
@@ -112,34 +112,32 @@ impl Logger {
     datetime: &DateTime<Local>) -> String {
         if self.show_datetime {
             let datetime_formatted = datetime.format(&self.datetime_format);
-            datetime_formatted.to_string()
+            return datetime_formatted.to_string()
         }
-        else {
-            String::from("")
-        }
+        return String::new();
     }
 
     pub(crate) fn colorify(&self, text: &str, color: Color) -> String {
         if self.log_header_color_enabled {
             return color_text(text, color);
         }
-        text.to_string()
+        return text.to_string()
     }
 
     pub(crate) fn filter_log(&self, log_type: LogType) -> bool {
         if self.filtering_enabled {
             return (log_type as i32) < self.verbosity as i32;
         }
-        false
+        return false;
     }
 
     pub(crate) fn log_header_color(&self, log_type: LogType) -> Color {
         match log_type {
-            LogType::Debug => { self.debug_color }
-            LogType::Info => { self.info_color }
-            LogType::Warning => { self.warning_color }
-            LogType::Err => { self.error_color }
-            LogType::FatalError => { self.fatal_color }
+            LogType::Debug => self.debug_color,
+            LogType::Info => self.info_color,
+            LogType::Warning => self.warning_color,
+            LogType::Err => self.error_color,
+            LogType::FatalError => self.fatal_color,
         }
     }
 
@@ -180,7 +178,7 @@ impl Logger {
             Ok(_) => Ok(()),
             Err(_) => {
                 self.file_logging_enabled = false;
-                Err(Error::new(&"Failed to write log buffer to a file!"))
+                return Err(Error::new(&"Failed to write log buffer to a file!"))
             },
         }
     }
@@ -235,28 +233,19 @@ impl Logger {
     pub fn format_log(&self, log: &LogStruct) -> String {
         let headers = self.get_log_headers(log);
         let mut result = String::new();
-        let mut char_iter = self.log_format.char_indices().peekable();
+        let mut char_iter = self
+            .log_format.char_indices().peekable();
 
         while let Some((_, c)) = char_iter.next() {
             match c {
                 '%' => {
                     if let Some((_, nc)) = char_iter.peek() {
                         match nc {
-                            'h' => {
-                                result += &headers.0;
-                            }
-                            'd' => {
-                                result += &headers.1;
-                            }
-                            'm' => {
-                                result += &headers.2;
-                            }
-                            'c' => {
-                                result += &self.log_count.to_string();
-                            }
-                            _ => {
-                                result += &nc.to_string();
-                            }
+                            'h' => result += &headers.0,
+                            'd' => result += &headers.1,
+                            'm' => result += &headers.2,
+                            'c' => result += &self.log_count.to_string(),
+                            _ => result += &nc.to_string(),
                         }
                         char_iter.next();
                     }
@@ -268,7 +257,7 @@ impl Logger {
         }
 
         result += "\n";
-        result
+        return result
     }
 
     /// Flushes log buffer (if file logging is enabled and log file lock
@@ -280,7 +269,7 @@ impl Logger {
         if self.file_logging_enabled {
             self.flush_file_log_buffer(false)?;
         }
-        Ok(())
+        return Ok(());
     }
 
     /// Prints a **debug message** to `stdout`.
@@ -408,7 +397,7 @@ impl Error {
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.message)
+        return write!(f, "{}", self.message)
     }
 }
 

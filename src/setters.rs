@@ -1,9 +1,9 @@
 use crate::{
     Logger,
     Error,
-    colors::*,
-    fileio::*,
-    config::*,
+    colors::Color,
+    fileio::{ensure_writable_file_exists, expand_env_vars, expand_tilde, overwrite_file},
+    config::{Verbosity, OnDropPolicy},
 };
 
 impl Logger {
@@ -140,7 +140,7 @@ impl Logger {
     /// ```
     pub fn set_log_file_path(&mut self, path: &str) -> Result<(), Error> {
         let path: &str = &expand_env_vars(&expand_tilde(path));
-        if is_file_writable(path) {
+        if ensure_writable_file_exists(path) {
             self.log_file_path = path.to_string();
             match overwrite_file(path, "") {
                 Ok(_) => { Ok(()) },
@@ -183,7 +183,7 @@ impl Logger {
             self.file_logging_enabled = false;
             Ok(())
         }
-        else if is_file_writable(&self.log_file_path) {
+        else if ensure_writable_file_exists(&self.log_file_path) {
             self.file_logging_enabled = true;
             Ok(())
         }

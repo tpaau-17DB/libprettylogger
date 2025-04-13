@@ -3,8 +3,7 @@ v2.1.0
 </h1>
 
 ## Minor changes
-* Added a new constructor that allows for creating a `Logger` instance from
-stringified JSON.
+* Added a new constructor to create a `Logger` instance from a JSON string.
 
 ## Patches
 * Fixed various errors and typos in error messages.
@@ -12,6 +11,8 @@ stringified JSON.
 * `Logger::from_template()` and `logger.save_template(...)` now return
 `Result<...>` enums instead of panicking with `expect()`.
 * Warnings now go to `stderr` instead of `stdout`.
+* Updated the codebase to follow
+[my style](https://github.com/tpaau-17DB/coding-style/blob/main/src/RUST.md).
 
 
 <h1 align="center">

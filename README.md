@@ -19,12 +19,12 @@
 
 <a name="tldr"></a>
 ## TL;DR
-**Installing the library**:
+### Installing the library:
 ```bash
 cargo add libprettylogger
 ```
 
-**Quick start**:
+### Quick start:
 ```rust
 // Include stuff from the library:
 use prettylogger::Logger;

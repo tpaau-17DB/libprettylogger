@@ -30,15 +30,15 @@ pub enum Verbosity {
 
 /// Defines the policy for handling log file flushing when a `Logger` is
 /// dropped.
-///
-/// The default policy is `DiscardLogBuffer`.
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default,
     Serialize, Deserialize)]
 pub enum OnDropPolicy {
-    /// Completely ignore log file lock and write to file anyway
+    /// Ignore log file lock and write to file anyway. This may cause race
+    /// conditions
     IgnoreLogFileLock,
     #[default]
-    /// Don't write to the log file when lock is enabled
+    /// Respect the log file lock and don't write to the log file. This may
+    /// cause data loss
     DiscardLogBuffer,
 }
 
@@ -60,7 +60,6 @@ pub enum LogType {
     FatalError = 4,
 }
 
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
 /// Represents a single log entry.
 ///
 /// Can be used to create custom log messages or storing logs in memory for
@@ -73,6 +72,7 @@ pub enum LogType {
 /// // Get a formatted log message from a `LogStruct` instance:
 /// let log_string = logger.format_log(&LogStruct::error("Much bad!"));
 /// ```
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
 pub struct LogStruct {
     /// The log message
     pub message: String,
@@ -161,7 +161,7 @@ impl LogStruct {
 
 impl Display for LogStruct {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
+        return write!(
             f,
             "Log: {}\nType: {:?}\nDateTime: {}",
             self.message,
@@ -180,7 +180,7 @@ impl std::fmt::Display for Verbosity {
             Verbosity::Quiet => "Quiet",
             Verbosity::ErrorsOnly => "ErrorsOnly",
         };
-        write!(f, "{}", level_str)
+        return write!(f, "{}", level_str)
     }
 }
 
@@ -215,7 +215,7 @@ impl Display for OnDropPolicy {
             OnDropPolicy::IgnoreLogFileLock => "IgnoreLogFileLock",
             OnDropPolicy::DiscardLogBuffer => "DiscardLogBuffer",
         };
-        write!(f, "{}", level_str)
+        return write!(f, "{}", level_str)
     }
 }
 
@@ -243,7 +243,7 @@ impl Display for LogType {
             LogType::Err => "Error",
             LogType::FatalError => "FatalError",
         };
-        write!(f, "{}", level_str)
+        return write!(f, "{}", level_str)
     }
 }
 

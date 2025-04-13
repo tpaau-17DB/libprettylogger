@@ -1,5 +1,9 @@
 use std::fs::{create_dir_all, read_to_string};
-use crate::*;
+use crate::{
+    Logger,
+    config::{Verbosity, LogType, LogStruct},
+    colors::{Color, color_text}
+};
 
 lazy_static::lazy_static! {
     static ref TEST_PATH: String = {

@@ -1,6 +1,6 @@
 use crate::{Logger, Error};
 use std::{
-    fs::*,
+    fs::{File, read_to_string},
     io::Write,
 };
 use crate::fileio::{expand_env_vars, expand_tilde};
@@ -30,9 +30,7 @@ impl Logger {
 
                 return Ok(logger);
             },
-            Err(e) => {
-                return Err(Error::new(&e.to_string()));
-            }
+            Err(e) => Err(Error::new(&e.to_string()))
         }
     }
 
@@ -54,11 +52,9 @@ impl Logger {
 
         match read_to_string(path) {
             Ok(contents) => {
-                return Logger::from_template_str(&contents);
+                Logger::from_template_str(&contents)
             },
-            Err(e) => {
-                return Err(Error::new(&e.to_string()));
-            }
+            Err(e) => Err(Error::new(&e.to_string()))
         }
     }
 
@@ -86,22 +82,16 @@ impl Logger {
                 match File::create(path) {
                     Ok(mut file) => {
                         match file.write_all(json.as_bytes()) {
-                            Ok(_) => {
-                                Ok(())
-                            },
+                            Ok(_) => Ok(()),
                             Err(e) => {
                                 Err(Error::new(&e.to_string()))
                             }
                         }
                     },
-                    Err(e) => {
-                        Err(Error::new(&e.to_string()))
-                    }
+                    Err(e) => Err(Error::new(&e.to_string()))
                 }
             },
-            Err(e) => {
-                Err(Error::new(&e.to_string()))
-            }
+            Err(e) => Err(Error::new(&e.to_string()))
         }
     }
 }
