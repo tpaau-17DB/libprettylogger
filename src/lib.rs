@@ -1,6 +1,6 @@
-//! A highly customizable logger library.
+//! Highly customizable logger library.
 
-/// A highly customizable logger library.
+/// Highly customizable logger library.
 #[cfg(test)]
 mod tests;
 
@@ -8,6 +8,7 @@ mod tests;
 mod fileio;
 mod setters;
 mod json;
+mod getters;
 
 pub mod colors;
 pub mod config;
@@ -154,15 +155,13 @@ impl Logger {
                 match self.on_drop_policy {
                     OnDropPolicy::IgnoreLogFileLock => { }
                     OnDropPolicy::DiscardLogBuffer => {
-                        let message = format!("Log file lock enabled and on
-                            drop policy set to {}!",
-                            self.on_drop_policy);
-                        return Err(Error::new(&message));
+                        return Err(Error::new(&format!("Log file lock enabled and on drop policy set to {}!",
+                            self.on_drop_policy)));
                     }
                 }
             }
             else {
-               return Err(Error::new(&"Log file lock enabled!"))
+               return Err(Error::new(&"Log file lock is enabled!"))
             }
         }
         let mut buf = String::from("");
@@ -267,9 +266,16 @@ impl Logger {
     /// file lock is enabled.
     pub fn flush(&mut self) -> Result<(), Error> {
         if self.file_logging_enabled {
-            self.flush_file_log_buffer(false)?;
+            match self.flush_file_log_buffer(false) {
+                Ok(_) => Ok(()),
+                Err(e) => { 
+                    return Err(Error::new(&e.to_string())); 
+                }
+            }
         }
-        return Ok(());
+        else {
+            return Err(Error::new(&"File logging is disabled!"));
+        }
     }
 
     /// Prints a **debug message** to `stdout`.
@@ -328,11 +334,6 @@ impl Logger {
         let log = LogStruct::fatal_error(message);
         self.print_log(&log);
     }
-
-    /// Returns a reference to the custom log buffer.
-    pub fn log_buffer(&self) -> &Vec<LogStruct> {
-        return &self.custom_log_buffer;
-    }
 }
 
 impl Default for Logger {
@@ -382,6 +383,7 @@ impl Drop for Logger {
     }
 }
 
+/// Represents an error thrown by the Logger.
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct Error {
     pub message: String,

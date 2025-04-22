@@ -1,7 +1,6 @@
 //! Contains cosmetic, color-related utilities.
 
 /// Contains various color-related utilities for cosmetic customization.
-
 use std::{
     collections::HashMap,
     fmt::{Display, Formatter},
@@ -26,6 +25,15 @@ pub enum Color
     Red = 7,
     White = 8,
     Yellow = 9,
+
+    BrightBlack = 10,
+    BrightBlue = 11,
+    BrightCyan = 12,
+    BrightGreen = 13,
+    BrightMagenta = 14,
+    BrightRed = 15,
+    BrightWhite = 16,
+    BrightYellow = 17,
 }
 
 static BLACK: &str = "\x1b[30m";
@@ -37,6 +45,16 @@ static MAGENTA: &str = "\x1b[35m";
 static RED: &str = "\x1b[31m";
 static WHITE: &str = "\x1b[37m";
 static YELLOW: &str = "\x1b[33m";
+
+static BRIGHT_BLACK: &str = "\x1b[90m";
+static BRIGHT_BLUE: &str = "\x1b[94m";
+static BRIGHT_CYAN: &str = "\x1b[96m";
+static BRIGHT_GREEN: &str = "\x1b[92m";
+static BRIGHT_MAGENTA: &str = "\x1b[95m";
+static BRIGHT_RED: &str = "\x1b[91m";
+static BRIGHT_WHITE: &str = "\x1b[97m";
+static BRIGHT_YELLOW: &str = "\x1b[93m";
+
 pub(crate) static RESET: &str = "\x1b[0m";
 
 lazy_static! {
@@ -52,6 +70,15 @@ lazy_static! {
         m.insert(Color::Red as i32, RED);
         m.insert(Color::White as i32, WHITE);
         m.insert(Color::Yellow as i32, YELLOW);
+
+        m.insert(Color::BrightBlack as i32, BRIGHT_BLACK);
+        m.insert(Color::BrightBlue as i32, BRIGHT_BLUE);
+        m.insert(Color::BrightCyan as i32, BRIGHT_CYAN);
+        m.insert(Color::BrightGreen as i32, BRIGHT_GREEN);
+        m.insert(Color::BrightMagenta as i32, BRIGHT_MAGENTA);
+        m.insert(Color::BrightRed as i32, BRIGHT_RED);
+        m.insert(Color::BrightWhite as i32, BRIGHT_WHITE);
+        m.insert(Color::BrightYellow as i32, BRIGHT_YELLOW);
         return m;
     };
 }
@@ -84,6 +111,15 @@ impl Display for Color {
             Color::Red => "Red",
             Color::White => "White",
             Color::Yellow => "Yellow",
+
+            Color::BrightBlack => "BrightBlack",
+            Color::BrightBlue => "BrightBlue",
+            Color::BrightCyan => "BrightCyan",
+            Color::BrightGreen => "BrightGreen",
+            Color::BrightMagenta => "BrightMagenta",
+            Color::BrightRed => "BrightRed",
+            Color::BrightWhite => "BrightWhite",
+            Color::BrightYellow => "BrightYellow",
         };
         return write!(f, "{}", level_str)
     }
@@ -103,6 +139,15 @@ impl TryFrom<i32> for Color {
             7 => Ok(Color::Red),
             8 => Ok(Color::White),
             9 => Ok(Color::Yellow),
+
+            10 => Ok(Color::BrightBlack),
+            11 => Ok(Color::BrightBlue),
+            12 => Ok(Color::BrightCyan),
+            13 => Ok(Color::BrightGreen),
+            14 => Ok(Color::BrightMagenta),
+            15 => Ok(Color::BrightRed),
+            16 => Ok(Color::BrightWhite),
+            17 => Ok(Color::BrightYellow),
             _ => Err("Invalid value! Please provide a value in range 0-9."),
         }
     }
@@ -112,7 +157,7 @@ impl AsRef<str> for Color {
     fn as_ref(&self) -> &str {
         match self {
             Color::None => "None",
-            Color::Black => "Black",
+            Color:: Black => "Black",
             Color::Blue => "Blue",
             Color::Cyan => "Cyan",
             Color::Green => "Green",
@@ -121,6 +166,15 @@ impl AsRef<str> for Color {
             Color::Red => "Red",
             Color::White => "White",
             Color::Yellow => "Yellow",
+
+            Color::BrightBlack => "BrightBlack",
+            Color::BrightBlue => "BrightBlue",
+            Color::BrightCyan => "BrightCyan",
+            Color::BrightGreen => "BrightGreen",
+            Color::BrightMagenta => "BrightMagenta",
+            Color::BrightRed => "BrightRed",
+            Color::BrightWhite => "BrightWhite",
+            Color::BrightYellow => "BrightYellow",
         }
     }
 }

@@ -1,7 +1,6 @@
 //! Contains various types used to customize `Logger` behavior.
 
 /// Contains various types used to customize `Logger` behavior.
-
 use serde::{Serialize, Deserialize};
 use std::fmt::{Display, Formatter};
 use chrono::{Local, DateTime};
