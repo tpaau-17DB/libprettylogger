@@ -6,13 +6,13 @@ v2.1.0
 * Added a new constructor to create a `Logger` instance from a JSON string.
 
 ## Patches
-* Fixed various errors and typos in error messages.
-* Fixed various errors and typos in docstrings.
+* Fixed various issues and typos in error messages.
+* Fixed various issues and typos in docstrings.
+* `Logger::flush()` now returns an error when log file lock is enabled.
 * `Logger::from_template()` and `logger.save_template(...)` now return
-`Result<...>` enums instead of panicking with `expect()`.
+`Result<...>` enums instead of panicking.
 * Warnings now go to `stderr` instead of `stdout`.
-* Updated the codebase to follow
-[my style](https://github.com/tpaau-17DB/coding-style/blob/main/src/RUST.md).
+* Updated the codebase to follow [my style](https://github.com/tpaau-17DB/coding-style/blob/main/src/RUST.md).
 
 
 <h1 align="center">
