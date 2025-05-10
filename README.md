@@ -30,7 +30,7 @@ cargo add libprettylogger
 use prettylogger::Logger;
 use prettylogger::config::Verbosity;
 
-// A `Logger` struct with default configuration
+// A `Logger` struct with default configuration:
 let mut logger = Logger::default();
 
 // Configure `Logger` to your liking

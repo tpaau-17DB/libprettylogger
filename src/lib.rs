@@ -134,11 +134,11 @@ impl Logger {
 
     pub(crate) fn log_header_color(&self, log_type: LogType) -> Color {
         match log_type {
-            LogType::Debug => self.debug_color,
-            LogType::Info => self.info_color,
-            LogType::Warning => self.warning_color,
-            LogType::Err => self.error_color,
-            LogType::FatalError => self.fatal_color,
+            LogType::Debug => self.debug_color.clone(),
+            LogType::Info => self.info_color.clone(),
+            LogType::Warning => self.warning_color.clone(),
+            LogType::Err => self.error_color.clone(),
+            LogType::FatalError => self.fatal_color.clone(),
         }
     }
 
@@ -195,14 +195,7 @@ impl Logger {
         let log_str = self.format_log(log);
 
         if self.console_out_enabled {
-            if log.log_type == LogType::Warning
-            || log.log_type == LogType::Err
-            || log.log_type == LogType::FatalError {
-                eprint!("{}", log_str);
-            }
-            else {
-                print!("{}", log_str);
-            }
+            eprint!("{}", log_str);
         }
 
         if self.use_custom_log_buffer {

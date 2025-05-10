@@ -1,4 +1,15 @@
 <h1 align="center">
+v2.1.1
+</h1>
+
+## Patches
+* All logs now go to `stderr`.
+* Removed bright color variants from `Color`.
+* Added a new color variant that allows for specifying custom ANSII escape
+codes.
+
+
+<h1 align="center">
 v2.1.0
 </h1>
 

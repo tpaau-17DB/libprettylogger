@@ -13,6 +13,8 @@ use crate::{
     colors::{color_text, Color}, config::{LogStruct, LogType, OnDropPolicy, Verbosity}, Logger
 };
 
+const RESET: &str = "\x1b[0m";
+
 lazy_static::lazy_static! {
     static ref TMP_PATH: String = {
         let mut path = std::env::temp_dir();
@@ -33,15 +35,6 @@ lazy_static::lazy_static! {
         map.insert(Color::Magenta, String::from("\x1b[35m"));
         map.insert(Color::Cyan, String::from("\x1b[36m"));
         map.insert(Color::White, String::from("\x1b[37m"));
-
-        map.insert(Color::BrightBlack, String::from("\x1b[90m"));
-        map.insert(Color::BrightRed, String::from("\x1b[91m"));
-        map.insert(Color::BrightGreen, String::from("\x1b[92m"));
-        map.insert(Color::BrightYellow, String::from("\x1b[93m"));
-        map.insert(Color::BrightBlue, String::from("\x1b[94m"));
-        map.insert(Color::BrightMagenta, String::from("\x1b[95m"));
-        map.insert(Color::BrightCyan, String::from("\x1b[96m"));
-        map.insert(Color::BrightWhite, String::from("\x1b[97m"));
 
         return map;
     };
@@ -353,13 +346,22 @@ fn test_custom_log_buffer() {
 
 #[test]
 fn test_color_text() {
-    let reset = "\x1b[0m";
-
     for element in COLORS.iter() {
         let text = &rand_string(32);
         let color_test = color_text(text, element.0.to_owned());
         let color_manual
-            = element.1.clone() + text + reset;
+            = element.1.clone() + text + RESET;
+        assert_eq!(color_test, color_manual);
+    }
+}
+
+#[test]
+fn test_color_text_custom() {
+    for element in COLORS.iter() {
+        let text = &rand_string(32);
+        let color = element.0.as_ref().to_string();
+        let color_test = color_text(text, Color::Custom(color.clone()));
+        let color_manual = color + text + RESET;
         assert_eq!(color_test, color_manual);
     }
 }
