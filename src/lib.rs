@@ -6,18 +6,18 @@ mod tests;
 
 #[doc = include_str!("../README.md")]
 mod fileio;
-mod setters;
 mod json;
 mod getters;
 
 pub mod colors;
 pub mod config;
+pub mod format;
 
-use fileio::append_to_file;
-use chrono::{Local, DateTime};
+use format::LogFormatter;
 use serde::{Serialize, Deserialize};
-use colors::{Color, color_text};
 use config::{Verbosity, LogStruct, LogType, OnDropPolicy};
+use fileio::{append_to_file, ensure_writable_file_exists, expand_env_vars,
+expand_tilde, overwrite_file};
 
 /// The `Logger` struct used to print logs.
 ///
@@ -35,28 +35,14 @@ use config::{Verbosity, LogStruct, LogType, OnDropPolicy};
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Serialize,
     Deserialize)]
 pub struct Logger {
+    pub formatter: LogFormatter,
+
     pub(crate) console_out_enabled: bool,
 
     pub(crate) use_custom_log_buffer: bool,
 
     pub(crate) verbosity: Verbosity,
     pub(crate) filtering_enabled: bool,
-    pub(crate) log_header_color_enabled: bool,
-
-    pub(crate) debug_color: Color,
-    pub(crate) info_color: Color,
-    pub(crate) warning_color: Color,
-    pub(crate) error_color: Color,
-    pub(crate) fatal_color: Color,
-
-    pub(crate) debug_header: String,
-    pub(crate) info_header: String,
-    pub(crate) warning_header: String,
-    pub(crate) error_header: String,
-    pub(crate) fatal_header: String,
-
-    pub(crate) log_format: String,
-    pub(crate) datetime_format: String,
 
     pub(crate) file_logging_enabled: bool,
     pub(crate) log_file_path: String,
@@ -77,69 +63,12 @@ pub struct Logger {
 }
 
 impl Logger {
-    pub(crate) fn get_log_headers(&self, log: &LogStruct)
-    -> (String, String, String) {
-        let header = self.get_log_type_header(log.log_type);
-        let datetime = self.get_datetime_formatted(&log.datetime);
-        return (header, datetime, log.message.clone())
-    }
-
-    pub(crate) fn get_log_type_header(&self, log_type: LogType) -> String {
-        match log_type {
-            LogType::Debug => {
-                return self.colorify(&self.debug_header,
-                    self.log_header_color(log_type))
-            }
-            LogType::Info => {
-                return self.colorify(&self.info_header,
-                    self.log_header_color(log_type))
-            }
-            LogType::Warning => {
-                return self.colorify(&self.warning_header,
-                    self.log_header_color(log_type))
-            }
-            LogType::Err => {
-                return self.colorify(&self.error_header,
-                    self.log_header_color(log_type))
-            }
-            LogType::FatalError => {
-                return self.colorify(&self.fatal_header,
-                    self.log_header_color(log_type))
-            }
-        }
-    }
-
-    pub(crate) fn get_datetime_formatted(&self,
-    datetime: &DateTime<Local>) -> String {
-        if self.show_datetime {
-            let datetime_formatted = datetime.format(&self.datetime_format);
-            return datetime_formatted.to_string()
-        }
-        return String::new();
-    }
-
-    pub(crate) fn colorify(&self, text: &str, color: Color) -> String {
-        if self.log_header_color_enabled {
-            return color_text(text, color);
-        }
-        return text.to_string()
-    }
-
+    /// Returns true if log is to be filtered and false otherwise.
     pub(crate) fn filter_log(&self, log_type: LogType) -> bool {
         if self.filtering_enabled {
             return (log_type as i32) < self.verbosity as i32;
         }
         return false;
-    }
-
-    pub(crate) fn log_header_color(&self, log_type: LogType) -> Color {
-        match log_type {
-            LogType::Debug => self.debug_color.clone(),
-            LogType::Info => self.info_color.clone(),
-            LogType::Warning => self.warning_color.clone(),
-            LogType::Err => self.error_color.clone(),
-            LogType::FatalError => self.fatal_color.clone(),
-        }
     }
 
     pub(crate) fn drop_flush(&mut self) {
@@ -167,7 +96,7 @@ impl Logger {
         let mut buf = String::from("");
 
         for log in &self.file_log_buffer {
-            buf += &self.format_log(log);
+            buf += &self.formatter.format_log(log);
         }
 
         self.file_log_buffer = Vec::new();
@@ -184,6 +113,8 @@ impl Logger {
 
     /// Used to print a log from a `LogStruct`.
     ///
+    /// Bypasses log filtering.
+    ///
     /// # Example:
     /// ```
     /// # use prettylogger::{Logger, config::LogStruct};
@@ -192,7 +123,7 @@ impl Logger {
     /// ```
     pub fn print_log(&mut self, log: &LogStruct) {
         self.log_count += 1;
-        let log_str = self.format_log(log);
+        let log_str = self.formatter.format_log(log);
 
         if self.console_out_enabled {
             eprint!("{}", log_str);
@@ -211,45 +142,6 @@ impl Logger {
                 let _ = self.flush_file_log_buffer(false);
             }
         }
-    }
-
-    /// Returns a log entry from a `LogStruct` based on current `Logger`
-    /// configuration.
-    ///
-    /// # Example:
-    /// ```
-    /// # use prettylogger::{Logger, config::LogStruct};
-    /// # let mut logger = Logger::default();
-    /// let log_string = logger.format_log(&LogStruct::error("ZXJyb3IK"));
-    /// ```
-    pub fn format_log(&self, log: &LogStruct) -> String {
-        let headers = self.get_log_headers(log);
-        let mut result = String::new();
-        let mut char_iter = self
-            .log_format.char_indices().peekable();
-
-        while let Some((_, c)) = char_iter.next() {
-            match c {
-                '%' => {
-                    if let Some((_, nc)) = char_iter.peek() {
-                        match nc {
-                            'h' => result += &headers.0,
-                            'd' => result += &headers.1,
-                            'm' => result += &headers.2,
-                            'c' => result += &self.log_count.to_string(),
-                            _ => result += &nc.to_string(),
-                        }
-                        char_iter.next();
-                    }
-                }
-                _ => {
-                    result += &c.to_string();
-                }
-            }
-        }
-
-        result += "\n";
-        return result
     }
 
     /// Flushes log buffer (if file logging is enabled and log file lock
@@ -327,6 +219,186 @@ impl Logger {
         let log = LogStruct::fatal_error(message);
         self.print_log(&log);
     }
+
+    /// Sets logger `verbosity`.
+    ///
+    /// # Example
+    /// ```
+    /// # use prettylogger::{Logger, config::Verbosity};
+    /// # let mut logger = Logger::default();
+    /// logger.set_verbosity(Verbosity::Quiet);
+    /// ```
+    pub fn set_verbosity<I: Into<Verbosity>>(&mut self, verbosity: I) {
+        self.verbosity = verbosity.into();
+    }
+
+    /// Toggles log filtering.
+    /// * **true**: logs will get filtered based on verbosity
+    /// * **false**: log filtering will be disabled globally
+    pub fn toggle_log_filtering<I: Into<bool>>(&mut self, enabled: I) {
+        self.filtering_enabled = enabled.into();
+    }
+
+    /// Sets log file path.
+    ///
+    /// Returns an error if the path is inaccessible.
+    ///
+    /// https://github.com/tpaau-17DB/libprettylogger?tab=readme-ov-file#file-logging
+    ///
+    /// # Example
+    /// ```
+    /// # use prettylogger::Logger;
+    /// # let mut logger = Logger::default();
+    /// # let mut path = std::env::temp_dir();
+    /// # path.push("libprettylogger-tests/set_log_file_path.log");
+    /// # let path = &path.to_str().unwrap().to_string();
+    /// # logger.set_log_file_path(path);
+    /// // Set the log file path first:
+    /// logger.set_log_file_path(path);
+    /// // Then enable file logging:
+    /// logger.toggle_file_logging(true);
+    /// ```
+    pub fn set_log_file_path(&mut self, path: &str) -> Result<(), Error> {
+        let path: &str = &expand_env_vars(&expand_tilde(path));
+        if ensure_writable_file_exists(path) {
+            self.log_file_path = path.to_string();
+            match overwrite_file(path, "") {
+                Ok(_) => { Ok(()) },
+                Err(e) => {
+                    self.error(&format!("Failed to open file '{}' for writing. {}",
+                        path, e.to_string()));
+                    return Err(Error::new(&e.to_string()))
+                }
+            }
+        }
+        else {
+            self.error(&format!("Failed to open file '{}' for writing. File not writeable", path));
+            return Err(Error::new(&"File is not writable!"))
+        }
+    }
+
+    /// Toggles file logging.
+    ///
+    /// Before enabling file logging, ensure that the log file path is set.
+    /// This is because this method checks if the log file is writable. If
+    /// the log file path is not set, or the file is not writable, enabling
+    /// file logging will result in an error.
+    ///
+    /// # Example
+    /// ```
+    /// # use prettylogger::Logger;
+    /// # let mut logger = Logger::default();
+    /// # let mut path = std::env::temp_dir();
+    /// # path.push("libprettylogger-tests/toggle_file_logging.log");
+    /// # let path = &path.to_str().unwrap().to_string();
+    /// # logger.set_log_file_path(path);
+    /// // Set the log file path first:
+    /// logger.set_log_file_path(path);
+    /// // Then enable file logging:
+    /// logger.toggle_file_logging(true);
+    /// ```
+    pub fn toggle_file_logging<I: Into<bool>>(&mut self, enabled: I)
+   -> Result<(), std::io::Error> {
+        if !enabled.into() {
+            self.file_logging_enabled = false;
+            Ok(())
+        }
+        else if ensure_writable_file_exists(&self.log_file_path) {
+            self.file_logging_enabled = true;
+            Ok(())
+        }
+        else {
+            self.error(&format!("Failed to open file '{}' for writing!",
+                self.log_file_path));
+            Err(std::io::Error::new(std::io::ErrorKind::PermissionDenied,
+                "File is not writable!"))
+        }
+    }
+
+    /// Sets the maximum allowed size for the log buffer.
+    ///
+    /// When the buffer exceeds its max size, it gets flushed
+    /// automatically to the log file. When set to `0`,  automatic flushing is
+    /// disabled and the buffer can only be flushed manually.
+    ///
+    /// If a log file lock is active, the log buffer will not be flushed
+    /// automatically, regardless of the size limit.
+    ///
+    /// # Example
+    /// ```
+    /// # use prettylogger::Logger;
+    /// # let mut path = std::env::temp_dir();
+    /// # path.push("libprettylogger-tests/set_max_log_buffer_size.log");
+    /// # let path = &path.to_str().unwrap().to_string();
+    /// let mut logger = Logger::default();
+    /// logger.set_log_file_path(path);
+    /// logger.toggle_file_logging(true);
+    ///
+    /// // Make `Logger` flush the log buffer every 16 logs:
+    /// logger.set_max_log_buffer_size(16 as u32);
+    ///
+    /// let mut i = 0;
+    /// loop {
+    ///     logger.info("Yay!");
+    ///     i += 1;
+    ///     if i >= 16 {
+    ///         break;
+    ///     }
+    /// }
+    /// // Here the buffer gets flushed, after sixteenth iteration.
+    /// ```
+    pub fn set_max_log_buffer_size<I: Into<u32>>(&mut self, size: I) {
+        self.file_log_buffer_max_size = size.into();
+    }
+
+    /// Log file lock can be used to prevent race conditions when there are
+    /// multiple threads accessing the log file at the same time.
+    ///
+    /// # WARNING: leaving this option on for a long period of time will
+    /// cause high memory usage!
+    ///
+    /// * `true`: When log file lock is enabled, logger won't flush into the
+    ///     log file. Instead, it will wait until the lock is disabled. You
+    ///     will not loose any logs, they will be stored in the log buffer
+    ///     even when it exceeds its size limit.
+    /// * `false`: Logger will write to the log file normally.
+    pub fn toggle_log_file_lock<I: Into<bool>>(&mut self, enabled: I) {
+        self.log_file_lock = enabled.into();
+    }
+
+    /// Sets `Logger`'s on drop log file policy.
+    ///
+    /// # Example
+    /// ```
+    /// # use prettylogger::{Logger, config::OnDropPolicy};
+    /// # let mut logger = Logger::default();
+    /// logger.set_on_drop_file_policy(OnDropPolicy::IgnoreLogFileLock);
+    /// ```
+    pub fn set_on_drop_file_policy<I: Into<OnDropPolicy>>(&mut self, policy: I) {
+        self.on_drop_policy = policy.into();
+    }
+
+    /// Toggles printing logs to `stdout`.
+    /// * `true`: Logs will be printed in your terminal's `stdout`.
+    /// * `false`: No log output in your terminal.
+    pub fn toggle_console_output<I: Into<bool>>(&mut self, enabled: I) {
+        self.console_out_enabled = enabled.into();
+    }
+
+    /// Toggles the usage of a custom log buffer.
+    /// * `true`: Logs will be stored in a buffer inside `Logger` and can
+    ///     be cloned using the `clone_log_buffer()` method. Be aware that
+    ///     this will lead to high memory usage if turned on for a log
+    ///     period of time.
+    /// * `false`: Logs will not be stored in a log buffer.
+    pub fn toggle_custom_log_buffer<I: Into<bool>>(&mut self, enabled: I) {
+        self.use_custom_log_buffer = enabled.into();
+    }
+
+    /// Clears the custom log buffer.
+    pub fn clear_log_buffer(&mut self) {
+        self.custom_log_buffer = Vec::new();
+    }
 }
 
 impl Default for Logger {
@@ -339,22 +411,8 @@ impl Default for Logger {
 
             verbosity: Verbosity::default(),
             filtering_enabled: true,
-            log_header_color_enabled: true,
 
-            debug_color: Color::Blue,
-            info_color: Color::Green,
-            warning_color: Color::Yellow,
-            error_color: Color::Red,
-            fatal_color: Color::Magenta,
-
-            debug_header: String::from("DBG"),
-            info_header: String::from("INF"),
-            warning_header: String::from("WAR"),
-            error_header: String::from("ERR"),
-            fatal_header: String::from("FATAL"),
-
-            log_format: log_format.clone(),
-            datetime_format: String::from("%Y-%m-%d %H:%M:%S"),
+            formatter: LogFormatter::default(),
 
             file_logging_enabled: false,
             log_file_path: String::new(),
@@ -368,6 +426,7 @@ impl Default for Logger {
             log_count: 1,
         }
     }
+    
 }
 
 impl Drop for Logger {

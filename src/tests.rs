@@ -10,7 +10,9 @@ use rand::{
     Rng,
 };
 use crate::{
-    colors::{color_text, Color}, config::{LogStruct, LogType, OnDropPolicy, Verbosity}, Logger
+    colors::{color_text, Color},
+    config::{LogStruct, LogType, OnDropPolicy, Verbosity},
+    format::LogFormatter, Logger,
 };
 
 const RESET: &str = "\x1b[0m";
@@ -128,43 +130,43 @@ fn test_log_headers() {
     // Test if header format setting works
     let header = "askljdfh";
 
-    let mut l = Logger::default();
+    let mut f = LogFormatter::default();
 
-    l.set_debug_header(header);
-    if l.get_log_type_header(LogType::Debug) !=
-    l.colorify(header, l.log_header_color(LogType::Debug)) {
+    f.set_debug_header(header);
+    if f.get_log_type_header(LogType::Debug) !=
+    f.colorify(header, f.log_header_color(LogType::Debug)) {
         panic!("Debug headers do not match!");
     }
-    l.set_info_header(header);
-    if l.get_log_type_header(LogType::Info) !=
-    l.colorify(header, l.log_header_color(LogType::Info)) {
+    f.set_info_header(header);
+    if f.get_log_type_header(LogType::Info) !=
+    f.colorify(header, f.log_header_color(LogType::Info)) {
         panic!("Info headers do not match!");
     }
-    l.set_warning_header(header);
-    if l.get_log_type_header(LogType::Warning) !=
-    l.colorify(header, l.log_header_color(LogType::Warning)) {
+    f.set_warning_header(header);
+    if f.get_log_type_header(LogType::Warning) !=
+    f.colorify(header, f.log_header_color(LogType::Warning)) {
         panic!("Warning headers do not match!");
     }
-    l.set_error_header(header);
-    if l.get_log_type_header(LogType::Err) !=
-    l.colorify(header, l.log_header_color(LogType::Err)) {
+    f.set_error_header(header);
+    if f.get_log_type_header(LogType::Err) !=
+    f.colorify(header, f.log_header_color(LogType::Err)) {
         panic!("Error headers do not match!");
     }
-    l.set_fatal_header(header);
-    if l.get_log_type_header(LogType::FatalError) !=
-    l.colorify(header, l.log_header_color(LogType::FatalError)) {
+    f.set_fatal_header(header);
+    if f.get_log_type_header(LogType::FatalError) !=
+    f.colorify(header, f.log_header_color(LogType::FatalError)) {
         panic!("Fatal error headers do not match!");
     }
 }
 
 #[test]
 fn test_log_colors() {
-    let l = Logger::default();
+    let f = LogFormatter::default();
     let reset = "\x1b[0m";
 
     for element in COLORS.iter() {
         let text = &rand_string(32);
-        let color_test = l.colorify(text, element.0.clone());
+        let color_test = f.colorify(text, element.0.clone());
         let color_manual
             = element.1.clone() + text + reset;
         assert_eq!(color_test, color_manual);
@@ -191,65 +193,65 @@ fn test_templates() {
 
 #[test]
 fn test_formats() {
-    let mut l = Logger::default();
+    let mut f = LogFormatter::default();
 
-    l.set_datetime_format("aaa");
-    l.set_debug_header("d");
-    l.set_info_header("i");
-    l.set_warning_header("W");
-    l.set_error_header("E");
-    l.set_fatal_header("!");
-    let _ = l.set_log_format("<l> <h>%h</h> <d>%d</d> <m>%m</m> </l>");
+    f.set_datetime_format("aaa");
+    f.set_debug_header("d");
+    f.set_info_header("i");
+    f.set_warning_header("W");
+    f.set_error_header("E");
+    f.set_fatal_header("!");
+    let _ = f.set_log_format("<l> <h>%h</h> <d>%d</d> <m>%m</m> </l>");
 
     let mut logstruct = LogStruct::debug("aaa");
     let mut comp = format!("<l> <h>{}</h> <d>aaa</d> <m>aaa</m> </l>\n",
-        l.colorify("d", l.log_header_color(LogType::Debug))
+        f.colorify("d", f.log_header_color(LogType::Debug))
     );
 
-    if l.format_log(&logstruct) != comp {
+    if f.format_log(&logstruct) != comp {
         panic!("Bad log formatting, expected \n'{}', got \n'{}'",
             comp,
-            l.format_log(&logstruct));
+            f.format_log(&logstruct));
     }
 
     logstruct.log_type = LogType::Info;
     comp = format!("<l> <h>{}</h> <d>aaa</d> <m>aaa</m> </l>\n",
-        l.colorify("i", l.log_header_color(LogType::Info))
+        f.colorify("i", f.log_header_color(LogType::Info))
     );
-    if l.format_log(&logstruct) != comp {
+    if f.format_log(&logstruct) != comp {
         panic!("Bad log formatting, expected \n'{}', got \n'{}'",
             comp,
-            l.format_log(&logstruct));
+            f.format_log(&logstruct));
     }
 
     logstruct.log_type = LogType::Warning;
     comp = format!("<l> <h>{}</h> <d>aaa</d> <m>aaa</m> </l>\n",
-        l.colorify("W", l.log_header_color(LogType::Warning))
+        f.colorify("W", f.log_header_color(LogType::Warning))
     );
-    if l.format_log(&logstruct) != comp {
+    if f.format_log(&logstruct) != comp {
         panic!("Bad log formatting, expected \n'{}', got \n'{}'",
             comp,
-            l.format_log(&logstruct));
+            f.format_log(&logstruct));
     }
 
     logstruct.log_type = LogType::Err;
     comp = format!("<l> <h>{}</h> <d>aaa</d> <m>aaa</m> </l>\n",
-        l.colorify("E", l.log_header_color(LogType::Err))
+        f.colorify("E", f.log_header_color(LogType::Err))
     );
-    if l.format_log(&logstruct) != comp {
+    if f.format_log(&logstruct) != comp {
         panic!("Bad log formatting, expected \n'{}', got \n'{}'",
             comp,
-            l.format_log(&logstruct));
+            f.format_log(&logstruct));
     }
 
     logstruct.log_type = LogType::FatalError;
     comp = format!("<l> <h>{}</h> <d>aaa</d> <m>aaa</m> </l>\n",
-        l.colorify("!", l.log_header_color(LogType::FatalError))
+        f.colorify("!", f.log_header_color(LogType::FatalError))
     );
-    if l.format_log(&logstruct) != comp {
+    if f.format_log(&logstruct) != comp {
         panic!("Bad log formatting, expected \n'{}', got \n'{}'",
             comp,
-            l.format_log(&logstruct));
+            f.format_log(&logstruct));
     }
 }
 
@@ -294,9 +296,9 @@ fn test_manual_file_log_flushing() {
     l.toggle_file_logging(true)
         .expect("Failed to enable file logging");
 
-    l.set_datetime_format("aaa");
+    l.formatter.set_datetime_format("aaa");
 
-    l.set_log_format("<l><d>%d</d><h>%h</h><m>%m</m></l>")
+    l.formatter.set_log_format("<l><d>%d</d><h>%h</h><m>%m</m></l>")
         .expect("Failed to set the log format");
 
     l.error("eror");
@@ -369,7 +371,7 @@ fn test_color_text_custom() {
 #[test]
 fn test_logger_errs() {
     let mut l = Logger::default();
-    assert!(l.set_log_format("%h %c %d").is_err());
+    assert!(l.formatter.set_log_format("%h %c %d").is_err());
     assert!(l.set_log_file_path("/asjkhdfahjksdfk").is_err());
     assert!(l.toggle_file_logging(true).is_err());
     assert!(l.toggle_file_logging(false).is_ok());

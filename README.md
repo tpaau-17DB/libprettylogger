@@ -128,14 +128,14 @@ Use this method to set the datetime format of a `Logger`:
 ```rust
 # use prettylogger::Logger;
 # let mut logger = Logger::default();
-logger.set_datetime_format("%H:%M:%S");
+logger.formatter.set_datetime_format("%H:%M:%S");
 ```
 
 You can set a custom log format like this:
 ```rust
 # use prettylogger::Logger;
 # let mut logger = Logger::default();
-logger.set_log_format("[ %h %d %m ]");
+logger.formatter.set_log_format("[ %h %d %m ]");
 ```
 **Note** that the `%m` (message) placeholder is mandatory and you will get an error
 unless you include it in your format string.
@@ -144,22 +144,22 @@ Log type headers can be customized with their corresponding methods:
 ```rust
 # use prettylogger::Logger;
 # let mut logger = Logger::default();
-logger.set_debug_header("DEBUG");
-logger.set_info_header("INFO");
-logger.set_warning_header("WARNING");
-logger.set_error_header("ERROR");
-logger.set_fatal_header("FATAL ERROR");
+logger.formatter.set_debug_header("DEBUG");
+logger.formatter.set_info_header("INFO");
+logger.formatter.set_warning_header("WARNING");
+logger.formatter.set_error_header("ERROR");
+logger.formatter.set_fatal_header("FATAL ERROR");
 ```
 
 And you can also customize their colors:
 ```rust
 # use prettylogger::{Logger, colors::Color};
 # let mut logger = Logger::default();
-logger.set_debug_color(Color::Blue);
-logger.set_info_color(Color::Green);
-logger.set_warning_color(Color::Yellow);
-logger.set_error_color(Color::Red);
-logger.set_fatal_color(Color::Magenta);
+logger.formatter.set_debug_color(Color::Blue);
+logger.formatter.set_info_color(Color::Green);
+logger.formatter.set_warning_color(Color::Yellow);
+logger.formatter.set_error_color(Color::Red);
+logger.formatter.set_fatal_color(Color::Magenta);
 ```
 
 ### Using the `LogStruct`
@@ -173,9 +173,9 @@ logger.set_fatal_color(Color::Magenta);
 Using `LogStruct`'s `debug` constructor to create a debug log, and then formatting
 with `logger.format_log(...)`:
 ```rust
-# use prettylogger::{Logger, config::LogStruct};
-# let mut logger = Logger::default();
-let log_formatted = logger.format_log(&LogStruct::debug("A debug log!"));
+# use prettylogger::{format::LogFormatter, config::LogStruct};
+# let mut formatter = LogFormatter::default();
+let log_formatted = formatter.format_log(&LogStruct::debug("A debug log!"));
 ```
 
 <a name="log-filtering"></a>

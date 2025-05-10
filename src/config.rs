@@ -69,7 +69,7 @@ pub enum LogType {
 /// # use prettylogger::{Logger, config::LogStruct};
 /// # let mut logger = Logger::default();
 /// // Get a formatted log message from a `LogStruct` instance:
-/// let log_string = logger.format_log(&LogStruct::error("Much bad!"));
+/// let log_string = logger.formatter.format_log(&LogStruct::error("Much bad!"));
 /// ```
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
 pub struct LogStruct {

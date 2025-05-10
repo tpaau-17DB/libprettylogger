@@ -26,7 +26,7 @@ impl Logger {
         match result {
             Ok(mut logger) => {
                 logger.log_count += 1;
-                logger.show_datetime = logger.log_format.contains("%d");
+                logger.show_datetime = logger.formatter.log_format.contains("%d");
 
                 return Ok(logger);
             },
