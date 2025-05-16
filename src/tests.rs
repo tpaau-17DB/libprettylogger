@@ -116,7 +116,7 @@ fn test_log_filtering() {
         }
 
         // With log filtering disabled
-        l.toggle_log_filtering(false);
+        l.disable_log_filtering();
         if l.filter_log(LogType::Debug) {
             panic!("Log should not get filtered when filtering is disabled!");
         }

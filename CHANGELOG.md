@@ -6,6 +6,7 @@ v3.0.0
 * Refactored log formatting system
 * Refactored log outputting system
 * Removed `_no_filtering` logging methods
+* Split `Logger`'s `toggle_log_filtering(...)` into two methods
 
 ## Minor changes
 * Removed automatic tilde and environment variable expansion for extended
@@ -18,7 +19,6 @@ flexibility
 * Removed bright color variants from `Color`
 * Added a new color variant that allows for specifying custom ANSII escape
 codes
-* Removed the `default` constructor for `LogStruct`
 
 
 <h1 align="center">

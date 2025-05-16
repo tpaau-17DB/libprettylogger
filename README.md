@@ -6,12 +6,19 @@
 ## Table of Contents
 * [TL;DR](#tldr)
 * [The Logger](#the-logger)
-* [Log Filtering](#log-filtering)
-* [Log Format](#log-format)
-* [File Logging](#file-logging)
-    * [Automatic Log File Flushing](#file-logging_automatic-log-buffer-flushing)
-    * [Locking the Log File](#file-logging_locking-the-log-file)
-* [Logger Templates](#logger-templates)
+    * [Log Filtering](#the-logger_log-filtering)
+    * [Logger Templates](#the-logger_logger-templates)
+* [Log Formatting](#log-formatting)
+    * [Log Formatter](#log-formatting_log-formatter)
+    * [Log Format](#log-formatting_log-format)
+    * [Log Format](#log-formatting_using-log-struct)
+* [Log Outputs](#log-outputs)
+    * [Log Output (parent)](#log-outputs_log-output)
+    * [Stderr Stream](#log-outputs_stderr-stream)
+    * [Buffer Stream](#log-outputs_buffer-stream)
+    * [File Stream](#log-outputs_file-stream)
+        * [Automatic Log Buffer Flushing](#log-outputs_file-stream_auto-log-buffer-flushing)
+        * [Locking the Log File](#log-outputs_file-stream_locking-log-file)
 
 
 <a name="tldr"></a>
@@ -52,28 +59,23 @@ let mut logger = Logger::default();
 ```
 
 <a name="the-logger_log-filtering"></a>
-## Log Filtering
+### Log Filtering
 Logs are filtered based on their importance and the `Logger`'s verbosity
 setting. `config::Verbosity` enum can be used to set the verbosity of a `Logger`.
 
-The `Verbosity` level determines which logs are filtered out:
-- `All` **→** Disables log filtering, allowing all logs to pass through.
-- `Standard` (default) **→** Filters out debug logs.
-- `Quiet` **→** Only allows errors and warnings to be displayed.
-- `ErrorsOnly` **→** Only allows errors to be shown.
-
-To modify the verbosity of the `Logger`, use:
+Setting logger verbosity:
 ```rust
 # use prettylogger::{Logger, config::Verbosity};
 # let mut logger = Logger::default();
 logger.set_verbosity(Verbosity::All);
 ```
 
-To toggle log filtering, use:
+Toggle log filtering:
 ```rust
 # use prettylogger::{Logger, config::Verbosity};
 # let mut logger = Logger::default();
-logger.toggle_log_filtering(false);
+logger.enable_log_filtering();
+logger.disable_log_filtering();
 ```
 
 <a name="the-logger_logger-templates"></a>
@@ -123,7 +125,7 @@ Loading `Logger` from a template file:
 ```rust
 # use prettylogger::Logger;
 # let mut path = std::env::temp_dir();
-# path.push("libprettylogger-tests/readme-doc1.log");
+# path.push("libprettylogger-tests/readme-logger-loading.json");
 # let path = path.to_str().unwrap().to_string();
 # Logger::default().save_template(&path);
 let mut logger = Logger::from_template(&path);
@@ -142,7 +144,7 @@ Saving `Logger` to a template file:
 ```rust
 # use prettylogger::Logger;
 # let mut path = std::env::temp_dir();
-# path.push("libprettylogger-tests/readme-doc2.log");
+# path.push("libprettylogger-tests/readme-logger-saving.json");
 # let path = &path.to_str().unwrap().to_string();
 let mut logger = Logger::default();
 logger.save_template(path);
@@ -157,7 +159,7 @@ The `LogFormatter` struct manages log formatting. It's accessible as a field
 within the `Logger`, but can also operate independently. This means that
 `LogFormatter` can be used directly without the need for a `Logger` instance.
 
-Using a `LogFormatter`
+Using a `LogFormatter`:
 ```rust
 # use prettylogger::{
 #    config::LogStruct,
@@ -198,26 +200,26 @@ Here is a log message with all it's headers marked:
 This specific effect was achieved by setting the datetime format to `%H:%M:%S`,
 log format to `[ %h %d %m ]` and the debug log type header to `DEBUG`.
 
-Setting datetime format of a `LogFormatter`
+Setting datetime format of a `LogFormatter`:
 ```rust
 # use prettylogger::format::LogFormatter;
-# let mut formatter = LogFormatter::default();
+let mut formatter = LogFormatter::default();
 formatter.set_datetime_format("%H:%M:%S");
 ```
 
-Setting a custom log format
+Setting a custom log format:
 ```rust
 # use prettylogger::format::LogFormatter;
-# let mut formatter = LogFormatter::default();
+let mut formatter = LogFormatter::default();
 formatter.set_log_format("[ %h %d %m ]");
 ```
 Note that the `%m` (message) placeholder is mandatory. You will get an error
 unless you include it in your format string.
 
-Customizing log headers
+Customizing log headers:
 ```rust
 # use prettylogger::format::LogFormatter;
-# let mut formatter = LogFormatter::default();
+let mut formatter = LogFormatter::default();
 formatter.set_debug_header("DEBUG");
 formatter.set_info_header("INFO");
 formatter.set_warning_header("WARNING");
@@ -231,7 +233,7 @@ Setting custom log header colors:
 #     format::LogFormatter,
 #     colors::Color
 # };
-# let mut formatter = LogFormatter::default();
+let mut formatter = LogFormatter::default();
 formatter.set_debug_color(Color::Blue);
 formatter.set_info_color(Color::Green);
 formatter.set_warning_color(Color::Yellow);
@@ -239,14 +241,11 @@ formatter.set_error_color(Color::Red);
 formatter.set_fatal_color(Color::Magenta);
 ```
 
+<a name="log-formatting_using-log-struct"></a>
 ### Using the `LogStruct`
-`LogStruct` is a type that represents a single log entry. You can create
-`LogStruct` instance using one of it's constructors:
-* `debug(message: &str)`
-* `info(message: &str)`
-* `warning(message: &str)`
-* `error(message: &str)`
-* `fatal_error(message: &str)`
+`LogStruct` is a type that represents a single log entry. This is the raw,
+non-formatted log message used internally be `Logger`, `LogFormatter` and
+log streams.
 
 Creating a `LogStruct` and formatting it with a `LogFormatter`:
 ```rust
@@ -276,6 +275,8 @@ halts all child streams.
 
 <a name="log-outputs_log-output"></a>
 ### `LogOutput` (parent)
+`LogOutput` is mainly used internally be the `Logger` struct for handling it's
+child output streams. Toggling it affects all of its child streams.
 
 <a name="log-outputs_stderr-stream"></a>
 ### `StderrStream`
@@ -329,7 +330,7 @@ File stream is used for storing logs in a log file. For performance reasons,
 `FileStream` utilizes an internal log buffer for storing already formatted
 log messages until they are written to the log file.
 
-#### Using `FileStream`
+Using `FileStream`:
 ```rust
 # use prettylogger::{
 #     config::LogStruct,
@@ -362,11 +363,13 @@ file_stream.flush()
 
 Note that log file path has to be set in order to enable the file stream.
 
-#### Automatic Log File Flushing
+<a name="log-outputs_file-stream_auto-log-buffer-flushing"></a>
+#### Automatic Log Buffer Flushing
 `FileStream` can automatic write to the log file when it reaches a specific
 limit. This limit can either be set to a `Some` value, meaning that the log
 buffer will be automatic flushed, or to `None` to disable automatic flushing.
 
+Example:
 ```rust
 # use prettylogger::{
 #     output::{FileStream, Toggleable},
@@ -393,6 +396,7 @@ for i in 0..128 {
 // Here the log buffer will be automatically flushed.
 ```
 
+<a name="log-outputs_file-stream_locking-log-file"></a>
 #### Locking The Log File
 The log file can be locked to prevent race conditions when there are multiple
 threads accessing it at the same time. It prevents `FileStream` from writing to

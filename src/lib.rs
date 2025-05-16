@@ -119,11 +119,14 @@ impl Logger {
         self.verbosity = verbosity.into();
     }
 
-    /// Toggles log filtering.
-    /// * **true**: logs will get filtered based on verbosity
-    /// * **false**: log filtering will be disabled globally
-    pub fn toggle_log_filtering<I: Into<bool>>(&mut self, enabled: I) {
-        self.filtering_enabled = enabled.into();
+    /// Enables log filtering.
+    pub fn enable_log_filtering(&mut self) {
+        self.filtering_enabled = true;
+    }
+
+    /// Disables log filtering.
+    pub fn disable_log_filtering(&mut self) {
+        self.filtering_enabled = false;
     }
 
     pub fn get_log_count(&self) -> &u64 {
