@@ -7,6 +7,27 @@ use crate::{
     config::LogStruct,
 };
 
+/// The `LogFormatter` is responsible for turning log structs into log messages
+/// based on its configuration.
+///
+/// Examples
+/// ```
+/// # use prettylogger::{
+/// #    config::LogStruct,
+/// #    format::LogFormatter,
+/// # };
+/// // Create a `LogFormatter` with default configuration
+/// let mut formatter = LogFormatter::default();
+///
+/// // Set a log format
+/// formatter.set_log_format("[ %h %m ]");
+///
+/// // Obtain a formatted log from a `LogStruct`
+/// let log = formatter.format_log(&LogStruct::debug("Hello from LogStruct!"));
+///
+/// // Print the formatted log message
+/// print!("{}", &log);
+/// ```
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Serialize,
     Deserialize)]
 pub struct LogFormatter {
@@ -26,17 +47,12 @@ pub struct LogFormatter {
 
     pub(crate) log_format: String,
     pub(crate) datetime_format: String,
-
-    #[serde(skip)]
-    pub(crate) show_datetime: bool,
 }
 
 impl LogFormatter {
-    pub(crate) fn get_datetime_formatted(&self,
-    datetime: &DateTime<Local>) -> String {
-        if self.show_datetime {
-            let datetime_formatted = datetime.format(&self.datetime_format);
-            return datetime_formatted.to_string()
+    pub(crate) fn get_datetime_formatted(&self, datetime: &DateTime<Local>) -> String {
+        if self.log_format.contains("%d") {
+            return datetime.format(&self.datetime_format).to_string()
         }
         return String::new();
     }
@@ -84,10 +100,10 @@ impl LogFormatter {
     }
 
     pub(crate) fn get_log_headers(&self, log: &LogStruct)
-    -> (String, String, String) {
+    -> (String, String) {
         let header = self.get_log_type_header(log.log_type);
         let datetime = self.get_datetime_formatted(&log.datetime);
-        return (header, datetime, log.message.clone())
+        return (header, datetime);
     }
 
     /// Returns a log entry from a `LogStruct` based on current `LogFormatter`
@@ -112,7 +128,7 @@ impl LogFormatter {
                         match nc {
                             'h' => result += &headers.0,
                             'd' => result += &headers.1,
-                            'm' => result += &headers.2,
+                            'm' => result += &log.message,
                             _ => result += &nc.to_string(),
                         }
                         char_iter.next();
@@ -212,7 +228,6 @@ impl LogFormatter {
     pub fn set_log_format(&mut self, format: &str) -> Result<(), Error> {
         if format.contains("%m") {
             self.log_format = String::from(format);
-            self.show_datetime = format.contains("%d");
             Ok(())
         }
         else {
@@ -241,8 +256,6 @@ impl Default for LogFormatter {
             
             log_format: log_format.clone(),
             datetime_format: String::from("%Y-%m-%d %H:%M:%S"),
-
-           show_datetime: log_format.contains("%d"),
         }
     }
 }

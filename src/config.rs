@@ -4,6 +4,7 @@
 use serde::{Serialize, Deserialize};
 use std::fmt::{Display, Formatter};
 use chrono::{Local, DateTime};
+use crate::Error;
 
 /// Used to set the verbosity of a logger.
 ///
@@ -71,7 +72,7 @@ pub enum LogType {
 /// // Get a formatted log message from a `LogStruct` instance:
 /// let log_string = logger.formatter.format_log(&LogStruct::error("Much bad!"));
 /// ```
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct LogStruct {
     /// The log message
     pub message: String,
@@ -184,14 +185,14 @@ impl std::fmt::Display for Verbosity {
 }
 
 impl TryFrom<i32> for Verbosity {
-    type Error = String;
+    type Error = Error;
     fn try_from(value: i32) -> Result<Self, Self::Error> {
         match value {
             0 => Ok(Verbosity::All),
             1 => Ok(Verbosity::Standard),
             2 => Ok(Verbosity::Quiet),
             3 => Ok(Verbosity::ErrorsOnly),
-            _ => Err(String::from("Invalid value, please provide a value in range from 0 to 3.")),
+            _ => Err(Error::new("Invalid value. Please provide a value in range from 0 to 3.")),
         }
     }
 }
@@ -220,7 +221,7 @@ impl Display for OnDropPolicy {
 
 
 impl TryFrom<i32> for LogType {
-    type Error = String;
+    type Error = Error;
     fn try_from(value: i32) -> Result<Self, Self::Error> {
         match value {
             0 => Ok(LogType::Debug),
@@ -228,7 +229,7 @@ impl TryFrom<i32> for LogType {
             2 => Ok(LogType::Warning),
             3 => Ok(LogType::Err),
             4 => Ok(LogType::FatalError),
-            _ => Err(String::from("Invalid value, please provide a value in range from 0 to 4.")),
+            _ => Err(Error::new("Invalid value. Please provide a value in range from 0 to 4.")),
         }
     }
 }

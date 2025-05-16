@@ -3,7 +3,6 @@ use std::{
     fs::{File, read_to_string},
     io::Write,
 };
-use crate::fileio::{expand_env_vars, expand_tilde};
 
 impl Logger {
     /// Creates a `Logger` instance from a JSON template as string.
@@ -26,8 +25,6 @@ impl Logger {
         match result {
             Ok(mut logger) => {
                 logger.log_count += 1;
-                logger.show_datetime = logger.formatter.log_format.contains("%d");
-
                 return Ok(logger);
             },
             Err(e) => Err(Error::new(&e.to_string()))
@@ -48,8 +45,6 @@ impl Logger {
     /// let mut logger = Logger::from_template(path);
     /// ```
     pub fn from_template(path: &str) -> Result<Logger, Error> {
-        let path = expand_env_vars(&expand_tilde(path));
-
         match read_to_string(path) {
             Ok(contents) => {
                 Logger::from_template_str(&contents)
@@ -72,8 +67,6 @@ impl Logger {
     /// logger.save_template(path);
     /// ```
     pub fn save_template(&self, path: &str) -> Result<(), Error> {
-        let path = expand_env_vars(&expand_tilde(path));
-
         let json: Result<_, serde_json::Error>
             = serde_json::to_string_pretty(self);
 
