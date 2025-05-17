@@ -7,10 +7,12 @@ use crate::{
     config::LogStruct,
 };
 
-/// The `LogFormatter` is responsible for turning log structs into log messages
+/// The `LogFormatter` is used for turning raw log structs into log messages
 /// based on its configuration.
 ///
-/// Examples
+/// # Examples
+///
+/// Using a `LogFormatter` to print a log:
 /// ```
 /// # use prettylogger::{
 /// #    config::LogStruct,
@@ -47,17 +49,43 @@ pub struct LogFormatter {
 
     pub(crate) log_format: String,
     pub(crate) datetime_format: String,
+
+    #[serde(skip)]
+    pub(crate) show_datetime: Option<bool>,
 }
 
 impl LogFormatter {
-    pub(crate) fn get_datetime_formatted(&self, datetime: &DateTime<Local>) -> String {
-        if self.log_format.contains("%d") {
-            return datetime.format(&self.datetime_format).to_string()
+    pub(crate) fn get_datetime_formatted(&mut self, datetime: &DateTime<Local>) -> String {
+        match self.show_datetime {
+            Some(b) => {
+                match b {
+                    true => {
+                        return datetime.format(&self.datetime_format)
+                            .to_string();
+                    },
+                    false => {
+                        return String::new();
+                    },
+                }
+
+            },
+            None => {
+                match self.log_format.contains("%d") {
+                    true => {
+                        self.show_datetime = Some(true);
+                        return datetime.format(&self.datetime_format)
+                            .to_string();
+                    },
+                    false => {
+                        self.show_datetime = Some(false);
+                        return String::new();
+                    },
+                }
+            }
         }
-        return String::new();
     }
 
-        pub(crate) fn log_header_color(&self, log_type: LogType) -> Color {
+    pub(crate) fn log_header_color(&self, log_type: LogType) -> Color {
         match log_type {
             LogType::Debug => self.debug_color.clone(),
             LogType::Info => self.info_color.clone(),
@@ -99,7 +127,7 @@ impl LogFormatter {
         }
     }
 
-    pub(crate) fn get_log_headers(&self, log: &LogStruct)
+    pub(crate) fn get_log_headers(&mut self, log: &LogStruct)
     -> (String, String) {
         let header = self.get_log_type_header(log.log_type);
         let datetime = self.get_datetime_formatted(&log.datetime);
@@ -109,13 +137,13 @@ impl LogFormatter {
     /// Returns a log entry from a `LogStruct` based on current `LogFormatter`
     /// configuration.
     ///
-    /// # Example:
+    /// # Examples
     /// ```
     /// # use prettylogger::{format::LogFormatter, config::LogStruct};
     /// let mut formatter = LogFormatter::default();
-    /// let log_string = formatter.format_log(&LogStruct::error("ZXJyb3IK"));
+    /// let log_string = formatter.format_log(&LogStruct::error("Error!"));
     /// ```
-    pub fn format_log(&self, log: &LogStruct) -> String {
+    pub fn format_log(&mut self, log: &LogStruct) -> String {
         let headers = self.get_log_headers(log);
         let mut result = String::new();
         let mut char_iter = self
@@ -204,6 +232,7 @@ impl LogFormatter {
     /// Sets datetime format.
     pub fn set_datetime_format(&mut self, format: &str) {
         self.datetime_format = String::from(format);
+        self.show_datetime = None;
     }
 
     /// Sets the log format.
@@ -212,16 +241,21 @@ impl LogFormatter {
     /// * `%d`: The timestamp.
     /// * `%h`: The header indicating the log type (e.g., debug, error, etc.)
     /// * `%m`: The log message (this placeholder is mandatory, you will
-    ///     get an error if you don't include this in your log format).
+    ///   get an error if you don't include it in your log format).
     ///
     /// You can have multiple placeholders of the same type in a format string.
     ///
-    /// # Example
+    /// # Examples
     /// ```
-    /// # use prettylogger::Logger;
-    /// # let mut l = Logger::default();
-    /// l.formatter.set_log_format("<l> <h>%h</h> <m>%m</m> </l>");
-    /// l.error("lorem ipsum");
+    /// # use prettylogger::{
+    /// #     format::LogFormatter,
+    /// #     config::LogStruct,
+    /// # };
+    /// let mut formatter = LogFormatter::default();
+    ///
+    /// // Do a nice XML-like format:
+    /// formatter.set_log_format("<l> <h>%h</h> <m>%m</m> </l>");
+    /// print!("{}", formatter.format_log(&LogStruct::debug("Hello, World!")));
     /// ```
     ///
     /// Returns an error when the `%m` placeholder is missing.
@@ -231,7 +265,7 @@ impl LogFormatter {
             Ok(())
         }
         else {
-            Err(Error::new(&"Expected a message placeholder!"))
+            Err(Error::new("Expected a message placeholder!"))
         }
     }
 }
@@ -256,6 +290,8 @@ impl Default for LogFormatter {
             
             log_format: log_format.clone(),
             datetime_format: String::from("%Y-%m-%d %H:%M:%S"),
+
+            show_datetime: None,
         }
     }
 }

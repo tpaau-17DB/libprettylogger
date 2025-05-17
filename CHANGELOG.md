@@ -6,7 +6,8 @@ v3.0.0
 * Refactored log formatting system
 * Refactored log outputting system
 * Removed `_no_filtering` logging methods
-* Split `Logger`'s `toggle_log_filtering(...)` into two methods
+* Split `Logger`s `toggle_log_filtering(...)` into two methods
+* Removed `print_log(...)` method from logger
 
 ## Minor changes
 * Removed automatic tilde and environment variable expansion for extended

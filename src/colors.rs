@@ -10,6 +10,35 @@ use lazy_static::lazy_static;
 
 /// Represents different colors. Used to color text or modify the appearance of
 /// log headers.
+///
+/// # Examples
+///
+/// Using a standard `Color` to customize log header appearance:
+/// ```rust
+/// # use prettylogger::{
+/// #     Logger,
+/// #     colors::Color,
+/// # };
+/// let mut logger = Logger::default();
+///
+/// logger.formatter.set_debug_color(Color::Gray);
+/// logger.formatter.set_info_color(Color::Green);
+/// logger.formatter.set_warning_color(Color::Yellow);
+/// logger.formatter.set_error_color(Color::Red);
+/// logger.formatter.set_fatal_color(Color::Magenta);
+/// ```
+///
+/// Using a custom `Color` to customize log header appearance:
+/// ```rust
+/// # use prettylogger::{
+/// #     Logger,
+/// #     colors::Color,
+/// # };
+/// let mut logger = Logger::default();
+/// 
+/// // Set a **bold white** color:
+/// logger.formatter.set_debug_color(Color::Custom(String::from("\x1b[97m")));
+/// ```
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default,
     Serialize, Deserialize)]
 #[repr(i32)]
@@ -61,11 +90,21 @@ lazy_static! {
 
 /// Colors given text based on `color` value using ANSII escape codes.
 ///
-/// # Example
+/// # Examples
+///
+/// Using a `Color` enum to color text:
 /// ```
 /// # use prettylogger::colors::{Color, color_text};
-/// let colored_text = color_text("a piece of text", Color::Red);
-/// assert_eq!(colored_text, "\x1b[31ma piece of text\x1b[0m");
+/// let colored_text = color_text("some text", Color::Red);
+/// # assert_eq!(colored_text, "\x1b[31msome text\x1b[0m");
+/// ```
+///
+/// Using a custom `Color` to color text:
+/// ```
+/// # use prettylogger::colors::{Color, color_text};
+/// let colored_text = color_text("some text",
+///     Color::Custom(String::from("\x1b[97m")));
+/// # assert_eq!(colored_text, "\x1b[97msome text\x1b[0m");
 /// ```
 pub fn color_text(text: &str, color: Color) -> String {
     match color {
@@ -123,9 +162,9 @@ impl TryFrom<i32> for Color {
     }
 }
 
-impl Into<i32> for Color{
-    fn into(self) -> i32 {
-        match self {
+impl From<Color> for i32 {
+    fn from(color: Color) -> Self {
+        match color {
             Color::None => 0,
             Color::Black => 1,
             Color::Blue => 2,

@@ -284,14 +284,14 @@ fn test_file_output_errs() {
     let path = TMP_PATH.to_owned() + "/file_output.log";
 
     let log = LogStruct::debug("example debug message");
-    let formatter = LogFormatter::default();
+    let mut formatter = LogFormatter::default();
 
     let mut fo: FileStream;
 
 
     // Disabled
     fo = FileStream::default();
-    assert!(fo.out(&log, &formatter).is_err());
+    assert!(fo.out(&log, &mut formatter).is_err());
     assert!(fo.flush().is_err());
     assert!(fo.internal_flush(true).is_err());
     assert!(fo.enable().is_err());
@@ -303,11 +303,11 @@ fn test_file_output_errs() {
     fo.unlock_file();
     assert!(fo.flush().is_err());
     assert!(fo.internal_flush(true).is_err());
-    assert!(fo.out(&log, &formatter).is_ok());
+    assert!(fo.out(&log, &mut formatter).is_ok());
     assert!(fo.flush().is_ok());
-    assert!(fo.out(&log, &formatter).is_ok());
+    assert!(fo.out(&log, &mut formatter).is_ok());
     assert!(fo.internal_flush(false).is_ok());
-    assert!(fo.out(&log, &formatter).is_ok());
+    assert!(fo.out(&log, &mut formatter).is_ok());
     assert!(fo.internal_flush(true).is_ok());
 
     // Enabled, log file locked
@@ -317,7 +317,7 @@ fn test_file_output_errs() {
     fo.lock_file();
     assert!(fo.flush().is_err());
     assert!(fo.internal_flush(true).is_err());
-    assert!(fo.out(&log, &formatter).is_ok());
+    assert!(fo.out(&log, &mut formatter).is_ok());
     assert!(fo.flush().is_err());
     assert!(fo.internal_flush(false).is_err());
     fo.set_on_drop_policy(OnDropPolicy::DiscardLogBuffer); // Respect the lock
@@ -336,7 +336,7 @@ fn test_file_logging() {
     let log = LogStruct::debug("example debug message");
     let n = rng.gen_range(REPEAT_MIN..REPEAT_MAX) as usize;
 
-    let formatter = LogFormatter::default();
+    let mut formatter = LogFormatter::default();
 
     let mut fo = FileStream::default();
     fo.set_log_file_path(&path)
@@ -346,7 +346,7 @@ fn test_file_logging() {
 
     let mut log_vec: Vec<String> = Vec::new();
     for _ in 0..n {
-        fo.out(&log, &formatter)
+        fo.out(&log, &mut formatter)
             .expect("Failed to out to a file output!");
         log_vec.push(formatter.format_log(&log));
     }
@@ -375,7 +375,7 @@ fn test_auto_file_logging() {
 
     let max_buffer_size = rng.gen_range(1..REPEAT_MAX) as usize;
 
-    let formatter = LogFormatter::default();
+    let mut formatter = LogFormatter::default();
 
     let mut fo = FileStream::default();
     fo.set_max_buffer_size(Some(max_buffer_size));
@@ -386,7 +386,7 @@ fn test_auto_file_logging() {
 
     let mut log_vec: Vec<String> = Vec::new();
     for i in 0..n {
-        fo.out(&log, &formatter)
+        fo.out(&log, &mut formatter)
             .expect("Failed to out to a file output!");
         
         if i != 0 {

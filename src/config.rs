@@ -1,14 +1,18 @@
-//! Contains various types used to customize `Logger` behavior.
+//! Contains various types used to customize `Logger`, `LogFormatter` and
+//! output streams behavior.
 
-/// Contains various types used to customize `Logger` behavior.
+/// Contains various types used to customize `Logger`, `LogFormatter` and
+/// output streams behavior.
 use serde::{Serialize, Deserialize};
 use std::fmt::{Display, Formatter};
 use chrono::{Local, DateTime};
 use crate::Error;
 
-/// Used to set the verbosity of a logger.
+/// Used to set the verbosity of a `Logger`.
 ///
-/// # Example
+/// # Examples
+///
+/// Setting `Logger` verbosity:
 /// ```
 /// # use prettylogger::{Logger, config::Verbosity};
 /// # let mut logger = Logger::default();
@@ -20,7 +24,7 @@ pub enum Verbosity {
     /// Display all logs
     All = 0,
     #[default]
-    /// Just filter the debug logs
+    /// Only filter debug logs
     Standard = 1,
     /// Only display errors and warnings
     Quiet = 2,
@@ -28,12 +32,24 @@ pub enum Verbosity {
     ErrorsOnly = 3,
 }
 
-/// Defines the policy for handling log file flushing when a `Logger` is
-/// dropped.
+/// Defines the policy for handling log file flushing when a `FileStream`
+/// instance is dropped.
+///
+/// # Examples
+/// 
+/// Setting on drop policy:
+/// ```rust
+/// # use prettylogger::{
+/// #     output::FileStream,
+/// #     config::OnDropPolicy,
+/// # };
+/// let mut file_stream = FileStream::default();
+/// file_stream.set_on_drop_policy(OnDropPolicy::IgnoreLogFileLock);
+/// ```
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default,
     Serialize, Deserialize)]
 pub enum OnDropPolicy {
-    /// Ignore log file lock and write to file anyway. This may cause race
+    /// Ignore log file lock and write to the file anyway. This may cause race
     /// conditions
     IgnoreLogFileLock,
     #[default]
@@ -44,6 +60,21 @@ pub enum OnDropPolicy {
 
 
 /// Represents different types of log messages.
+///
+/// Used internally by `LogStruct`, `LogFormatter`, `Logger` and various log
+/// streams.
+///
+/// # Examples
+///
+/// Setting log type of a `LogStruct`:
+/// ```rust
+/// # use prettylogger::config::{
+/// #     LogStruct,
+/// #     LogType,
+/// # };
+/// let mut log = LogStruct::debug("This is going to be an error message");
+/// log.log_type = LogType::Err;
+/// ```
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default,
     Serialize, Deserialize)]
 pub enum LogType {
@@ -62,15 +93,17 @@ pub enum LogType {
 
 /// Represents a single log entry.
 ///
-/// Can be used to create custom log messages or storing logs in memory for
-/// later use.
+/// Used internally by `LogFormatter`, `Logger` and various log streams.
 ///
-/// # Example:
+/// # Examples
+///
+/// Print a formatted log message:
 /// ```
 /// # use prettylogger::{Logger, config::LogStruct};
 /// # let mut logger = Logger::default();
 /// // Get a formatted log message from a `LogStruct` instance:
-/// let log_string = logger.formatter.format_log(&LogStruct::error("Much bad!"));
+/// let log = logger.formatter.format_log(&LogStruct::error("Much bad!"));
+/// print!("{}", &log);
 /// ```
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct LogStruct {
@@ -85,7 +118,9 @@ pub struct LogStruct {
 impl LogStruct {
     /// Returns a `LogStruct` with **debug** preset applied.
     ///
-    /// # Example
+    /// # Examples
+    ///
+    /// Creating a debug log:
     /// ```
     /// # use prettylogger::config::LogStruct;
     /// let debug_log = LogStruct::debug("This is a debug log!");
@@ -100,10 +135,12 @@ impl LogStruct {
 
     /// Returns a `LogStruct` with **info** preset applied.
     ///
-    /// # Example
+    /// # Examples
+    ///
+    /// Creating an informative log:
     /// ```
     /// # use prettylogger::config::LogStruct;
-    /// let debug_log = LogStruct::info("This is an info log!");
+    /// let info_log = LogStruct::info("This is an info log!");
     /// ```
     pub fn info(message: &str) -> LogStruct {
         LogStruct {
@@ -115,10 +152,12 @@ impl LogStruct {
 
     /// Returns a `LogStruct` with **warning** preset applied.
     ///
-    /// # Example
+    /// # Examples
+    ///
+    /// Creating a warning log:
     /// ```
     /// # use prettylogger::config::LogStruct;
-    /// let debug_log = LogStruct::warning("This is a warning!");
+    /// let warning_log = LogStruct::warning("This is a warning!");
     /// ```
     pub fn warning(message: &str) -> LogStruct {
         LogStruct {
@@ -130,10 +169,12 @@ impl LogStruct {
 
     /// Returns a `LogStruct` with **error** preset applied.
     ///
-    /// # Example
+    /// # Examples
+    ///
+    /// Creating an error log:
     /// ```
     /// # use prettylogger::config::LogStruct;
-    /// let debug_log = LogStruct::error("This is an error!");
+    /// let error_log = LogStruct::error("This is an error!");
     /// ```
     pub fn error(message: &str) -> LogStruct {
         LogStruct {
@@ -145,10 +186,12 @@ impl LogStruct {
 
     /// Returns a `LogStruct` with **fatal error** preset applied.
     ///
-    /// # Example
+    /// # Examples
+    ///
+    /// Creating a fatal error log:
     /// ```
     /// # use prettylogger::config::LogStruct;
-    /// let debug_log = LogStruct::fatal_error("This is a fatal error!");
+    /// let fatal_log = LogStruct::fatal_error("This is a fatal error!");
     /// ```
     pub fn fatal_error(message: &str) -> LogStruct {
         LogStruct {

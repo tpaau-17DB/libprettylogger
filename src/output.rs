@@ -16,12 +16,14 @@ pub trait Toggleable {
     /// Disables the object.
     fn disable(&mut self);
     /// Returns whether the object is enabled.
-    fn enabled(&self) -> &bool;
+    fn is_enabled(&self) -> &bool;
 }
 
 /// A structured representation for logging output with multiple streams.
 ///
-/// Examples
+/// # Examples
+///
+/// Formatting and printing log to `stderr`:
 /// ```
 /// # use prettylogger::{
 ///     output::LogOutput,
@@ -29,23 +31,21 @@ pub trait Toggleable {
 ///     config::LogStruct,
 /// };
 /// // Required by `LogOutput` for parsing logs
-/// let formatter = LogFormatter::default();
+/// let mut formatter = LogFormatter::default();
 ///
 /// // By default, only output to `stderr` is enabled
 /// let mut log_output = LogOutput::default();
 ///
 /// // Print "Hello, World!" in a neat log format
-/// log_output.out(&LogStruct::debug("Hello, World!"), &formatter);
+/// log_output.out(&LogStruct::debug("Hello, World!"), &mut formatter);
 /// ```
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Serialize,
     Deserialize)]
 pub struct LogOutput {
     /// The `stderr` output stream.
     pub stderr_output: StderrStream,
-
     /// File output stream for writing logs to a file.
     pub file_output: FileStream,
-
     /// Buffer stream for storing log messages.
     pub buffer_output: BufferStream,
 
@@ -54,7 +54,9 @@ pub struct LogOutput {
 
 /// The `stderr` output stream.
 ///
-/// Examples
+/// # Examples
+///
+/// Printing a log to `stderr`:
 /// ```
 /// # use prettylogger::{
 ///     output::StderrStream,
@@ -62,13 +64,13 @@ pub struct LogOutput {
 ///     config::LogStruct,
 /// };
 /// // Required by `StderrStream` for parsing logs
-/// let formatter = LogFormatter::default();
+/// let mut formatter = LogFormatter::default();
 ///
 /// // Enabled by default
 /// let mut stderr_output = StderrStream::default();
 ///
 /// // Print "Hello, World!" in a neat log format
-/// stderr_output.out(&LogStruct::debug("Hello, World!"), &formatter);
+/// stderr_output.out(&LogStruct::debug("Hello, World!"), &mut formatter);
 /// ```
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Serialize,
     Deserialize)]
@@ -78,7 +80,9 @@ pub struct StderrStream {
 
 /// The file output stream.
 ///
-/// Examples
+/// # Examples
+///
+/// Writing a log to a file:
 /// ```
 /// # use prettylogger::{
 ///     output::{FileStream, Toggleable},
@@ -89,7 +93,7 @@ pub struct StderrStream {
 /// # path.push("libprettylogger-tests/fo-struct-doc.log");
 /// # let path = &path.to_str().unwrap().to_string();
 /// // Required by `FileStream` for parsing logs:
-/// let formatter = LogFormatter::default();
+/// let mut formatter = LogFormatter::default();
 /// 
 /// let mut file_output = FileStream::default();
 ///
@@ -102,7 +106,7 @@ pub struct StderrStream {
 ///     expect("Failed to enable the output!");
 ///
 /// // Write to the log file buffer
-/// file_output.out(&LogStruct::debug("Hello from file!"), &formatter)
+/// file_output.out(&LogStruct::debug("Hello from file!"), &mut formatter)
 ///     .expect("Failed to write to the buffer!");
 ///
 /// // Flush the logs from the buffer to the log file
@@ -123,9 +127,9 @@ pub struct FileStream {
     log_buffer: Vec<String>,
 }
 
-/// The file output stream.
+/// The buffer stream.
 ///
-/// Examples
+/// # Examples
 /// ```
 /// # use prettylogger::{
 ///     output::{BufferStream, Toggleable},
@@ -202,7 +206,7 @@ impl Toggleable for LogOutput {
     }
 
     /// Returns whether the output is enabled.
-    fn enabled(&self) -> &bool {
+    fn is_enabled(&self) -> &bool {
         return &self.enabled;
     }
 }
@@ -219,24 +223,7 @@ impl Toggleable for StderrStream {
     }
 
     /// Returns whether the output is enabled.
-    fn enabled(&self) -> &bool {
-        return &self.enabled;
-    }
-}
-
-impl Toggleable for FileStream {
-    /// Enables the output.
-    fn enable(&mut self) {
-        self.enabled = true;
-    }
-
-    /// Disables the output.
-    fn disable(&mut self) {
-        self.enabled = false;
-    }
-
-    /// Returns whether the output is enabled.
-    fn enabled(&self) -> &bool {
+    fn is_enabled(&self) -> &bool {
         return &self.enabled;
     }
 }
@@ -253,25 +240,25 @@ impl Toggleable for BufferStream {
     }
 
     /// Returns whether the output is enabled.
-    fn enabled(&self) -> &bool {
+    fn is_enabled(&self) -> &bool {
         return &self.enabled;
     }
 }
 
 impl LogOutput {
     /// Passes the log and its formatter to child streams for processing.
-    pub fn out(&mut self, log: &LogStruct, formatter: &LogFormatter) {
+    pub fn out(&mut self, log: &LogStruct, formatter: &mut LogFormatter) {
         if self.enabled {
             self.stderr_output.out(log, formatter);
             let _ = self.file_output.out(log, formatter);
-            let _ = self.buffer_output.out(log);
+            self.buffer_output.out(log);
         }
     }
 }
 
 impl StderrStream {
     /// Formats the given log using a formatter and prints it to `stderr`.
-    pub fn out(&self, log: &LogStruct, formatter: &LogFormatter) {
+    pub fn out(self, log: &LogStruct, formatter: &mut LogFormatter) {
         if self.enabled {
             eprint!("{}", formatter.format_log(log));
         }
@@ -312,7 +299,7 @@ impl FileStream {
             return Err(Error::new("Output not enabled!"));
         }
 
-        if self.log_buffer.len() == 0 {
+        if self.log_buffer.is_empty() {
             return Err(Error::new("Log buffer is empty!"));
         }
 
@@ -346,7 +333,7 @@ impl FileStream {
 
     /// Sets the log file path.
     /// 
-    /// Examples
+    /// # Examples
     /// ```
     /// # use prettylogger::{
     ///     output::{FileStream, Toggleable},
@@ -368,7 +355,7 @@ impl FileStream {
     ///     expect("Failed to enable the output!");
     /// ```
     pub fn set_log_file_path(&mut self, path: &str) -> Result<(), Error> {
-        match OpenOptions::new().write(true).create(true).open(path) {
+        match OpenOptions::new().write(true).create(true).truncate(true).open(path) {
             Ok(_) => {
                 self.log_file_path = path.to_string();
                 match overwrite_file(path, "") {
@@ -382,11 +369,121 @@ impl FileStream {
         }
     }
 
+    /// Formats the given log using a formatter and stores it in a buffer until
+    /// it is flushed.
+    ///
+    /// # Examples
+    /// ```
+    /// # use prettylogger::{
+    ///     output::{FileStream, Toggleable},
+    ///     format::LogFormatter,
+    ///     config::LogStruct,
+    /// };
+    /// # let mut path = std::env::temp_dir();
+    /// # path.push("libprettylogger-tests/fo-out-doc.log");
+    /// # let path = &path.to_str().unwrap().to_string();
+    /// # let mut formatter = LogFormatter::default();
+    /// # let mut file_output = FileStream::default();
+    ///
+    /// // Set the log file path **first**
+    /// file_output.set_log_file_path(&path)
+    ///     .expect("Failed to set the log file path!");
+    ///
+    /// // And then enable the output
+    /// file_output.enable().
+    ///     expect("Failed to enable the output!");
+    ///
+    /// for i in 0..100 {
+    ///     // Write to the buffer
+    ///     file_output.out(&LogStruct::debug(&format!("Log number {}", i)),
+    ///         &mut formatter).expect("Failed to write to the buffer!");
+    /// }
+    ///
+    /// // Write the log buffer contents to log file
+    /// file_output.flush();
+    /// ```
+    pub fn out(&mut self, log: &LogStruct, formatter: &mut LogFormatter)
+        -> Result<(), Error> {
+        return self.push_to_buffer(formatter.format_log(log));
+    }
+
+    /// Flush the contents of the log buffer to the log file.
+    ///
+    /// # Examples
+    /// ```
+    /// # use prettylogger::{
+    ///     output::{FileStream, Toggleable},
+    ///     format::LogFormatter,
+    ///     config::LogStruct,
+    /// };
+    /// # let mut path = std::env::temp_dir();
+    /// # path.push("libprettylogger-tests/fo-out-doc.log");
+    /// # let path = &path.to_str().unwrap().to_string();
+    /// # let mut formatter = LogFormatter::default();
+    /// # let mut file_output = FileStream::default();
+    ///
+    /// // Set the log file path **first**
+    /// file_output.set_log_file_path(&path)
+    ///     .expect("Failed to set the log file path!");
+    ///
+    /// // And then enable the output
+    /// file_output.enable().
+    ///     expect("Failed to enable the output!");
+    ///
+    /// file_output.out(&LogStruct::debug(&format!("Hello from file!")),
+    ///     &mut formatter).expect("Failed to write to the buffer!");
+    ///
+    /// // Write the log buffer contents to log file
+    /// file_output.flush();
+    /// ```
+    pub fn flush(&mut self) -> Result<(), Error> {
+        return self.internal_flush(false);
+    }
+
+    /// Sets the maximum size of the log buffer.
+    ///
+    /// When the buffer exceeds this size, its contents are written to a file
+    /// and then cleared.
+    ///
+    /// # Examples
+    /// ```
+    /// # use prettylogger::{
+    ///     output::{FileStream, Toggleable},
+    ///     format::LogFormatter,
+    ///     config::LogStruct,
+    /// };
+    /// # let mut path = std::env::temp_dir();
+    /// # path.push("libprettylogger-tests/fo-set_max_buffer_size-doc.log");
+    /// # let path = &path.to_str().unwrap().to_string();
+    /// # let mut formatter = LogFormatter::default();
+    /// # let mut file_output = FileStream::default();
+    /// // Set the log file path **first**
+    /// file_output.set_log_file_path(&path)
+    ///     .expect("Failed to set the log file path!");
+    ///
+    /// // And then enable the output
+    /// file_output.enable().
+    ///     expect("Failed to enable the output!");
+    ///
+    /// // Define the maximum buffer size
+    /// let max_size = 128;
+    /// file_output.set_max_buffer_size(Some(128));
+    /// for i in 0..max_size {
+    ///     // Write to the buffer
+    ///     file_output.out(&LogStruct::debug(&format!("Log number {}", i)),
+    ///         &mut formatter).expect("Failed to write to the buffer!");
+    /// }
+    /// // Here the buffer will be flushed to the log file.
+    /// ```
+    pub fn set_max_buffer_size<I: Into<Option<usize>>>(&mut self, size: I) {
+        self.max_buffer_size = size.into();
+    }
+
     /// Enables the output.
     ///
     /// Returns an error if the log file is not writable.
     ///
-    /// Examples
+    /// # Examples
     /// ```
     /// # use prettylogger::{
     ///     output::{FileStream, Toggleable},
@@ -412,7 +509,7 @@ impl FileStream {
             return Ok(());
         }
         else {
-            match OpenOptions::new().write(true).create(true)
+            match OpenOptions::new().write(true).create(true).truncate(true)
             .open(&self.log_file_path) {
                 Ok(_) => {
                     self.enabled = true;
@@ -426,116 +523,6 @@ impl FileStream {
     /// Disables the output.
     pub fn disable(&mut self) {
         self.enabled = false;
-    }
-
-    /// Formats the given log using a formatter and stores it in a buffer until
-    /// it is flushed.
-    ///
-    /// Examples
-    /// ```
-    /// # use prettylogger::{
-    ///     output::{FileStream, Toggleable},
-    ///     format::LogFormatter,
-    ///     config::LogStruct,
-    /// };
-    /// # let mut path = std::env::temp_dir();
-    /// # path.push("libprettylogger-tests/fo-out-doc.log");
-    /// # let path = &path.to_str().unwrap().to_string();
-    /// # let formatter = LogFormatter::default();
-    /// # let mut file_output = FileStream::default();
-    ///
-    /// // Set the log file path **first**
-    /// file_output.set_log_file_path(&path)
-    ///     .expect("Failed to set the log file path!");
-    ///
-    /// // And then enable the output
-    /// file_output.enable().
-    ///     expect("Failed to enable the output!");
-    ///
-    /// for i in 0..100 {
-    ///     // Write to the buffer
-    ///     file_output.out(&LogStruct::debug(&format!("Log number {}", i)),
-    ///         &formatter).expect("Failed to write to the buffer!");
-    /// }
-    ///
-    /// // Write the log buffer contents to log file
-    /// file_output.flush();
-    /// ```
-    pub fn out(&mut self, log: &LogStruct, formatter: &LogFormatter)
-        -> Result<(), Error> {
-        return self.push_to_buffer(formatter.format_log(log));
-    }
-
-    /// Flush the contents of the log buffer to the log file.
-    ///
-    /// Examples
-    /// ```
-    /// # use prettylogger::{
-    ///     output::{FileStream, Toggleable},
-    ///     format::LogFormatter,
-    ///     config::LogStruct,
-    /// };
-    /// # let mut path = std::env::temp_dir();
-    /// # path.push("libprettylogger-tests/fo-out-doc.log");
-    /// # let path = &path.to_str().unwrap().to_string();
-    /// # let formatter = LogFormatter::default();
-    /// # let mut file_output = FileStream::default();
-    ///
-    /// // Set the log file path **first**
-    /// file_output.set_log_file_path(&path)
-    ///     .expect("Failed to set the log file path!");
-    ///
-    /// // And then enable the output
-    /// file_output.enable().
-    ///     expect("Failed to enable the output!");
-    ///
-    /// file_output.out(&LogStruct::debug(&format!("Hello from file!")),
-    ///     &formatter).expect("Failed to write to the buffer!");
-    ///
-    /// // Write the log buffer contents to log file
-    /// file_output.flush();
-    /// ```
-    pub fn flush(&mut self) -> Result<(), Error> {
-        return self.internal_flush(false);
-    }
-
-    /// Sets the maximum size of the log buffer.
-    ///
-    /// When the buffer exceeds this size, its contents are written to a file
-    /// and then cleared.
-    ///
-    /// Examples
-    /// ```
-    /// # use prettylogger::{
-    ///     output::{FileStream, Toggleable},
-    ///     format::LogFormatter,
-    ///     config::LogStruct,
-    /// };
-    /// # let mut path = std::env::temp_dir();
-    /// # path.push("libprettylogger-tests/fo-set_max_buffer_size-doc.log");
-    /// # let path = &path.to_str().unwrap().to_string();
-    /// # let formatter = LogFormatter::default();
-    /// # let mut file_output = FileStream::default();
-    /// // Set the log file path **first**
-    /// file_output.set_log_file_path(&path)
-    ///     .expect("Failed to set the log file path!");
-    ///
-    /// // And then enable the output
-    /// file_output.enable().
-    ///     expect("Failed to enable the output!");
-    ///
-    /// // Define the maximum buffer size
-    /// let max_size = 128;
-    /// file_output.set_max_buffer_size(Some(128));
-    /// for i in 0..max_size {
-    ///     // Write to the buffer
-    ///     file_output.out(&LogStruct::debug(&format!("Log number {}", i)),
-    ///         &formatter).expect("Failed to write to the buffer!");
-    /// }
-    /// // Here the buffer will be flushed to the log file.
-    /// ```
-    pub fn set_max_buffer_size<I: Into<Option<usize>>>(&mut self, size: I) {
-        self.max_buffer_size = size.into();
     }
 
     /// Sets the policy for handling the log buffer lock when the stream is
@@ -552,6 +539,11 @@ impl FileStream {
     /// Unlocks the log file, allowing the stream to write to it.
     pub fn unlock_file(&mut self) {
         self.lock_enabled = false;
+    }
+
+    /// Returns whether the output is enabled.
+    pub fn is_enabled(&self) -> &bool {
+        return &self.enabled;
     }
 }
 

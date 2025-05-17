@@ -11,7 +11,7 @@
 * [Log Formatting](#log-formatting)
     * [Log Formatter](#log-formatting_log-formatter)
     * [Log Format](#log-formatting_log-format)
-    * [Log Format](#log-formatting_using-log-struct)
+    * [Using the `LogStruct`](#log-formatting_using-log-struct)
 * [Log Outputs](#log-outputs)
     * [Log Output (parent)](#log-outputs_log-output)
     * [Stderr Stream](#log-outputs_stderr-stream)
@@ -23,12 +23,12 @@
 
 <a name="tldr"></a>
 ## TL;DR
-### Installing the library:
+### Installing the library
 ```bash
 cargo add libprettylogger
 ```
 
-### Quick start:
+### Quick start
 ```rust
 use prettylogger::Logger;
 use prettylogger::config::Verbosity;
@@ -60,8 +60,7 @@ let mut logger = Logger::default();
 
 <a name="the-logger_log-filtering"></a>
 ### Log Filtering
-Logs are filtered based on their importance and the `Logger`'s verbosity
-setting. `config::Verbosity` enum can be used to set the verbosity of a `Logger`.
+Logs are filtered based on their importance and the verbosity setting.
 
 Setting logger verbosity:
 ```rust
@@ -70,7 +69,7 @@ Setting logger verbosity:
 logger.set_verbosity(Verbosity::All);
 ```
 
-Toggle log filtering:
+Toggling log filtering:
 ```rust
 # use prettylogger::{Logger, config::Verbosity};
 # let mut logger = Logger::default();
@@ -81,10 +80,10 @@ logger.disable_log_filtering();
 <a name="the-logger_logger-templates"></a>
 ### Logger Templates
 A **Logger template** is just a JSON file that defines the configuration of a
-`Logger` struct. This can be used to easily manage and store logger
+`Logger` struct. Logger templates be used to easily manage and store logger
 configurations in files.
 
-Here’s an example of what a `Logger` struct looks like in JSON format:
+Here’s an example of what a `Logger` struct looks like in JSON:
 ```json
 {
   "formatter": {
@@ -154,7 +153,7 @@ logger.save_template(path);
 ## Log Formatting
 
 <a name="log-formatting_log-formatter"></a>
-### LogFormatter
+### `LogFormatter`
 The `LogFormatter` struct manages log formatting. It's accessible as a field
 within the `Logger`, but can also operate independently. This means that
 `LogFormatter` can be used directly without the need for a `Logger` instance.
@@ -275,13 +274,13 @@ halts all child streams.
 
 <a name="log-outputs_log-output"></a>
 ### `LogOutput` (parent)
-`LogOutput` is mainly used internally be the `Logger` struct for handling it's
-child output streams. Toggling it affects all of its child streams.
+`LogOutput` is used internally be the `Logger` struct for handling it's child
+output streams. Toggling it affects all of its child streams.
 
 <a name="log-outputs_stderr-stream"></a>
 ### `StderrStream`
-This is the simplest of the log outputs. It simply formats the given log using
-the formatter and prints it to `stderr`.
+This is the simplest of the log outputs. It formats the given log using a
+formatter and prints it to `stderr`.
 
 Using `StderrStream`:
 ```rust
@@ -295,7 +294,8 @@ let stderr_stream = StderrStream::default();
 
 <a name="log-outputs_buffer-stream"></a>
 ### `BufferStream`
-When enabled, `BufferStream` stores logs in an internal buffer in raw format.
+When enabled, `BufferStream` raw logs in an internal buffer, meaning it does
+not require a formatter.
 
 Using `BufferStream`:
 ```rust
@@ -340,7 +340,7 @@ Using `FileStream`:
 # let mut path = std::env::temp_dir();
 # path.push("libprettylogger-tests/readme-file-stream-doc1.log");
 # let path = &path.to_str().unwrap().to_string();
-let formatter = LogFormatter::default();
+let mut formatter = LogFormatter::default();
 
 let mut file_stream = FileStream::default();
 
@@ -353,7 +353,7 @@ file_stream.enable()
     .expect("Failed enabling the file stream!");
 
 // Write to the log buffer
-file_stream.out(&LogStruct::debug("Hello from a file!"), &formatter)
+file_stream.out(&LogStruct::debug("Hello from a file!"), &mut formatter)
     .expect("Failed outing to the file stream!");
 
 // Write the contents of the log buffer to the log file
@@ -379,7 +379,7 @@ Example:
 # let mut path = std::env::temp_dir();
 # path.push("libprettylogger-tests/readme-file-stream-doc2.log");
 # let path = &path.to_str().unwrap().to_string();
-let formatter = LogFormatter::default();
+let mut formatter = LogFormatter::default();
 
 let mut file_stream = FileStream::default();
 file_stream.set_log_file_path(&path)
@@ -390,7 +390,7 @@ file_stream.enable()
 file_stream.set_max_buffer_size(Some(128));
 
 for i in 0..128 {
-    file_stream.out(&LogStruct::debug("Hello!"), &formatter)
+    file_stream.out(&LogStruct::debug("Hello!"), &mut formatter)
         .expect("Failed to out to the log buffer!");
 }
 // Here the log buffer will be automatically flushed.

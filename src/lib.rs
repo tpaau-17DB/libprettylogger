@@ -18,18 +18,104 @@ use serde::{Serialize, Deserialize};
 use config::{Verbosity, LogStruct, LogType};
 use output::LogOutput;
 
-/// The `Logger` struct used to print logs.
+/// Logger capable of filtering logs, formatting them and distributing them to
+/// various streams.
 ///
-/// # Example
+/// The `Logger` struct is modular and itself only filters the logs, relying
+/// on `LogFormatter` and `LogOutput` for log formatting and outputting. 
+///
+/// Additionally, `Logger` includes a template system with built-in methods and
+/// constructors for easy JSON serialization and deserialization.
+///
+/// # Examples
+///
+/// Creating a `Logger` struct and printing out some logs:
 /// ```
 /// # use prettylogger::Logger;
-/// // Create a `Logger` with default configuration
+/// // Create a `Logger` instance with default configuration
 /// let mut logger = Logger::default();
+///
+/// // Print log messages
 /// logger.debug("debug message");
 /// logger.info("info message");
 /// logger.warning("warning message");
 /// logger.error("error message");
 /// logger.fatal("fatal error message");
+/// ```
+///
+/// Configuring `Logger`s formatter:
+/// ```
+/// # use prettylogger::{
+/// #     Logger,
+/// #     colors::Color,
+/// # };
+/// // Create a `Logger` instance with default configuration
+/// let mut logger = Logger::default();
+///
+/// // Set a simple log format
+/// logger.formatter.set_log_format("[ %d ] %m");
+///
+/// // Change debug log header color
+/// logger.formatter.set_debug_color(Color::Red);
+///
+/// // Set a fatal log header
+/// logger.formatter.set_fatal_header("--FATAL--");
+///
+/// // Configure datetime format
+/// logger.formatter.set_datetime_format("%H:%M");
+/// ```
+///
+/// Enabling log buffering:
+/// ```
+/// # use prettylogger::{
+/// #     Logger,
+/// #     output::Toggleable,
+/// # };
+/// // Create a `Logger` instance with default configuration
+/// let mut logger = Logger::default();
+///
+/// // Enable log buffering
+/// logger.output.buffer_output.enable();
+///
+/// for i in 0..128 {
+///     logger.error(&format!("Error number {}", i));
+/// }
+///
+/// // Get a reference to the log buffer
+/// let buffer = logger.output.buffer_output.get_log_buffer();
+/// ```
+/// 
+/// Enabling file logging:
+/// ```
+/// # use prettylogger::{
+/// #     Logger,
+/// #     output::Toggleable,
+/// #     format::LogFormatter,
+/// #     config::LogStruct,
+/// # };
+/// # let mut path = std::env::temp_dir();
+/// # path.push("libprettylogger-tests/readme-logger-saving.json");
+/// # let path = &path.to_str().unwrap().to_string();
+/// // Create a `Logger` instance with default configuration
+/// let mut logger = Logger::default();
+///
+/// // Required by `FileStream` for parsing logs:
+/// let mut formatter = LogFormatter::default();
+///
+/// // Set the log file path **first**
+/// logger.output.file_output.set_log_file_path(&path)
+///     .expect("Failed to set the log file path!");
+///
+/// // Enable the output
+/// logger.output.file_output.enable().
+///     expect("Failed to enable the output!");
+///
+/// // Write to the log file buffer
+/// logger.output.file_output.out(&LogStruct::debug("Hello from file!"),
+///     &mut formatter).expect("Failed to write to the buffer!");
+///
+/// // Flush the logs from the buffer to the log file
+/// logger.output.file_output.flush();
 /// ```
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Serialize,
     Deserialize)]
@@ -39,33 +125,15 @@ pub struct Logger {
 
     pub(crate) verbosity: Verbosity,
     pub(crate) filtering_enabled: bool,
-
-    #[serde(skip)]
-    pub (crate) log_count: u64,
 }
 
 impl Logger {
-    /// Returns true if log is to be filtered and false otherwise.
+    /// Returns true if log should be filtered and false otherwise.
     pub(crate) fn filter_log(&self, log_type: LogType) -> bool {
         if self.filtering_enabled {
             return (log_type as i32) < self.verbosity as i32;
         }
         return false;
-    }
-
-    /// Used to print a log from a `LogStruct`.
-    ///
-    /// Bypasses log filtering.
-    ///
-    /// # Example:
-    /// ```
-    /// # use prettylogger::{Logger, config::LogStruct};
-    /// # let mut logger = Logger::default();
-    /// logger.print_log(&LogStruct::error("&%$#@!"));
-    /// ```
-    pub fn print_log(&mut self, log: &LogStruct) {
-        self.log_count += 1;
-        self.output.out(log, &self.formatter);
     }
 
     /// Prints a **debug message**.
@@ -74,7 +142,7 @@ impl Logger {
             return;
         }
         let log = LogStruct::debug(message);
-        self.output.out(&log, &self.formatter);
+        self.output.out(&log, &mut self.formatter);
     }
 
     /// Prints an **informational message**.
@@ -83,7 +151,7 @@ impl Logger {
             return;
         }
         let log = LogStruct::info(message);
-        self.output.out(&log, &self.formatter);
+        self.output.out(&log, &mut self.formatter);
     }
 
     /// Prints a **warning**.
@@ -92,24 +160,26 @@ impl Logger {
             return;
         }
         let log = LogStruct::warning(message);
-        self.output.out(&log, &self.formatter);
+        self.output.out(&log, &mut self.formatter);
     }
 
     /// Prints an **error**.
     pub fn error(&mut self, message: &str) {
         let log = LogStruct::error(message);
-        self.output.out(&log, &self.formatter);
+        self.output.out(&log, &mut self.formatter);
     }
 
     /// Prints a **fatal error**.
     pub fn fatal(&mut self, message: &str) {
         let log = LogStruct::fatal_error(message);
-        self.output.out(&log, &self.formatter);
+        self.output.out(&log, &mut self.formatter);
     }
 
     /// Sets logger `verbosity`.
     ///
-    /// # Example
+    /// # Examples
+    ///
+    /// Setting `Logger` verbosity:
     /// ```
     /// # use prettylogger::{Logger, config::Verbosity};
     /// # let mut logger = Logger::default();
@@ -128,10 +198,6 @@ impl Logger {
     pub fn disable_log_filtering(&mut self) {
         self.filtering_enabled = false;
     }
-
-    pub fn get_log_count(&self) -> &u64 {
-        return &self.log_count;
-    }
 }
 
 impl Default for Logger {
@@ -143,7 +209,6 @@ impl Default for Logger {
             filtering_enabled: true,
 
             formatter: LogFormatter::default(),
-            log_count: 1,
         }
     }
     
@@ -155,7 +220,7 @@ impl Drop for Logger {
     }
 }
 
-/// Represents an error thrown by the Logger.
+/// Represents errors thrown by the `prettylogger` crate.
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Error {
     pub message: String,
