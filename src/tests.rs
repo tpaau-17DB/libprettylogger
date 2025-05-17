@@ -388,7 +388,7 @@ fn test_auto_file_logging() {
     for i in 0..n {
         fo.out(&log, &mut formatter)
             .expect("Failed to out to a file output!");
-        
+
         if i != 0 {
             if i % max_buffer_size == 0 {
                 match read_to_string(path.clone()) {

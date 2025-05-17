@@ -35,8 +35,8 @@ use lazy_static::lazy_static;
 /// #     colors::Color,
 /// # };
 /// let mut logger = Logger::default();
-/// 
-/// // Set a **bold white** color:
+///
+/// // Set a **bold white** color
 /// logger.formatter.set_debug_color(Color::Custom(String::from("\x1b[97m")));
 /// ```
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default,

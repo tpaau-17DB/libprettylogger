@@ -79,11 +79,10 @@ logger.disable_log_filtering();
 
 <a name="the-logger_logger-templates"></a>
 ### Logger Templates
-A **Logger template** is just a JSON file that defines the configuration of a
-`Logger` struct. Logger templates be used to easily manage and store logger
-configurations in files.
+A **Logger template** is serialized `Logger` struct in JSON format. Logger
+templates can be used to easily manage and store logger configurations in files.
 
-Here’s an example of what a `Logger` struct looks like in JSON:
+Here’s an example of what a serialized `Logger` struct looks like in JSON:
 ```json
 {
   "formatter": {
@@ -133,10 +132,14 @@ let mut logger = Logger::from_template(&path);
 Deserializing `Logger` from a JSON string:
 ```rust
 # use prettylogger::Logger;
+// Obtain a deserializable string
 let raw_json = serde_json::to_string(&Logger::default())
     .expect("Failed to serialize logger!");
-assert_eq!(Logger::default(), Logger::from_template_str(&raw_json)
-   .expect("Failed to deserialize logger!"));
+
+// Deserialize `Logger` for a string
+let logger = Logger::from_template_str(&raw_json)
+    .expect("Failed to deserialize logger!");
+# assert_eq!(Logger::default(), logger);
 ```
 
 Saving `Logger` to a template file:
@@ -155,8 +158,7 @@ logger.save_template(path);
 <a name="log-formatting_log-formatter"></a>
 ### `LogFormatter`
 The `LogFormatter` struct manages log formatting. It's accessible as a field
-within the `Logger`, but can also operate independently. This means that
-`LogFormatter` can be used directly without the need for a `Logger` instance.
+within `Logger`, but can also operate independently.
 
 Using a `LogFormatter`:
 ```rust
@@ -179,13 +181,13 @@ print!("{}", &log);
 
 <a name="log-formatting_log-format"></a>
 ### Log Format
-A basic log consists of several headers:
+A log consists of several headers:
 * **Log Type** **→** The type of the log (debug, info, warning etc.)
 * **Timestamp** **→** Contains the date and time the log was created
 * **Message** **→** The actual log message
 
 Those headers can then be formatted using a log format string, similarly to how
-you would format a datetime string.
+you would format datetime with a datetime format string.
 
 Here is a log message with all it's headers marked:
 ```markup
@@ -252,7 +254,7 @@ Creating a `LogStruct` and formatting it with a `LogFormatter`:
 #     format::LogFormatter,
 #     config::LogStruct
 # };
-# let mut formatter = LogFormatter::default();
+let mut formatter = LogFormatter::default();
 // Create a `LogStruct`
 let raw_log = LogStruct::debug("Hello from a struct!");
 
@@ -282,20 +284,27 @@ output streams. Toggling it affects all of its child streams.
 This is the simplest of the log outputs. It formats the given log using a
 formatter and prints it to `stderr`.
 
-Using `StderrStream`:
+Printing a log to `stderr`:
 ```rust
 # use prettylogger::{
 #     output::StderrStream,
 #     format::LogFormatter,
 #     config::LogStruct,
 # };
-let stderr_stream = StderrStream::default();
+// Required by `StderrStream` for parsing logs
+let mut formatter = LogFormatter::default();
+
+// Enabled by default
+let mut stderr_output = StderrStream::default();
+
+// Print "Hello, World!" in a neat format
+stderr_output.out(&LogStruct::debug("Hello, World!"), &mut formatter);
 ```
 
 <a name="log-outputs_buffer-stream"></a>
 ### `BufferStream`
-When enabled, `BufferStream` raw logs in an internal buffer, meaning it does
-not require a formatter.
+When enabled, `BufferStream` stores raw logs in an internal buffer. This means
+that it doesn't need a formatter.
 
 Using `BufferStream`:
 ```rust
@@ -326,9 +335,9 @@ buffer_stream.clear();
 
 <a name="log-outputs_file-stream"></a>
 ### `FileStream`
-File stream is used for storing logs in a log file. For performance reasons,
-`FileStream` utilizes an internal log buffer for storing already formatted
-log messages until they are written to the log file.
+File stream is used for storing logs in a log file. `FileStream` utilizes an
+internal log buffer for storing already formatted log messages until they are
+written to the log file.
 
 Using `FileStream`:
 ```rust
@@ -361,13 +370,13 @@ file_stream.flush()
     .expect("Failed flushing the file stream!");
 ```
 
-Note that log file path has to be set in order to enable the file stream.
+Note that log file path has to be set in order to enable and use the file
+stream.
 
 <a name="log-outputs_file-stream_auto-log-buffer-flushing"></a>
 #### Automatic Log Buffer Flushing
-`FileStream` can automatic write to the log file when it reaches a specific
-limit. This limit can either be set to a `Some` value, meaning that the log
-buffer will be automatic flushed, or to `None` to disable automatic flushing.
+`FileStream` can automatically write to the log file when its log buffer
+exceeds a specific limit. Setting this limit to `None` will disable the feature.
 
 Example:
 ```rust
@@ -399,8 +408,8 @@ for i in 0..128 {
 <a name="log-outputs_file-stream_locking-log-file"></a>
 #### Locking The Log File
 The log file can be locked to prevent race conditions when there are multiple
-threads accessing it at the same time. It prevents `FileStream` from writing to
-the log file until the lock has been released. The lock is only ignored when the
+threads accessing it at the same time. It stops `FileStream` from writing to
+it until the lock has been released. The lock is only ignored when
 `FileStream` is being dropped and the `OnDropPolicy` is set to
 `IgnoreLogFileLock` (off by default).
 

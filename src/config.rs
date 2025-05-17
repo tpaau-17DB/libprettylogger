@@ -36,7 +36,7 @@ pub enum Verbosity {
 /// instance is dropped.
 ///
 /// # Examples
-/// 
+///
 /// Setting on drop policy:
 /// ```rust
 /// # use prettylogger::{
@@ -101,7 +101,7 @@ pub enum LogType {
 /// ```
 /// # use prettylogger::{Logger, config::LogStruct};
 /// # let mut logger = Logger::default();
-/// // Get a formatted log message from a `LogStruct` instance:
+/// // Get a formatted log message from a `LogStruct` instance
 /// let log = logger.formatter.format_log(&LogStruct::error("Much bad!"));
 /// print!("{}", &log);
 /// ```

@@ -253,7 +253,7 @@ impl LogFormatter {
     /// # };
     /// let mut formatter = LogFormatter::default();
     ///
-    /// // Do a nice XML-like format:
+    /// // Do a nice XML-like format
     /// formatter.set_log_format("<l> <h>%h</h> <m>%m</m> </l>");
     /// print!("{}", formatter.format_log(&LogStruct::debug("Hello, World!")));
     /// ```
@@ -287,7 +287,7 @@ impl Default for LogFormatter {
             warning_header: String::from("WAR"),
             error_header: String::from("ERR"),
             fatal_header: String::from("FATAL"),
-            
+
             log_format: log_format.clone(),
             datetime_format: String::from("%Y-%m-%d %H:%M:%S"),
 

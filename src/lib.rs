@@ -22,7 +22,7 @@ use output::LogOutput;
 /// various streams.
 ///
 /// The `Logger` struct is modular and itself only filters the logs, relying
-/// on `LogFormatter` and `LogOutput` for log formatting and outputting. 
+/// on `LogFormatter` and `LogOutput` for log formatting and outputting.
 ///
 /// Additionally, `Logger` includes a template system with built-in methods and
 /// constructors for easy JSON serialization and deserialization.
@@ -84,7 +84,7 @@ use output::LogOutput;
 /// // Get a reference to the log buffer
 /// let buffer = logger.output.buffer_output.get_log_buffer();
 /// ```
-/// 
+///
 /// Enabling file logging:
 /// ```
 /// # use prettylogger::{
@@ -99,7 +99,7 @@ use output::LogOutput;
 /// // Create a `Logger` instance with default configuration
 /// let mut logger = Logger::default();
 ///
-/// // Required by `FileStream` for parsing logs:
+/// // Required by `FileStream` for parsing logs
 /// let mut formatter = LogFormatter::default();
 ///
 /// // Set the log file path **first**
@@ -211,7 +211,6 @@ impl Default for Logger {
             formatter: LogFormatter::default(),
         }
     }
-    
 }
 
 impl Drop for Logger {

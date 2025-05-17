@@ -26,10 +26,10 @@ pub trait Toggleable {
 /// Formatting and printing log to `stderr`:
 /// ```
 /// # use prettylogger::{
-///     output::LogOutput,
-///     format::LogFormatter,
-///     config::LogStruct,
-/// };
+/// #     output::LogOutput,
+/// #     format::LogFormatter,
+/// #     config::LogStruct,
+/// # };
 /// // Required by `LogOutput` for parsing logs
 /// let mut formatter = LogFormatter::default();
 ///
@@ -59,10 +59,10 @@ pub struct LogOutput {
 /// Printing a log to `stderr`:
 /// ```
 /// # use prettylogger::{
-///     output::StderrStream,
-///     format::LogFormatter,
-///     config::LogStruct,
-/// };
+/// #     output::StderrStream,
+/// #     format::LogFormatter,
+/// #     config::LogStruct,
+/// # };
 /// // Required by `StderrStream` for parsing logs
 /// let mut formatter = LogFormatter::default();
 ///
@@ -85,16 +85,16 @@ pub struct StderrStream {
 /// Writing a log to a file:
 /// ```
 /// # use prettylogger::{
-///     output::{FileStream, Toggleable},
-///     format::LogFormatter,
-///     config::LogStruct,
-/// };
+/// #     output::{FileStream, Toggleable},
+/// #     format::LogFormatter,
+/// #     config::LogStruct,
+/// # };
 /// # let mut path = std::env::temp_dir();
 /// # path.push("libprettylogger-tests/fo-struct-doc.log");
 /// # let path = &path.to_str().unwrap().to_string();
-/// // Required by `FileStream` for parsing logs:
+/// // Required by `FileStream` for parsing logs
 /// let mut formatter = LogFormatter::default();
-/// 
+///
 /// let mut file_output = FileStream::default();
 ///
 /// // Set the log file path **first**
@@ -132,9 +132,9 @@ pub struct FileStream {
 /// # Examples
 /// ```
 /// # use prettylogger::{
-///     output::{BufferStream, Toggleable},
-///     config::LogStruct,
-/// };
+/// #     output::{BufferStream, Toggleable},
+/// #     config::LogStruct,
+/// # };
 /// let mut buffer_output = BufferStream::default();
 ///
 /// // `BufferStream` is disabled by default
@@ -332,14 +332,14 @@ impl FileStream {
     }
 
     /// Sets the log file path.
-    /// 
+    ///
     /// # Examples
     /// ```
     /// # use prettylogger::{
-    ///     output::{FileStream, Toggleable},
-    ///     format::LogFormatter,
-    ///     config::LogStruct,
-    /// };
+    /// #     output::{FileStream, Toggleable},
+    /// #     format::LogFormatter,
+    /// #     config::LogStruct,
+    /// # };
     /// # let mut path = std::env::temp_dir();
     /// # path.push("libprettylogger-tests/fo-set_log_file_path-doc.log");
     /// # let path = &path.to_str().unwrap().to_string();
@@ -375,10 +375,10 @@ impl FileStream {
     /// # Examples
     /// ```
     /// # use prettylogger::{
-    ///     output::{FileStream, Toggleable},
-    ///     format::LogFormatter,
-    ///     config::LogStruct,
-    /// };
+    /// #     output::{FileStream, Toggleable},
+    /// #     format::LogFormatter,
+    /// #     config::LogStruct,
+    /// # };
     /// # let mut path = std::env::temp_dir();
     /// # path.push("libprettylogger-tests/fo-out-doc.log");
     /// # let path = &path.to_str().unwrap().to_string();
@@ -412,10 +412,10 @@ impl FileStream {
     /// # Examples
     /// ```
     /// # use prettylogger::{
-    ///     output::{FileStream, Toggleable},
-    ///     format::LogFormatter,
-    ///     config::LogStruct,
-    /// };
+    /// #     output::{FileStream, Toggleable},
+    /// #     format::LogFormatter,
+    /// #     config::LogStruct,
+    /// # };
     /// # let mut path = std::env::temp_dir();
     /// # path.push("libprettylogger-tests/fo-out-doc.log");
     /// # let path = &path.to_str().unwrap().to_string();
@@ -448,9 +448,9 @@ impl FileStream {
     /// # Examples
     /// ```
     /// # use prettylogger::{
-    ///     output::{FileStream, Toggleable},
-    ///     format::LogFormatter,
-    ///     config::LogStruct,
+    /// #     output::{FileStream, Toggleable},
+    /// #     format::LogFormatter,
+    /// #     config::LogStruct,
     /// };
     /// # let mut path = std::env::temp_dir();
     /// # path.push("libprettylogger-tests/fo-set_max_buffer_size-doc.log");
@@ -486,10 +486,10 @@ impl FileStream {
     /// # Examples
     /// ```
     /// # use prettylogger::{
-    ///     output::{FileStream, Toggleable},
-    ///     format::LogFormatter,
-    ///     config::LogStruct,
-    /// };
+    /// #     output::{FileStream, Toggleable},
+    /// #     format::LogFormatter,
+    /// #     config::LogStruct,
+    /// # };
     /// # let mut path = std::env::temp_dir();
     /// # path.push("libprettylogger-tests/fo-enable-doc.log");
     /// # let path = &path.to_str().unwrap().to_string();
@@ -554,7 +554,7 @@ impl BufferStream {
             self.log_buffer.push(log.clone());
         }
     }
-    
+
     /// Returns a reference to the internal log struct buffer.
     pub fn get_log_buffer(&self) -> &Vec<LogStruct> {
         return &self.log_buffer;
