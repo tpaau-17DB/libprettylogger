@@ -1,7 +1,7 @@
-//! Contains various types used to customize `Logger`, `LogFormatter` and
+//! Implements various types used to customize `Logger`, `LogFormatter` and
 //! output streams behavior.
 
-/// Contains various types used to customize `Logger`, `LogFormatter` and
+/// Implements various types used to customize `Logger`, `LogFormatter` and
 /// output streams behavior.
 use serde::{Serialize, Deserialize};
 use std::fmt::{Display, Formatter};

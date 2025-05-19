@@ -1,3 +1,8 @@
+//! Provides log stream implementations for directing log output to various
+//! destinations, such as files, standard error, or a log buffer.
+
+/// Provides log stream implementations for directing log output to various
+/// destinations, such as files, standard error, or a log buffer.
 use std::fs::OpenOptions;
 
 use serde::{Serialize, Deserialize};
@@ -19,11 +24,12 @@ pub trait Toggleable {
     fn is_enabled(&self) -> &bool;
 }
 
-/// A structured representation for logging output with multiple streams.
+/// Wraps `StderrStream`, `BufferStream` and `FileStream` in one object used
+/// internally by `Logger`.
 ///
 /// # Examples
 ///
-/// Formatting and printing log to `stderr`:
+/// Printing log to `stderr`:
 /// ```
 /// # use prettylogger::{
 /// #     output::LogOutput,

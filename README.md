@@ -2,6 +2,7 @@
 
 ![CI Ubuntu](https://img.shields.io/github/actions/workflow/status/tpaau-17DB/libprettylogger/Ubuntu.yml?branch=main)
 ![Crates.io](https://img.shields.io/crates/v/libprettylogger.svg)
+![MSRV](https://img.shields.io/badge/MSRV-1.79.0-blue)
 
 ## Table of Contents
 * [TL;DR](#tldr)
@@ -33,13 +34,13 @@ cargo add libprettylogger
 use prettylogger::Logger;
 use prettylogger::config::Verbosity;
 
-// A `Logger` struct with default configuration
+// Create a `Logger` struct with default configuration
 let mut logger = Logger::default();
 
 // Don't suppress any log messages
 logger.set_verbosity(Verbosity::All);
 
-// Print logs
+// Print some logs
 logger.debug("A debug message!");
 logger.info("Info message!");
 logger.warning("A warning!");

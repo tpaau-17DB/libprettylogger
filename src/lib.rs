@@ -1,6 +1,6 @@
-//! Highly customizable logger library.
+//! Fancy logger library.
 
-/// Highly customizable logger library.
+/// Fancy logger library.
 #[cfg(test)]
 mod tests;
 
@@ -18,8 +18,8 @@ use serde::{Serialize, Deserialize};
 use config::{Verbosity, LogStruct, LogType};
 use output::LogOutput;
 
-/// Logger capable of filtering logs, formatting them and distributing them to
-/// various streams.
+/// `Logger` capable of filtering logs, formatting them and distributing them
+/// to various streams.
 ///
 /// The `Logger` struct is modular and itself only filters the logs, relying
 /// on `LogFormatter` and `LogOutput` for log formatting and outputting.

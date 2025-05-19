@@ -1,3 +1,8 @@
+//! Contains `LogFormatter`, used to create formatted log messages from raw log
+//! structs.
+
+/// Contains `LogFormatter`, used to create formatted log messages from raw log
+/// structs.
 use serde::{Serialize, Deserialize};
 use chrono::{Local, DateTime};
 
