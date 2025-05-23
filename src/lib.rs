@@ -43,7 +43,7 @@ use output::LogOutput;
 /// logger.fatal("fatal error message");
 /// ```
 ///
-/// Configuring `Logger`s formatter:
+/// Configuring the formatter of a `Logger`:
 /// ```
 /// # use prettylogger::{
 /// #     Logger,
@@ -175,7 +175,7 @@ impl Logger {
         self.output.out(&log, &mut self.formatter);
     }
 
-    /// Sets logger `verbosity`.
+    /// Sets `Logger` verbosity.
     ///
     /// # Examples
     ///

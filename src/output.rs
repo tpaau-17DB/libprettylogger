@@ -20,7 +20,7 @@ pub trait Toggleable {
     fn enable(&mut self);
     /// Disables the object.
     fn disable(&mut self);
-    /// Returns whether the object is enabled.
+    /// Returns if the object is enabled.
     fn is_enabled(&self) -> &bool;
 }
 
@@ -108,8 +108,8 @@ pub struct StderrStream {
 ///     .expect("Failed to set the log file path!");
 ///
 /// // Enable the output
-/// file_output.enable().
-///     expect("Failed to enable the output!");
+/// file_output.enable()
+///     .expect("Failed to enable the output!");
 ///
 /// // Write to the log file buffer
 /// file_output.out(&LogStruct::debug("Hello from file!"), &mut formatter)
@@ -211,7 +211,7 @@ impl Toggleable for LogOutput {
         self.enabled = false;
     }
 
-    /// Returns whether the output is enabled.
+    /// Returns if the output is enabled.
     fn is_enabled(&self) -> &bool {
         return &self.enabled;
     }
@@ -228,7 +228,7 @@ impl Toggleable for StderrStream {
         self.enabled = false;
     }
 
-    /// Returns whether the output is enabled.
+    /// Returns if the output is enabled.
     fn is_enabled(&self) -> &bool {
         return &self.enabled;
     }
@@ -245,7 +245,7 @@ impl Toggleable for BufferStream {
         self.enabled = false;
     }
 
-    /// Returns whether the output is enabled.
+    /// Returns if the output is enabled.
     fn is_enabled(&self) -> &bool {
         return &self.enabled;
     }
@@ -357,8 +357,8 @@ impl FileStream {
     ///     .expect("Failed to set the log file path!");
     ///
     /// // And then enable the output
-    /// file_output.enable().
-    ///     expect("Failed to enable the output!");
+    /// file_output.enable()
+    ///     .expect("Failed to enable the output!");
     /// ```
     pub fn set_log_file_path(&mut self, path: &str) -> Result<(), Error> {
         match OpenOptions::new().write(true).create(true).truncate(true).open(path) {
@@ -396,16 +396,16 @@ impl FileStream {
     ///     .expect("Failed to set the log file path!");
     ///
     /// // And then enable the output
-    /// file_output.enable().
-    ///     expect("Failed to enable the output!");
+    /// file_output.enable()
+    ///     .expect("Failed to enable the output!");
     ///
+    /// // Write to the buffer 100 times
     /// for i in 0..100 {
-    ///     // Write to the buffer
     ///     file_output.out(&LogStruct::debug(&format!("Log number {}", i)),
     ///         &mut formatter).expect("Failed to write to the buffer!");
     /// }
     ///
-    /// // Write the log buffer contents to log file
+    /// // Write the log buffer contents to the log file
     /// file_output.flush();
     /// ```
     pub fn out(&mut self, log: &LogStruct, formatter: &mut LogFormatter)
@@ -433,13 +433,13 @@ impl FileStream {
     ///     .expect("Failed to set the log file path!");
     ///
     /// // And then enable the output
-    /// file_output.enable().
-    ///     expect("Failed to enable the output!");
+    /// file_output.enable()
+    ///     .expect("Failed to enable the output!");
     ///
     /// file_output.out(&LogStruct::debug(&format!("Hello from file!")),
     ///     &mut formatter).expect("Failed to write to the buffer!");
     ///
-    /// // Write the log buffer contents to log file
+    /// // Write the log buffer contents to the log file
     /// file_output.flush();
     /// ```
     pub fn flush(&mut self) -> Result<(), Error> {
@@ -457,7 +457,7 @@ impl FileStream {
     /// #     output::{FileStream, Toggleable},
     /// #     format::LogFormatter,
     /// #     config::LogStruct,
-    /// };
+    /// # };
     /// # let mut path = std::env::temp_dir();
     /// # path.push("libprettylogger-tests/fo-set_max_buffer_size-doc.log");
     /// # let path = &path.to_str().unwrap().to_string();
@@ -468,12 +468,12 @@ impl FileStream {
     ///     .expect("Failed to set the log file path!");
     ///
     /// // And then enable the output
-    /// file_output.enable().
-    ///     expect("Failed to enable the output!");
+    /// file_output.enable()
+    ///     .expect("Failed to enable the output!");
     ///
     /// // Define the maximum buffer size
     /// let max_size = 128;
-    /// file_output.set_max_buffer_size(Some(128));
+    /// file_output.set_max_buffer_size(Some(max_size));
     /// for i in 0..max_size {
     ///     // Write to the buffer
     ///     file_output.out(&LogStruct::debug(&format!("Log number {}", i)),
@@ -507,8 +507,8 @@ impl FileStream {
     ///     .expect("Failed to set the log file path!");
     ///
     /// // And then enable the output
-    /// file_output.enable().
-    ///     expect("Failed to enable the output!");
+    /// file_output.enable()
+    ///     .expect("Failed to enable the output!");
     /// ```
     pub fn enable(&mut self) -> Result<(), Error> {
         if self.enabled {
@@ -547,7 +547,7 @@ impl FileStream {
         self.lock_enabled = false;
     }
 
-    /// Returns whether the output is enabled.
+    /// Returns if the output is enabled.
     pub fn is_enabled(&self) -> &bool {
         return &self.enabled;
     }

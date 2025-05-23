@@ -137,7 +137,7 @@ Deserializing `Logger` from a JSON string:
 let raw_json = serde_json::to_string(&Logger::default())
     .expect("Failed to serialize logger!");
 
-// Deserialize `Logger` for a string
+// Deserialize `Logger` from a string
 let logger = Logger::from_template_str(&raw_json)
     .expect("Failed to deserialize logger!");
 # assert_eq!(Logger::default(), logger);
@@ -187,10 +187,10 @@ A log consists of several headers:
 * **Timestamp** **→** Contains the date and time the log was created
 * **Message** **→** The actual log message
 
-Those headers can then be formatted using a log format string, similarly to how
+These headers can then be formatted using a log format string, similarly to how
 you would format datetime with a datetime format string.
 
-Here is a log message with all it's headers marked:
+Here is a log message with all its headers marked:
 ```markup
 [ DEBUG 21:52:37 An example debug message ]
   ^^^^^ ^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -246,7 +246,7 @@ formatter.set_fatal_color(Color::Magenta);
 <a name="log-formatting_using-log-struct"></a>
 ### Using the `LogStruct`
 `LogStruct` is a type that represents a single log entry. This is the raw,
-non-formatted log message used internally be `Logger`, `LogFormatter` and
+non-formatted log message used internally by `Logger`, `LogFormatter` and
 log streams.
 
 Creating a `LogStruct` and formatting it with a `LogFormatter`:
@@ -256,6 +256,7 @@ Creating a `LogStruct` and formatting it with a `LogFormatter`:
 #     config::LogStruct
 # };
 let mut formatter = LogFormatter::default();
+
 // Create a `LogStruct`
 let raw_log = LogStruct::debug("Hello from a struct!");
 
@@ -277,12 +278,12 @@ halts all child streams.
 
 <a name="log-outputs_log-output"></a>
 ### `LogOutput` (parent)
-`LogOutput` is used internally be the `Logger` struct for handling it's child
+`LogOutput` is used internally by the `Logger` struct for handling it's child
 output streams. Toggling it affects all of its child streams.
 
 <a name="log-outputs_stderr-stream"></a>
 ### `StderrStream`
-This is the simplest of the log outputs. It formats the given log using a
+This is the simplest of the log outputs. It formats the given log using the
 formatter and prints it to `stderr`.
 
 Printing a log to `stderr`:
@@ -336,7 +337,7 @@ buffer_stream.clear();
 
 <a name="log-outputs_file-stream"></a>
 ### `FileStream`
-File stream is used for storing logs in a log file. `FileStream` utilizes an
+`FileStream` is used for storing logs in a log file. `FileStream` utilizes an
 internal log buffer for storing already formatted log messages until they are
 written to the log file.
 
@@ -371,13 +372,14 @@ file_stream.flush()
     .expect("Failed flushing the file stream!");
 ```
 
-Note that log file path has to be set in order to enable and use the file
+Note that the log file path has to be set in order to enable and use the file
 stream.
 
 <a name="log-outputs_file-stream_auto-log-buffer-flushing"></a>
 #### Automatic Log Buffer Flushing
 `FileStream` can automatically write to the log file when its log buffer
-exceeds a specific limit. Setting this limit to `None` will disable the feature.
+exceeds a specific limit. Setting this limit to `None` will disable this
+feature.
 
 Example:
 ```rust
@@ -391,19 +393,22 @@ Example:
 # let path = &path.to_str().unwrap().to_string();
 let mut formatter = LogFormatter::default();
 
+// Configure the `FileStream`
 let mut file_stream = FileStream::default();
 file_stream.set_log_file_path(&path)
     .expect("Failed setting log file path!");
 file_stream.enable()
     .expect("Failed enabling the file stream!");
 
+// Set the log file buffer limit to 128
 file_stream.set_max_buffer_size(Some(128));
 
+// Write to the log buffer 128 times
 for i in 0..128 {
     file_stream.out(&LogStruct::debug("Hello!"), &mut formatter)
         .expect("Failed to out to the log buffer!");
 }
-// Here the log buffer will be automatically flushed.
+// Here the log buffer will automatically be flushed.
 ```
 
 <a name="log-outputs_file-stream_locking-log-file"></a>

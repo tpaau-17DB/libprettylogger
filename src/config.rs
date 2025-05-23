@@ -1,8 +1,8 @@
 //! Implements various types used to customize `Logger`, `LogFormatter` and
-//! output streams behavior.
+//! output streams' behavior.
 
 /// Implements various types used to customize `Logger`, `LogFormatter` and
-/// output streams behavior.
+/// output streams' behavior.
 use serde::{Serialize, Deserialize};
 use std::fmt::{Display, Formatter};
 use chrono::{Local, DateTime};
@@ -49,8 +49,8 @@ pub enum Verbosity {
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default,
     Serialize, Deserialize)]
 pub enum OnDropPolicy {
-    /// Ignore log file lock and write to the file anyway. This may cause race
-    /// conditions
+    /// Ignore the log file lock and write to the file anyway. This may cause
+    /// race conditions
     IgnoreLogFileLock,
     #[default]
     /// Respect the log file lock and don't write to the log file. This may
