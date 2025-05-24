@@ -12,8 +12,8 @@ use crate::{
     config::LogStruct,
 };
 
-/// The `LogFormatter` is used for turning raw log structs into log messages
-/// based on its configuration.
+/// Formats raw log structs into log messages by applying both the log
+/// message's configuration and the formatter's own settings.
 ///
 /// # Examples
 ///
@@ -242,11 +242,13 @@ impl LogFormatter {
 
     /// Sets the log format.
     ///
+    /// Returns an error when the `%m` placeholder is missing.
+    ///
     /// There are several placeholders in a log format string:
-    /// * `%d`: The timestamp.
-    /// * `%h`: The header indicating the log type (e.g., debug, error, etc.)
     /// * `%m`: The log message (this placeholder is mandatory, you will
     ///   get an error if you don't include it in your log format).
+    /// * `%h`: The header indicating the log type (e.g., debug, error, etc.)
+    /// * `%d`: The timestamp.
     ///
     /// You can have multiple placeholders of the same type in a format string.
     ///
@@ -262,8 +264,6 @@ impl LogFormatter {
     /// formatter.set_log_format("<l> <h>%h</h> <m>%m</m> </l>");
     /// print!("{}", formatter.format_log(&LogStruct::debug("Hello, World!")));
     /// ```
-    ///
-    /// Returns an error when the `%m` placeholder is missing.
     pub fn set_log_format(&mut self, format: &str) -> Result<(), Error> {
         if format.contains("%m") {
             self.log_format = String::from(format);

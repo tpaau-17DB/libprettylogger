@@ -77,6 +77,7 @@ use output::LogOutput;
 /// // Enable log buffering
 /// logger.output.buffer_output.enable();
 ///
+/// // Write to the log buffer 128 times
 /// for i in 0..128 {
 ///     logger.error(&format!("Error number {}", i));
 /// }

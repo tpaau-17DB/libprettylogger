@@ -20,7 +20,7 @@ pub trait Toggleable {
     fn enable(&mut self);
     /// Disables the object.
     fn disable(&mut self);
-    /// Returns if the object is enabled.
+    /// Returns whether the object is enabled.
     fn is_enabled(&self) -> &bool;
 }
 
@@ -58,7 +58,7 @@ pub struct LogOutput {
     enabled: bool,
 }
 
-/// The `stderr` output stream.
+/// Used for printing logs to `stderr`.
 ///
 /// # Examples
 ///
@@ -84,7 +84,7 @@ pub struct StderrStream {
     enabled: bool,
 }
 
-/// The file output stream.
+/// Used to output logs to a file.
 ///
 /// # Examples
 ///
@@ -133,7 +133,7 @@ pub struct FileStream {
     log_buffer: Vec<String>,
 }
 
-/// The buffer stream.
+/// Used for storing logs in a buffer for later use.
 ///
 /// # Examples
 /// ```
@@ -211,7 +211,7 @@ impl Toggleable for LogOutput {
         self.enabled = false;
     }
 
-    /// Returns if the output is enabled.
+    /// Returns whether the output is enabled.
     fn is_enabled(&self) -> &bool {
         return &self.enabled;
     }
@@ -228,7 +228,7 @@ impl Toggleable for StderrStream {
         self.enabled = false;
     }
 
-    /// Returns if the output is enabled.
+    /// Returns whether the output is enabled.
     fn is_enabled(&self) -> &bool {
         return &self.enabled;
     }
@@ -245,7 +245,7 @@ impl Toggleable for BufferStream {
         self.enabled = false;
     }
 
-    /// Returns if the output is enabled.
+    /// Returns whether the output is enabled.
     fn is_enabled(&self) -> &bool {
         return &self.enabled;
     }
@@ -547,7 +547,7 @@ impl FileStream {
         self.lock_enabled = false;
     }
 
-    /// Returns if the output is enabled.
+    /// Returns whether the output is enabled.
     pub fn is_enabled(&self) -> &bool {
         return &self.enabled;
     }
