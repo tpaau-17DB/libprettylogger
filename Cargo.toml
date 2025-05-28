@@ -1,6 +1,6 @@
 [package]
 name = "libprettylogger"
-version = "3.0.0"
+version = "3.0.1"
 authors = ["tpaau-17DB"]
 edition = "2021"
 description = "Fancy logger library."
