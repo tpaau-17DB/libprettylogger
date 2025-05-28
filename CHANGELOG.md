@@ -2,7 +2,7 @@
 v3.0.1
 </h1>
 
-# Patches
+## Patches
 * Split `LogFormatter::toggle_log_color(...)` into two methods.
 * Fixed some minor issues with docstrings.
 
