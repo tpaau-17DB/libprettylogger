@@ -177,11 +177,14 @@ impl LogFormatter {
         return result
     }
 
-    /// Toggles colored log headers.
-    /// * `true`: Log headers will have colors
-    /// * `false`: No colors :(
-    pub fn toggle_log_header_color<I: Into<bool>>(&mut self, enabled: I) {
-        self.log_header_color_enabled = enabled.into();
+    /// Enables the log headers to have colors.
+    pub fn enable_log_header_color(&mut self) {
+        self.log_header_color_enabled = true;
+    }
+
+    /// Disables colored log headers.
+    pub fn disable_log_header_color(&mut self) {
+        self.log_header_color_enabled = false;
     }
 
     /// Sets **debug log header** color.
