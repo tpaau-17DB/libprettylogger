@@ -21,11 +21,11 @@ use lazy_static::lazy_static;
 /// # };
 /// let mut logger = Logger::default();
 ///
-/// logger.formatter.set_debug_color(Color::Gray);
-/// logger.formatter.set_info_color(Color::Green);
-/// logger.formatter.set_warning_color(Color::Yellow);
-/// logger.formatter.set_error_color(Color::Red);
-/// logger.formatter.set_fatal_color(Color::Magenta);
+/// logger.formatter.lock().unwrap().set_debug_color(Color::Gray);
+/// logger.formatter.lock().unwrap().set_info_color(Color::Green);
+/// logger.formatter.lock().unwrap().set_warning_color(Color::Yellow);
+/// logger.formatter.lock().unwrap().set_error_color(Color::Red);
+/// logger.formatter.lock().unwrap().set_fatal_color(Color::Magenta);
 /// ```
 ///
 /// Using a custom `Color` to customize log header appearance:
@@ -37,7 +37,8 @@ use lazy_static::lazy_static;
 /// let mut logger = Logger::default();
 ///
 /// // Set a **bold white** color
-/// logger.formatter.set_debug_color(Color::Custom(String::from("\x1b[97m")));
+/// logger.formatter.lock().unwrap()
+///     .set_debug_color(Color::Custom(String::from("\x1b[97m")));
 /// ```
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default,
     Serialize, Deserialize)]

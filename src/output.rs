@@ -3,7 +3,7 @@
 
 /// Provides log stream implementations for directing log output to various
 /// destinations, such as files, standard error, or a log buffer.
-use std::fs::OpenOptions;
+use std::{fs::OpenOptions, sync::Mutex};
 
 use serde::{Serialize, Deserialize};
 
@@ -45,15 +45,14 @@ pub trait Toggleable {
 /// // Print "Hello, World!" in a neat log format
 /// log_output.out(&LogStruct::debug("Hello, World!"), &mut formatter);
 /// ```
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Serialize,
-    Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct LogOutput {
     /// The `stderr` output stream.
     pub stderr_output: StderrStream,
     /// File output stream for writing logs to a file.
-    pub file_output: FileStream,
+    pub file_output: Mutex<FileStream>,
     /// Buffer stream for storing log messages.
-    pub buffer_output: BufferStream,
+    pub buffer_output: Mutex<BufferStream>,
 
     enabled: bool,
 }
@@ -167,13 +166,20 @@ impl Drop for FileStream {
     }
 }
 
+impl PartialEq for LogOutput {
+    fn eq(&self, other: &Self) -> bool {
+        return self.enabled == other.enabled &&
+            self.stderr_output == other.stderr_output;
+    }
+}
+
 impl Default for LogOutput {
     fn default() -> Self {
         LogOutput {
             enabled: true,
             stderr_output: StderrStream::default(),
-            file_output: FileStream::default(),
-            buffer_output: BufferStream::default(),
+            file_output: FileStream::default().into(),
+            buffer_output: BufferStream::default().into(),
         }
     }
 }
@@ -253,11 +259,11 @@ impl Toggleable for BufferStream {
 
 impl LogOutput {
     /// Passes the log and its formatter to child streams for processing.
-    pub fn out(&mut self, log: &LogStruct, formatter: &mut LogFormatter) {
+    pub fn out(&self, log: &LogStruct, formatter: &mut LogFormatter) {
         if self.enabled {
             self.stderr_output.out(log, formatter);
-            let _ = self.file_output.out(log, formatter);
-            self.buffer_output.out(log);
+            let _ = self.file_output.lock().unwrap().out(log, formatter);
+            self.buffer_output.lock().unwrap().out(log);
         }
     }
 }

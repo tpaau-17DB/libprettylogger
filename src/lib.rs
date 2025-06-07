@@ -13,6 +13,8 @@ pub mod config;
 pub mod format;
 pub mod output;
 
+use std::sync::Mutex;
+
 use format::LogFormatter;
 use serde::{Serialize, Deserialize};
 use config::{Verbosity, LogStruct, LogType};
@@ -53,16 +55,16 @@ use output::LogOutput;
 /// let mut logger = Logger::default();
 ///
 /// // Set a simple log format
-/// logger.formatter.set_log_format("[ %d ] %m");
+/// logger.formatter.lock().unwrap().set_log_format("[ %d ] %m");
 ///
 /// // Change debug log header color
-/// logger.formatter.set_debug_color(Color::Red);
+/// logger.formatter.lock().unwrap().set_debug_color(Color::Red);
 ///
 /// // Set a fatal log header
-/// logger.formatter.set_fatal_header("--FATAL--");
+/// logger.formatter.lock().unwrap().set_fatal_header("--FATAL--");
 ///
 /// // Configure datetime format
-/// logger.formatter.set_datetime_format("%H:%M");
+/// logger.formatter.lock().unwrap().set_datetime_format("%H:%M");
 /// ```
 ///
 /// Enabling log buffering:
@@ -75,7 +77,7 @@ use output::LogOutput;
 /// let mut logger = Logger::default();
 ///
 /// // Enable log buffering
-/// logger.output.buffer_output.enable();
+/// logger.output.buffer_output.lock().unwrap().enable();
 ///
 /// // Write to the log buffer 128 times
 /// for i in 0..128 {
@@ -83,7 +85,7 @@ use output::LogOutput;
 /// }
 ///
 /// // Get a reference to the log buffer
-/// let buffer = logger.output.buffer_output.get_log_buffer();
+/// let buffer = logger.output.buffer_output.lock().unwrap().get_log_buffer();
 /// ```
 ///
 /// Enabling file logging:
@@ -100,28 +102,30 @@ use output::LogOutput;
 /// // Create a `Logger` instance with default configuration
 /// let mut logger = Logger::default();
 ///
+/// // Lock the file output and obtain a reference to it
+/// let mut file_output = logger.output.file_output.lock().unwrap();
+///
 /// // Required by `FileStream` for parsing logs
 /// let mut formatter = LogFormatter::default();
 ///
 /// // Set the log file path **first**
-/// logger.output.file_output.set_log_file_path(&path)
+/// file_output.set_log_file_path(&path)
 ///     .expect("Failed to set the log file path!");
 ///
 /// // Enable the output
-/// logger.output.file_output.enable().
+/// file_output.enable().
 ///     expect("Failed to enable the output!");
 ///
 /// // Write to the log file buffer
-/// logger.output.file_output.out(&LogStruct::debug("Hello from file!"),
+/// file_output.out(&LogStruct::debug("Hello from file!"),
 ///     &mut formatter).expect("Failed to write to the buffer!");
 ///
 /// // Flush the logs from the buffer to the log file
-/// logger.output.file_output.flush();
+/// file_output.flush();
 /// ```
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Serialize,
-    Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Logger {
-    pub formatter: LogFormatter,
+    pub formatter: Mutex<LogFormatter>,
     pub output: LogOutput,
 
     pub(crate) verbosity: Verbosity,
@@ -138,42 +142,42 @@ impl Logger {
     }
 
     /// Prints a **debug message**.
-    pub fn debug(&mut self, message: &str) {
+    pub fn debug(&self, message: &str) {
         if self.filter_log(LogType::Debug) {
             return;
         }
         let log = LogStruct::debug(message);
-        self.output.out(&log, &mut self.formatter);
+        self.output.out(&log, &mut self.formatter.lock().unwrap());
     }
 
     /// Prints an **informational message**.
-    pub fn info(&mut self, message: &str) {
+    pub fn info(&self, message: &str) {
         if self.filter_log(LogType::Info) {
             return;
         }
         let log = LogStruct::info(message);
-        self.output.out(&log, &mut self.formatter);
+        self.output.out(&log, &mut self.formatter.lock().unwrap());
     }
 
     /// Prints a **warning**.
-    pub fn warning(&mut self, message: &str) {
+    pub fn warning(&self, message: &str) {
         if self.filter_log(LogType::Warning) {
             return;
         }
         let log = LogStruct::warning(message);
-        self.output.out(&log, &mut self.formatter);
+        self.output.out(&log, &mut self.formatter.lock().unwrap());
     }
 
     /// Prints an **error**.
-    pub fn error(&mut self, message: &str) {
+    pub fn error(&self, message: &str) {
         let log = LogStruct::error(message);
-        self.output.out(&log, &mut self.formatter);
+        self.output.out(&log, &mut self.formatter.lock().unwrap());
     }
 
     /// Prints a **fatal error**.
-    pub fn fatal(&mut self, message: &str) {
+    pub fn fatal(&self, message: &str) {
         let log = LogStruct::fatal_error(message);
-        self.output.out(&log, &mut self.formatter);
+        self.output.out(&log, &mut self.formatter.lock().unwrap());
     }
 
     /// Sets `Logger` verbosity.
@@ -209,14 +213,22 @@ impl Default for Logger {
             verbosity: Verbosity::default(),
             filtering_enabled: true,
 
-            formatter: LogFormatter::default(),
+            formatter: LogFormatter::default().into(),
         }
     }
 }
 
 impl Drop for Logger {
     fn drop(&mut self) {
-        self.output.file_output.drop_flush();
+        self.output.file_output.lock().unwrap().drop_flush();
+    }
+}
+
+impl PartialEq for Logger {
+    fn eq(&self, other: &Self) -> bool {
+        return self.output == other.output &&
+            self.verbosity == other.verbosity &&
+            self.filtering_enabled == other.filtering_enabled;
     }
 }
 
