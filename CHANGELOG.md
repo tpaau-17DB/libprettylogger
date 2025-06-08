@@ -1,10 +1,17 @@
 <h1 align="center">
+v3.0.2
+</h1>
+
+## Patches
+* Made logger log methods accessible with a non-mutable references
+
+<h1 align="center">
 v3.0.1
 </h1>
 
 ## Patches
-* Split `LogFormatter::toggle_log_color(...)` into two methods.
-* Fixed some minor issues with docstrings.
+* Split `LogFormatter::toggle_log_color(...)` into two methods
+* Fixed some minor issues with docstrings
 
 
 <h1 align="center">
