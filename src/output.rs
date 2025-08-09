@@ -3,15 +3,27 @@
 
 /// Provides log stream implementations for directing log output to various
 /// destinations, such as files, standard error, or a log buffer.
-use std::{fs::OpenOptions, sync::Mutex};
+use std::{
+    fs::OpenOptions,
+    sync::Mutex
+};
 
-use serde::{Serialize, Deserialize};
+use serde::{
+    Serialize,
+    Deserialize
+};
 
 use crate::{
     Error,
-    config::{LogStruct, OnDropPolicy},
+    config::{
+        LogStruct,
+        OnDropPolicy
+    },
     format::LogFormatter,
-    fileio::{append_to_file, overwrite_file},
+    fileio::{
+        append_to_file,
+        overwrite_file
+    },
 };
 
 /// Common trait for toggleable objects.

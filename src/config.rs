@@ -3,9 +3,19 @@
 
 /// Implements various types used to customize `Logger`, `LogFormatter` and
 /// output streams' behavior.
-use serde::{Serialize, Deserialize};
-use std::fmt::{Display, Formatter};
-use chrono::{Local, DateTime};
+use serde::{
+    Serialize,
+    Deserialize
+};
+use std::fmt::{
+    Display,
+    Formatter
+};
+use chrono::{
+    Local,
+    DateTime
+};
+
 use crate::Error;
 
 /// Used to set the verbosity of a `Logger`.
@@ -205,7 +215,7 @@ impl LogStruct {
 
 impl Display for LogStruct {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        return write!(
+        write!(
             f,
             "Log: {}\nType: {:?}\nDateTime: {}",
             self.message,
@@ -224,7 +234,7 @@ impl std::fmt::Display for Verbosity {
             Verbosity::Quiet => "Quiet",
             Verbosity::ErrorsOnly => "ErrorsOnly",
         };
-        return write!(f, "{}", level_str)
+        write!(f, "{level_str}")
     }
 }
 
@@ -259,7 +269,7 @@ impl Display for OnDropPolicy {
             OnDropPolicy::IgnoreLogFileLock => "IgnoreLogFileLock",
             OnDropPolicy::DiscardLogBuffer => "DiscardLogBuffer",
         };
-        return write!(f, "{}", level_str)
+        write!(f, "{level_str}")
     }
 }
 
@@ -287,7 +297,7 @@ impl Display for LogType {
             LogType::Err => "Error",
             LogType::FatalError => "FatalError",
         };
-        return write!(f, "{}", level_str)
+        write!(f, "{level_str}")
     }
 }
 

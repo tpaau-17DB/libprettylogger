@@ -3,12 +3,21 @@
 
 /// Contains `LogFormatter`, used to create formatted log messages from raw log
 /// structs.
-use serde::{Serialize, Deserialize};
-use chrono::{Local, DateTime};
+use serde::{
+    Serialize,
+    Deserialize
+};
+use chrono::{
+    Local,
+    DateTime
+};
 
 use crate::{
     LogType, Error,
-    colors::{Color, color_text},
+    colors::{
+        Color,
+        color_text
+    },
     config::LogStruct,
 };
 
@@ -65,11 +74,11 @@ impl LogFormatter {
             Some(b) => {
                 match b {
                     true => {
-                        return datetime.format(&self.datetime_format)
-                            .to_string();
+                        datetime.format(&self.datetime_format)
+                            .to_string()
                     },
                     false => {
-                        return String::new();
+                        String::new()
                     },
                 }
 
@@ -78,12 +87,12 @@ impl LogFormatter {
                 match self.log_format.contains("%d") {
                     true => {
                         self.show_datetime = Some(true);
-                        return datetime.format(&self.datetime_format)
-                            .to_string();
+                        datetime.format(&self.datetime_format)
+                            .to_string()
                     },
                     false => {
                         self.show_datetime = Some(false);
-                        return String::new();
+                        String::new()
                     },
                 }
             }
@@ -104,29 +113,29 @@ impl LogFormatter {
         if self.log_header_color_enabled {
             return color_text(text, color);
         }
-        return text.to_string()
+        text.to_string()
     }
 
     pub(crate) fn get_log_type_header(&self, log_type: LogType) -> String {
         match log_type {
             LogType::Debug => {
-                return self.colorify(&self.debug_header,
+                self.colorify(&self.debug_header,
                     self.log_header_color(log_type))
             }
             LogType::Info => {
-                return self.colorify(&self.info_header,
+                self.colorify(&self.info_header,
                     self.log_header_color(log_type))
             }
             LogType::Warning => {
-                return self.colorify(&self.warning_header,
+                self.colorify(&self.warning_header,
                     self.log_header_color(log_type))
             }
             LogType::Err => {
-                return self.colorify(&self.error_header,
+                self.colorify(&self.error_header,
                     self.log_header_color(log_type))
             }
             LogType::FatalError => {
-                return self.colorify(&self.fatal_header,
+                self.colorify(&self.fatal_header,
                     self.log_header_color(log_type))
             }
         }
@@ -136,7 +145,7 @@ impl LogFormatter {
     -> (String, String) {
         let header = self.get_log_type_header(log.log_type);
         let datetime = self.get_datetime_formatted(&log.datetime);
-        return (header, datetime);
+        (header, datetime)
     }
 
     /// Returns a log entry from a `LogStruct` based on current `LogFormatter`
@@ -174,7 +183,7 @@ impl LogFormatter {
         }
 
         result += "\n";
-        return result
+        result
     }
 
     /// Enables the log headers to have colors.

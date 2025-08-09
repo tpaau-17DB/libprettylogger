@@ -5,7 +5,7 @@ use std::{
 
 use crate::Error;
 
-/// Writes contents to a file overwriting it.
+/// Overwrites a file with the given content.
 pub(crate) fn overwrite_file(path: &str, content: &str) -> Result<(), Error> {
     match OpenOptions::new()
          .write(true)
@@ -22,7 +22,7 @@ pub(crate) fn overwrite_file(path: &str, content: &str) -> Result<(), Error> {
 
 }
 
-/// Appends a string to a file at given path.
+/// Appends a string to the given file.
 pub(crate) fn append_to_file(path: &str, content: &str) -> Result<(), Error> {
     match OpenOptions::new()
         .append(true)

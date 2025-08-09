@@ -1,14 +1,35 @@
 use std::{
-    collections::hash_map::HashMap, fs::{create_dir_all, read_to_string},
+    collections::hash_map::HashMap,
+    fs::{
+        create_dir_all,
+        read_to_string
+    },
 };
+
 use rand::{
-    distributions::Alphanumeric, thread_rng, Rng
+    distributions::Alphanumeric,
+    thread_rng,
+    Rng
 };
+
 use crate::{
     Logger,
-    colors::{color_text, Color},
-    config::{LogStruct, LogType, OnDropPolicy, Verbosity},
-    format::LogFormatter, output::{BufferStream, FileStream, Toggleable}
+    colors::{
+        color_text,
+        Color
+    },
+    config::{
+        LogStruct,
+        LogType,
+        OnDropPolicy,
+        Verbosity
+    },
+    format::LogFormatter,
+    output::{
+        BufferStream,
+        FileStream,
+        Toggleable
+    }
 };
 
 const REPEAT_MIN: u32 = 1;
@@ -42,7 +63,7 @@ lazy_static::lazy_static! {
 }
 
 fn rand_string(length: usize) -> String {
-    return rand::thread_rng()
+    rand::thread_rng()
         .sample_iter(&Alphanumeric)
         .take(length)
         .map(char::from)

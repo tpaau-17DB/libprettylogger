@@ -3,9 +3,16 @@
 /// Contains various color-related utilities for cosmetic customization.
 use std::{
     collections::HashMap,
-    fmt::{Display, Formatter},
+    fmt::{
+        Display,
+        Formatter
+    },
 };
-use serde::{Serialize, Deserialize};
+
+use serde::{
+    Serialize,
+    Deserialize
+};
 use lazy_static::lazy_static;
 
 /// Represents different colors. Used to color text or modify the appearance of
@@ -110,14 +117,14 @@ lazy_static! {
 pub fn color_text(text: &str, color: Color) -> String {
     match color {
         Color::Custom(s) => {
-            return s + text + RESET;
+            s + text + RESET
         },
         _ => {
             if color != Color::None {
-                return COLOR_MAP[&(color.into())].to_string() + text + RESET;
+                COLOR_MAP[&(color.into())].to_string() + text + RESET
             }
             else{
-                return String::from(text)
+                String::from(text)
             }
         }
     }
@@ -137,9 +144,9 @@ impl Display for Color {
             Color::White => "White",
             Color::Yellow => "Yellow",
 
-            Color::Custom(str) => &format!("'{}'", str)
+            Color::Custom(str) => &format!("'{str}'")
         };
-        return write!(f, "{}", level_str)
+        write!(f, "{level_str}")
     }
 }
 

@@ -12,12 +12,20 @@ pub mod colors;
 pub mod config;
 pub mod format;
 pub mod output;
+pub mod glob;
 
 use std::sync::Mutex;
 
 use format::LogFormatter;
-use serde::{Serialize, Deserialize};
-use config::{Verbosity, LogStruct, LogType};
+use serde::{
+    Serialize,
+    Deserialize
+};
+use config::{
+    Verbosity,
+    LogStruct,
+    LogType
+};
 use output::LogOutput;
 
 /// `Logger` capable of filtering logs, formatting them and distributing them
@@ -138,7 +146,7 @@ impl Logger {
         if self.filtering_enabled {
             return (log_type as i32) < self.verbosity as i32;
         }
-        return false;
+        false
     }
 
     /// Prints a **debug message**.
@@ -226,9 +234,9 @@ impl Drop for Logger {
 
 impl PartialEq for Logger {
     fn eq(&self, other: &Self) -> bool {
-        return self.output == other.output &&
-            self.verbosity == other.verbosity &&
-            self.filtering_enabled == other.filtering_enabled;
+        self.output == other.output &&
+        self.verbosity == other.verbosity &&
+        self.filtering_enabled == other.filtering_enabled
     }
 }
 
@@ -248,7 +256,7 @@ impl Error {
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        return write!(f, "{}", self.message)
+        write!(f, "{}", self.message)
     }
 }
 

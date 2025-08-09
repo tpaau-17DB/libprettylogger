@@ -1,7 +1,14 @@
-use crate::{Logger, Error};
 use std::{
-    fs::{File, read_to_string},
+    fs::{
+        File,
+        read_to_string
+    },
     io::Write,
+};
+
+use crate::{
+    Logger,
+    Error
 };
 
 impl Logger {
@@ -29,7 +36,7 @@ impl Logger {
             = serde_json::from_str(template);
         match result {
             Ok(logger) => {
-                return Ok(logger);
+                Ok(logger)
             },
             Err(e) => Err(Error::new(&e.to_string()))
         }
