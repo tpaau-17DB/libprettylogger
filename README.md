@@ -9,6 +9,7 @@
 * [The Logger](#the-logger)
     * [Log Filtering](#the-logger_log-filtering)
     * [Logger Templates](#the-logger_logger-templates)
+    * [Global `Logger` instance](#the-logger_global-logger)
 * [Log Formatting](#log-formatting)
     * [Log Formatter](#log-formatting_log-formatter)
     * [Log Format](#log-formatting_log-format)
@@ -31,21 +32,12 @@ cargo add libprettylogger
 
 ### Quick start
 ```rust
-use prettylogger::Logger;
-use prettylogger::config::Verbosity;
-
-// Create a `Logger` struct with default configuration
-let mut logger = Logger::default();
-
-// Don't suppress any log messages
-logger.set_verbosity(Verbosity::All);
-
-// Print some logs
-logger.debug("A debug message!");
-logger.info("Info message!");
-logger.warning("A warning!");
-logger.error("An error!");
-logger.fatal("A fatal error!");
+# use prettylogger::{debug, info, warn, err, fatal};
+debug!("This is a debug message!");
+info!("This is an info message!");
+warn!("This is a warning!");
+err!("This is an error!");
+fatal!("This is a fatal error!");
 ```
 
 <a name="the-logger"></a>
@@ -60,7 +52,7 @@ let mut logger = Logger::default();
 ```
 
 <a name="the-logger_log-filtering"></a>
-### Log Filtering
+### Log filtering
 Logs are filtered based on their importance and the verbosity setting.
 
 Setting logger verbosity:
@@ -79,7 +71,7 @@ logger.disable_log_filtering();
 ```
 
 <a name="the-logger_logger-templates"></a>
-### Logger Templates
+### Logger templates
 A **Logger template** is serialized `Logger` struct in JSON format. Logger
 templates can be used to easily manage and store logger configurations in files.
 
@@ -153,8 +145,75 @@ let mut logger = Logger::default();
 logger.save_template(path);
 ```
 
+<a name="the-logger_global-logger"></a>
+### Global logger instance
+
+The `prettylogger` crate defines a global logger instance wrapped in a `RwLock`,
+which you can use to share between multiple threads.
+
+Modifying the global logger configuration:
+```rust
+# use prettylogger::{glob::LOGGER, config::Verbosity};
+// Get write access to the logger
+let mut logger = LOGGER.write().unwrap();
+
+// Modify the logger
+logger.set_verbosity(Verbosity::All);
+```
+
+Using the global logger:
+```rust
+# use prettylogger::glob::LOGGER;
+// Get read access to the logger
+let logger = LOGGER.read().unwrap();
+
+// Print some logs
+logger.info("Hello, World!");
+```
+
+Requiring read access to the global logger in every function you use is tedious,
+isn't it? Furthermore, because its methods only accept `&str` as message
+arguments, you’d have to handle all message formatting yourself.
+
+Fortunately, there is a set of macros designed just to solve this issue.
+
+Using logging macros to print some messages with the global logger:
+```rust
+# use prettylogger::{debug, info, warn, err, fatal};
+debug!("This is a debug message!");
+info!("This is an info message!");
+warn!("This is a warning!");
+err!("This is an error!");
+fatal!("This is a fatal error!");
+```
+
+Logging macros accept arguments just like the `format!` macro:
+```rust
+# use prettylogger::info;
+let some_value = 32;
+let name = "User";
+
+info!("Hello {name}, `some_value` is {some_value}.");
+```
+
+> [!WARNING]
+> Since the logging macros acquire read access to the global logger under the
+> hood, they will block your thread if there is another process with write
+> access to the logger.
+>
+> This will block the thread:
+> ```rust
+> # use prettylogger::{info, glob::LOGGER};
+> // Get write access to the logger
+> let mut logger = LOGGER.write().unwrap();
+>
+> // Trying to use logging macro blocks the thread
+> info!("This will never be shown!");
+> ```
+
+
 <a name="log-formatting"></a>
-## Log Formatting
+## Log formatting
 
 <a name="log-formatting_log-formatter"></a>
 ### `LogFormatter`
@@ -181,7 +240,7 @@ print!("{}", &log);
 ```
 
 <a name="log-formatting_log-format"></a>
-### Log Format
+### Log format
 A log consists of several headers:
 * **Log Type** **→** The type of the log (debug, info, warning etc.)
 * **Timestamp** **→** Contains the date and time the log was created
@@ -215,8 +274,10 @@ Setting a custom log format:
 let mut formatter = LogFormatter::default();
 formatter.set_log_format("[ %h %d %m ]");
 ```
-Note that the `%m` (message) placeholder is mandatory. You will get an error
-unless you include it in your format string.
+
+> [!NOTE]
+> The `%m` (message) placeholder is mandatory. You will get an error unless you
+> include it in your format string.
 
 Customizing log headers:
 ```rust
@@ -269,7 +330,7 @@ print!("{}", &formatted_log);
 
 
 <a name="log-outputs"></a>
-## Log Outputs
+## Log outputs
 Log outputs determine how messages are routed, delivering logs to specific
 destinations  like standard error (`StderrStream`) or a dedicated log file
 (`FileStream`). Each output can be selectively toggled. Additionally, the
@@ -372,11 +433,11 @@ file_stream.flush()
     .expect("Failed flushing the file stream!");
 ```
 
-Note that the log file path has to be set in order to enable and use the file
-stream.
+> [!NOTE]
+> The log file path has to be set in order to enable and use the file stream.
 
 <a name="log-outputs_file-stream_auto-log-buffer-flushing"></a>
-#### Automatic Log Buffer Flushing
+#### Automatic log buffer flushing
 `FileStream` can automatically write to the log file when its log buffer
 exceeds a specific limit. Setting this limit to `None` will disable this
 feature.
@@ -412,7 +473,7 @@ for i in 0..128 {
 ```
 
 <a name="log-outputs_file-stream_locking-log-file"></a>
-#### Locking The Log File
+#### Locking the log file
 The log file can be locked to prevent race conditions when there are multiple
 threads accessing it at the same time. It stops `FileStream` from writing to
 it until the lock has been released. The lock is only ignored when

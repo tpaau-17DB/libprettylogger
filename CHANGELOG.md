@@ -1,4 +1,16 @@
 <h1 align="center">
+v3.1.0
+</h1>
+
+## Minor changes
+* Added global logging and logging macros
+* Updated rust edition to 2024
+
+## Patches
+* Removed `lazy_static` in favor of built-in `LazyLock`
+* Fixed some inconsistencies in the README file
+
+<h1 align="center">
 v3.0.2
 </h1>
 

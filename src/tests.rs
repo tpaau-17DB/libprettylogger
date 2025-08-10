@@ -1,4 +1,5 @@
 use std::{
+    sync::LazyLock,
     collections::hash_map::HashMap,
     fs::{
         create_dir_all,
@@ -37,30 +38,26 @@ const REPEAT_MAX: u32 = 1024;
 
 const RESET: &str = "\x1b[0m";
 
-lazy_static::lazy_static! {
-    static ref TMP_PATH: String = {
-        let mut path = std::env::temp_dir();
-        path.push("libprettylogger-tests");
-        path.to_str().unwrap().to_string()
-    };
-}
+static TMP_PATH: LazyLock<String> = LazyLock::new(|| {
+    let mut path = std::env::temp_dir();
+    path.push("libprettylogger-tests");
+    path.to_str().unwrap().to_string()
+});
 
-lazy_static::lazy_static! {
-    static ref COLORS: HashMap<Color, String> = {
-        let mut map: HashMap<Color, String> = HashMap::new();
+static COLORS: LazyLock<HashMap<Color, String>> = LazyLock::new(|| {
+    let mut map: HashMap<Color, String> = HashMap::new();
 
-        map.insert(Color::Black, String::from("\x1b[30m"));
-        map.insert(Color::Red, String::from("\x1b[31m"));
-        map.insert(Color::Green, String::from("\x1b[32m"));
-        map.insert(Color::Yellow, String::from("\x1b[33m"));
-        map.insert(Color::Blue, String::from("\x1b[34m"));
-        map.insert(Color::Magenta, String::from("\x1b[35m"));
-        map.insert(Color::Cyan, String::from("\x1b[36m"));
-        map.insert(Color::White, String::from("\x1b[37m"));
+    map.insert(Color::Black, String::from("\x1b[30m"));
+    map.insert(Color::Red, String::from("\x1b[31m"));
+    map.insert(Color::Green, String::from("\x1b[32m"));
+    map.insert(Color::Yellow, String::from("\x1b[33m"));
+    map.insert(Color::Blue, String::from("\x1b[34m"));
+    map.insert(Color::Magenta, String::from("\x1b[35m"));
+    map.insert(Color::Cyan, String::from("\x1b[36m"));
+    map.insert(Color::White, String::from("\x1b[37m"));
 
-        return map;
-    };
-}
+    map
+});
 
 fn rand_string(length: usize) -> String {
     rand::thread_rng()
@@ -72,7 +69,7 @@ fn rand_string(length: usize) -> String {
 
 // Check if logs are properly filtered by the Logger struct
 #[test]
-fn test_log_filtering() {
+fn log_filtering() {
     // Loop over all the possible Verbosity values
     let mut i = 0;
     loop {
@@ -163,9 +160,9 @@ fn test_log_filtering() {
 
 // Test if Logger templates are correctly serialized and deserialized
 #[test]
-fn test_templates() {
+fn templates() {
     create_dir_all(TMP_PATH.clone()).expect("Failed to create a directory");
-    let path = TMP_PATH.to_owned() + "/test_templates.json";
+    let path = TMP_PATH.to_owned() + "/templates.json";
 
     Logger::default().save_template(&path)
         .expect("Failed to save logger template");
@@ -184,7 +181,7 @@ fn test_templates() {
 
 // Test if setting different log header formats works
 #[test]
-fn test_log_headers() {
+fn log_headers() {
     let header = &rand_string(32);
     let mut f = LogFormatter::default();
 
@@ -218,7 +215,7 @@ fn test_log_headers() {
 
 // Test if logs are formatted as expected
 #[test]
-fn test_formats() {
+fn formats() {
     let mut f = LogFormatter::default();
 
     f.set_datetime_format("aaa");
@@ -271,7 +268,7 @@ fn test_color_text() {
 
 // Test text coloring with non-standard colors
 #[test]
-fn test_color_text_custom() {
+fn color_text_custom() {
     for element in COLORS.iter() {
         let text = &rand_string(32);
         let color = element.0.as_ref().to_string();
@@ -283,7 +280,7 @@ fn test_color_text_custom() {
 
 // Test if formatter is throwing errors when it should
 #[test]
-fn test_formatter_errs() {
+fn formatter_errs() {
     let mut f: LogFormatter;
 
     // Without a message placeholder
@@ -300,7 +297,7 @@ fn test_formatter_errs() {
 
 // Test if file output is throwing errors when it should
 #[test]
-fn test_file_output_errs() {
+fn file_output_errs() {
     create_dir_all(TMP_PATH.clone()).expect("Failed to create a directory");
     let path = TMP_PATH.to_owned() + "/file_output.log";
 
@@ -349,7 +346,7 @@ fn test_file_output_errs() {
 
 // Test if file logging is working as expected
 #[test]
-fn test_file_logging() {
+fn file_logging() {
     create_dir_all(TMP_PATH.clone()).expect("Failed to create a directory");
     let path = TMP_PATH.to_owned() + "/file_logging.log";
 
@@ -386,7 +383,7 @@ fn test_file_logging() {
 
 // Test if automatic log file buffer flushing is working
 #[test]
-fn test_auto_file_logging() {
+fn auto_file_logging() {
     create_dir_all(TMP_PATH.clone()).expect("Failed to create a directory");
     let path = TMP_PATH.to_owned() + "/auto_file_logging.log";
 
@@ -438,7 +435,7 @@ fn test_auto_file_logging() {
 
 // Check if log buffering is working fine
 #[test]
-fn test_log_buffering() {
+fn log_buffering() {
     let mut rng = thread_rng();
     let log = LogStruct::debug("example debug message");
     let n = rng.gen_range(REPEAT_MIN..REPEAT_MAX) as usize;

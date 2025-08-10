@@ -39,6 +39,26 @@ use output::LogOutput;
 ///
 /// # Examples
 ///
+/// Using global logging:
+/// ```
+/// use prettylogger::{debug, info, warn, err, fatal};
+///
+/// let mut message = "debug";
+/// debug!("Hello, this is a {message} log!");
+///
+/// message = "info";
+/// info!("Hello, this is an {message} log!");
+///
+/// message = "warning";
+/// warn!("Hello, this is a {message}!");
+///
+/// message = "error";
+/// err!("Hello, this is an {message}!");
+///
+/// message = "fatal error";
+/// fatal!("Hello, this is a {message}!")
+/// ```
+///
 /// Creating a `Logger` struct and printing out some logs:
 /// ```
 /// # use prettylogger::Logger;

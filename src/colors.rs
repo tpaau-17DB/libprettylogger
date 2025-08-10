@@ -6,14 +6,13 @@ use std::{
     fmt::{
         Display,
         Formatter
-    },
+    }, sync::LazyLock,
 };
 
 use serde::{
     Serialize,
     Deserialize
 };
-use lazy_static::lazy_static;
 
 /// Represents different colors. Used to color text or modify the appearance of
 /// log headers.
@@ -67,34 +66,32 @@ pub enum Color
     Custom(String) = 10,
 }
 
-static BLACK: &str = "\x1b[30m";
-static BLUE: &str = "\x1b[34m";
-static CYAN: &str = "\x1b[36m";
-static GREEN: &str = "\x1b[32m";
-static GRAY: &str = "\x1b[90m";
-static MAGENTA: &str = "\x1b[35m";
-static RED: &str = "\x1b[31m";
-static WHITE: &str = "\x1b[37m";
-static YELLOW: &str = "\x1b[33m";
+const BLACK: &str = "\x1b[30m";
+const BLUE: &str = "\x1b[34m";
+const CYAN: &str = "\x1b[36m";
+const GREEN: &str = "\x1b[32m";
+const GRAY: &str = "\x1b[90m";
+const MAGENTA: &str = "\x1b[35m";
+const RED: &str = "\x1b[31m";
+const WHITE: &str = "\x1b[37m";
+const YELLOW: &str = "\x1b[33m";
 
 pub(crate) static RESET: &str = "\x1b[0m";
 
-lazy_static! {
-    static ref COLOR_MAP: HashMap<i32, &'static str> =  {
-        let mut m = HashMap::new();
-        m.insert(Color::None.into(), "");
-        m.insert(Color::Black.into(), BLACK);
-        m.insert(Color::Blue.into(), BLUE);
-        m.insert(Color::Cyan.into(), CYAN);
-        m.insert(Color::Green.into(), GREEN);
-        m.insert(Color::Gray.into(), GRAY);
-        m.insert(Color::Magenta.into(), MAGENTA);
-        m.insert(Color::Red.into(), RED);
-        m.insert(Color::White.into(), WHITE);
-        m.insert(Color::Yellow.into(), YELLOW);
-        return m;
-    };
-}
+static COLOR_MAP: LazyLock<HashMap<i32, &str>> = LazyLock::new(|| {
+    let mut m = HashMap::new();
+    m.insert(Color::None.into(), "");
+    m.insert(Color::Black.into(), BLACK);
+    m.insert(Color::Blue.into(), BLUE);
+    m.insert(Color::Cyan.into(), CYAN);
+    m.insert(Color::Green.into(), GREEN);
+    m.insert(Color::Gray.into(), GRAY);
+    m.insert(Color::Magenta.into(), MAGENTA);
+    m.insert(Color::Red.into(), RED);
+    m.insert(Color::White.into(), WHITE);
+    m.insert(Color::Yellow.into(), YELLOW);
+    m
+});
 
 /// Colors given text based on `color` value using ANSII escape codes.
 ///
