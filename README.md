@@ -149,7 +149,7 @@ logger.save_template(path);
 ### Global logger instance
 
 The `prettylogger` crate defines a global logger instance wrapped in `RwLock`,
-which you can use to share between multiple threads.
+which you can share between multiple threads.
 
 Modifying the global logger configuration:
 ```rust
