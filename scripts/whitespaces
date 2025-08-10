@@ -1,11 +1,23 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 root=$(git rev-parse --show-toplevel)
 
-grep -n '[[:space:]]$' $root/README.md\
-    $root/Cargo.toml\
-    $root/CHANGELOG.md\
-    $root/deny.toml\
-    $root/README.md\
-    $root/scripts/*\
-    $root/src/*\
+out="$(grep -n '[[:space:]]$' \
+    $root/README.md \
+    $root/CHANGELOG.md \
+    $root/Cargo.toml \
+    $root/scripts/* \
+	$root/src/*)"
+status=$?
+
+echo "$out" >&2
+
+if [[ -z "$out" ]] && (( status == 1 )); then
+	exit 0
+else
+	if (( status == 0 )); then
+		exit 1
+	else
+		exit $status
+	fi
+fi
