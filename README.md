@@ -148,7 +148,7 @@ logger.save_template(path);
 <a name="the-logger_global-logger"></a>
 ### Global logger instance
 
-The `prettylogger` crate defines a global logger instance wrapped in a `RwLock`,
+The `prettylogger` crate defines a global logger instance wrapped in `RwLock`,
 which you can use to share between multiple threads.
 
 Modifying the global logger configuration:
@@ -202,7 +202,7 @@ info!("Hello {name}, `some_value` is {some_value}.");
 > access to the logger.
 >
 > This will block the thread:
-> ```rust
+> ```no_run
 > # use prettylogger::{info, glob::LOGGER};
 > // Get write access to the logger
 > let mut logger = LOGGER.write().unwrap();
