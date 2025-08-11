@@ -7,4 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: EmbarkStudios/cargo-deny-action@v1
+    - name: Get cargo-deny
+      run: cargo install --locked cargo-deny
+    - name: Run cargo-deny
+      run: cargo deny check
